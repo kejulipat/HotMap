@@ -10,6 +10,7 @@ const ROLE_RULES = {
   "/petugas": ["petugas", "admin"],
   "/pelapor": ["pelapor", "admin"],
   "/dashboard": ["pelapor", "petugas", "admin"],
+  "/test-db": ["admin"],
 };
 
 // Halaman auth: user yang sudah login akan diarahkan ke dashboard role-nya.
@@ -82,7 +83,10 @@ export async function middleware(request) {
     .eq("id", user.id)
     .single();
 
-  const role = profile?.role ?? "pelapor";
+  const rawRole = profile?.role
+    ? String(profile.role).toLowerCase().trim()
+    : "pelapor";
+  const role = ROLE_HOME[rawRole] ? rawRole : "pelapor";
 
   // Sudah login tapi membuka /login atau /register -> ke home role.
   if (isAuthRoute) {
