@@ -80,6 +80,7 @@ export default function PublicNavbar({ currentUser = null }) {
                 <Link
                   key={item.href}
                   href={item.href}
+                  prefetch={true}
                   className={`relative py-2 transition-colors ${
                     active
                       ? "text-[#155E42] font-semibold"
@@ -178,6 +179,7 @@ export default function PublicNavbar({ currentUser = null }) {
                 <Link
                   key={item.href}
                   href={item.href}
+                  prefetch={true}
                   onClick={() => setMobileOpen(false)}
                   className={`block rounded-lg px-3.5 py-2.5 text-sm font-medium ${
                     active

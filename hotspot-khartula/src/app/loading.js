@@ -1,9 +1,31 @@
-import { LoadingSpinner } from "@/components/ui/SharedUI";
+import { DashboardPageSkeleton } from "@/components/ui/SharedUI";
 
 export default function GlobalLoading() {
   return (
-    <div className="min-h-screen bg-[#F6F7F3] flex items-center justify-center px-4">
-      <LoadingSpinner label="Memuat halaman HotMap..." />
+    <div className="min-h-screen bg-[#F6F7F3] text-[#14231B] flex flex-col font-sans">
+      <header className="sticky top-0 z-30 bg-[#F6F7F3]/95 backdrop-blur border-b border-[#E3E8E1]">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-18 sm:h-20 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#155E42]" />
+            <div className="space-y-1.5">
+              <div className="h-4 w-20 rounded bg-[#E3E8E1]" />
+              <div className="h-2.5 w-36 rounded bg-[#E3E8E1]" />
+            </div>
+          </div>
+          <div className="hidden lg:flex items-center gap-7">
+            <div className="h-4 w-16 rounded bg-[#E3E8E1]" />
+            <div className="h-4 w-24 rounded bg-[#E3E8E1]" />
+            <div className="h-4 w-14 rounded bg-[#E3E8E1]" />
+          </div>
+          <div className="hidden lg:flex items-center gap-2.5">
+            <div className="h-9 w-24 rounded-lg bg-[#E3E8E1]" />
+            <div className="h-9 w-36 rounded-lg bg-[#E3E8E1]" />
+          </div>
+        </div>
+      </header>
+      <main className="flex-1 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+        <DashboardPageSkeleton />
+      </main>
     </div>
   );
 }

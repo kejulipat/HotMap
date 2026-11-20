@@ -1,5 +1,10 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
+import {
+  extractSupabaseAuthFingerprint,
+  getCachedAuth,
+  setCachedAuth,
+} from "@/lib/server-cache";
 
 /**
  * Aturan akses route berdasarkan kolom `role` di tabel `profiles`.
@@ -30,47 +35,92 @@ function matchRule(pathname) {
 }
 
 export async function middleware(request) {
-  let response = NextResponse.next({ request });
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
-          );
-          response = NextResponse.next({ request });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options)
-          );
-        },
-      },
-    }
-  );
-
-  // PENTING: jangan taruh logic lain di antara createServerClient dan getClaims().
-  // getClaims() me-refresh sesi bila perlu dan memverifikasi JWT secara lokal
-  // (asymmetric signing keys) tanpa round-trip ke Auth server di setiap request.
-  // Otorisasi final tetap dilakukan di server (requireRole -> getUser()).
-  const { data: claimsData } = await supabase.auth.getClaims();
-  const claims = claimsData?.claims;
-  const user = claims?.sub ? { id: claims.sub } : null;
-
   const { pathname } = request.nextUrl;
   const rulePrefix = matchRule(pathname);
   const isAuthRoute = AUTH_ROUTES.some((r) => pathname.startsWith(r));
 
-  // Route publik dan user belum login -> lanjutkan.
-  if (!rulePrefix && !(isAuthRoute && user)) {
+  const allCookies = request.cookies.getAll();
+  const fingerprint = extractSupabaseAuthFingerprint(allCookies);
+
+  // 1. Pengunjung belum login (tidak ada cookie sb-*):
+  if (!fingerprint) {
+    if (!rulePrefix) {
+      return NextResponse.next({ request });
+    }
+    const url = request.nextUrl.clone();
+    const redirectTarget = `${pathname}${request.nextUrl.search}`;
+    url.pathname = "/login";
+    url.search = "";
+    url.searchParams.set("redirectTo", redirectTarget);
+    return NextResponse.redirect(url);
+  }
+
+  // 2. Route publik (/, /peta, /berita, /berita/[id]): tidak perlu blokir dengan network call di middleware.
+  if (!rulePrefix && !isAuthRoute) {
+    return NextResponse.next({ request });
+  }
+
+  let response = NextResponse.next({ request });
+
+  // 3. Cek cache sesi terverifikasi di memori server agar navigasi antar halaman instan (0ms).
+  let cachedSession = getCachedAuth(fingerprint);
+  let user = cachedSession?.user ?? null;
+  let role = cachedSession?.role ?? null;
+
+  if (!user) {
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll();
+          },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value }) =>
+              request.cookies.set(name, value)
+            );
+            response = NextResponse.next({ request });
+            cookiesToSet.forEach(({ name, value, options }) =>
+              response.cookies.set(name, value, options)
+            );
+          },
+        },
+      }
+    );
+
+    const {
+      data: { user: verifiedUser },
+    } = await supabase.auth.getUser();
+
+    user = verifiedUser;
+
+    if (user) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("id, role, full_name, wilayah_id, created_at")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      const rawRole = profile?.role
+        ? String(profile.role).toLowerCase().trim()
+        : "pelapor";
+      role = ROLE_HOME[rawRole] ? rawRole : "pelapor";
+
+      setCachedAuth(fingerprint, {
+        user,
+        profile: profile ?? null,
+        role,
+      });
+    }
+  }
+
+  // Route auth (/login, /register) tetapi token ternyata sudah tidak valid -> lanjutkan.
+  if (!rulePrefix && !user) {
     return response;
   }
 
-  // Route terproteksi tapi belum login -> ke /login.
+  // Route terproteksi tapi token tidak valid -> ke /login.
   if (rulePrefix && !user) {
     const url = request.nextUrl.clone();
     const redirectTarget = `${pathname}${request.nextUrl.search}`;
@@ -79,18 +129,6 @@ export async function middleware(request) {
     url.searchParams.set("redirectTo", redirectTarget);
     return redirectWithCookies(url, response);
   }
-
-  // Ambil role user dari tabel profiles.
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .maybeSingle();
-
-  const rawRole = profile?.role
-    ? String(profile.role).toLowerCase().trim()
-    : "pelapor";
-  const role = ROLE_HOME[rawRole] ? rawRole : "pelapor";
 
   // Sudah login tapi membuka /login atau /register -> ke home role.
   if (isAuthRoute) {

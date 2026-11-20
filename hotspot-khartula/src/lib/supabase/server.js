@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { extractSupabaseAuthFingerprint } from "@/lib/server-cache";
 
 /**
  * Supabase client untuk Server Components, Server Actions, dan Route Handlers.
@@ -7,8 +8,10 @@ import { cookies } from "next/headers";
  */
 export async function createClient() {
   const cookieStore = await cookies();
+  const allCookies = cookieStore.getAll();
+  const authFingerprint = extractSupabaseAuthFingerprint(allCookies);
 
-  return createServerClient(
+  const client = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     {
@@ -29,5 +32,8 @@ export async function createClient() {
       },
     }
   );
+
+  client.__authFingerprint = authFingerprint;
+  return client;
 }
 
