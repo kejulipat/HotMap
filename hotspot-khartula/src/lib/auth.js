@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
@@ -38,8 +39,10 @@ export function isPathAllowedForRole(targetPath, role) {
 
 /**
  * Mengambil user Supabase Auth saat ini beserta baris profil & role dari tabel `profiles`.
+ * Dibungkus React `cache()` agar layout + page dalam satu request hanya memanggil
+ * Supabase sekali (sebelumnya terjadi 2x getUser + 2x query profiles per navigasi).
  */
-export async function getCurrentUserWithRole() {
+export const getCurrentUserWithRole = cache(async function getCurrentUserWithRole() {
   const supabase = await createClient();
   const {
     data: { user },
@@ -63,7 +66,7 @@ export async function getCurrentUserWithRole() {
     profile: profile ?? null,
     role,
   };
-}
+});
 
 /**
  * Penjaga server untuk route dan halaman terproteksi.

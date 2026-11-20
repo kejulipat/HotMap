@@ -53,11 +53,13 @@ export async function middleware(request) {
     }
   );
 
-  // PENTING: jangan taruh logic lain di antara createServerClient dan getUser().
-  // getUser() memvalidasi token ke server Supabase sekaligus me-refresh sesi.
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // PENTING: jangan taruh logic lain di antara createServerClient dan getClaims().
+  // getClaims() me-refresh sesi bila perlu dan memverifikasi JWT secara lokal
+  // (asymmetric signing keys) tanpa round-trip ke Auth server di setiap request.
+  // Otorisasi final tetap dilakukan di server (requireRole -> getUser()).
+  const { data: claimsData } = await supabase.auth.getClaims();
+  const claims = claimsData?.claims;
+  const user = claims?.sub ? { id: claims.sub } : null;
 
   const { pathname } = request.nextUrl;
   const rulePrefix = matchRule(pathname);

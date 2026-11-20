@@ -144,6 +144,25 @@ export function LoadingSpinner({ label = "Memuat data..." }) {
   );
 }
 
+/** Skeleton area konten dashboard; sidebar & header tetap tampil saat pindah halaman. */
+export function DashboardPageSkeleton() {
+  const block = "rounded-xl bg-[#E6ECE7] animate-pulse";
+  return (
+    <div className="space-y-6" aria-busy="true" aria-label="Memuat halaman">
+      <div className="space-y-2">
+        <div className={`${block} h-7 w-64 max-w-full`} />
+        <div className={`${block} h-4 w-96 max-w-full`} />
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className={`${block} h-20`} />
+        ))}
+      </div>
+      <div className={`${block} h-72`} />
+    </div>
+  );
+}
+
 export function Breadcrumb({ items = [] }) {
   if (items.length === 0) return null;
   return (
