@@ -2,109 +2,24 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-
-const STATUS_META = {
-  menunggu_verifikasi: {
-    label: "Menunggu verifikasi",
-    dotColor: "bg-[#D9822B]",
-    badgeBg: "bg-[#FEF5E7]",
-    badgeText: "text-[#B5651D]",
-    pinRing: "ring-[#D9822B]/30",
-    pinBg: "bg-[#D9822B]",
-  },
-  terverifikasi: {
-    label: "Terverifikasi",
-    dotColor: "bg-[#2B7FD9]",
-    badgeBg: "bg-[#EBF4FF]",
-    badgeText: "text-[#1E62B5]",
-    pinRing: "ring-[#2B7FD9]/30",
-    pinBg: "bg-[#2B7FD9]",
-  },
-  ditangani: {
-    label: "Ditangani",
-    dotColor: "bg-[#D9532B]",
-    badgeBg: "bg-[#FDEEE9]",
-    badgeText: "text-[#B83E1B]",
-    pinRing: "ring-[#D9532B]/30",
-    pinBg: "bg-[#D9532B]",
-  },
-  selesai: {
-    label: "Selesai",
-    dotColor: "bg-[#2E8555]",
-    badgeBg: "bg-[#EAF5EE]",
-    badgeText: "text-[#1F6B41]",
-    pinRing: "ring-[#2E8555]/30",
-    pinBg: "bg-[#2E8555]",
-  },
-  ditolak: {
-    label: "Ditolak",
-    dotColor: "bg-[#7A8680]",
-    badgeBg: "bg-[#F0F2F0]",
-    badgeText: "text-[#525E58]",
-    pinRing: "ring-[#7A8680]/30",
-    pinBg: "bg-[#7A8680]",
-  },
-};
-
-const SUMMARY_CARDS = [
-  { key: "semua", label: "Total laporan", dotColor: "bg-[#52D19C]" },
-  {
-    key: "menunggu_verifikasi",
-    label: "Menunggu verifikasi",
-    dotColor: "bg-[#D9822B]",
-  },
-  { key: "terverifikasi", label: "Terverifikasi", dotColor: "bg-[#2B7FD9]" },
-  { key: "ditangani", label: "Ditangani", dotColor: "bg-[#D9532B]" },
-  { key: "selesai", label: "Selesai", dotColor: "bg-[#2E8555]" },
-  { key: "ditolak", label: "Ditolak", dotColor: "bg-[#7A8680]" },
-];
-
-// Konversi koordinat (lat, lng) wilayah Indonesia ke posisi persen (x%, y%) pada kanvas peta
-function projectToIndonesiaMap(lat, lng) {
-  const minLng = 94.5;
-  const maxLng = 141.5;
-  const minLat = -11.5;
-  const maxLat = 6.5;
-
-  const x = ((lng - minLng) / (maxLng - minLng)) * 78 + 7;
-  const y = ((maxLat - lat) / (maxLat - minLat)) * 68 + 16;
-
-  return {
-    x: Math.max(6, Math.min(88, x)),
-    y: Math.max(12, Math.min(86, y)),
-  };
-}
-
-function formatDate(dateStr, month = "long") {
-  if (!dateStr) return "-";
-  const isDateOnly = /^\d{4}-\d{2}-\d{2}$/.test(dateStr);
-  const date = new Date(isDateOnly ? `${dateStr}T00:00:00+07:00` : dateStr);
-  if (Number.isNaN(date.getTime())) return dateStr;
-  return new Intl.DateTimeFormat("id-ID", {
-    day: "numeric",
-    month,
-    year: "numeric",
-    timeZone: "Asia/Jakarta",
-  }).format(date);
-}
-
-function StatusBadge({ statusKey, className = "" }) {
-  const meta = STATUS_META[statusKey] ?? STATUS_META.menunggu_verifikasi;
-  return (
-    <span
-      className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold ${meta.badgeBg} ${meta.badgeText} ${className}`}
-    >
-      <span className={`h-1.5 w-1.5 rounded-full ${meta.dotColor}`} />
-      {meta.label}
-    </span>
-  );
-}
+import PublicNavbar from "@/components/layout/PublicNavbar";
+import PublicFooter from "@/components/layout/PublicFooter";
+import { StatusBadge } from "@/components/ui/SharedUI";
+import {
+  STATUS_META,
+  SUMMARY_CARDS,
+  computeStatusCounts,
+  formatDate,
+  isValidLatLng,
+  projectToIndonesiaMap,
+} from "@/lib/normalizers";
 
 export default function LandingExplorer({
   initialLaporan = [],
   wilayahList = [],
   beritaList = [],
   hasQueryError = false,
+  currentUser = null,
 }) {
   // Draft input filter pada form
   const [draftStartDate, setDraftStartDate] = useState("");
@@ -161,22 +76,10 @@ export default function LandingExplorer({
   ]);
 
   // Hitung ringkasan jumlah per status (mengikuti filter wilayah & tanggal)
-  const counts = useMemo(() => {
-    const result = {
-      semua: baseFilteredLaporan.length,
-      menunggu_verifikasi: 0,
-      terverifikasi: 0,
-      ditangani: 0,
-      selesai: 0,
-      ditolak: 0,
-    };
-    for (const item of baseFilteredLaporan) {
-      if (result[item.statusKey] !== undefined) {
-        result[item.statusKey] += 1;
-      }
-    }
-    return result;
-  }, [baseFilteredLaporan]);
+  const counts = useMemo(
+    () => computeStatusCounts(baseFilteredLaporan),
+    [baseFilteredLaporan]
+  );
 
   // Daftar opsi wilayah unik
   const wilayahOptions = useMemo(() => {
@@ -241,67 +144,7 @@ export default function LandingExplorer({
 
   return (
     <div className="min-h-screen bg-[#F6F7F3] text-[#14231B] flex flex-col font-sans">
-      {/* Navbar */}
-      <header className="sticky top-0 z-30 bg-[#F6F7F3]/95 backdrop-blur border-b border-[#E3E8E1]">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
-          {/* Brand Logo */}
-          <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-xl bg-[#155E42] flex items-center justify-center text-white shadow-sm">
-              <svg
-                className="w-5 h-5"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M12 3L5 12h4l-3 7h12l-3-7h4L12 3z" />
-                <path d="M12 19v3" />
-              </svg>
-            </div>
-            <div>
-              <span className="block text-base font-bold tracking-tight text-[#12241B]">
-                SIPKARHUTLA
-              </span>
-              <span className="block text-xs text-[#6B7A71]">
-                Sistem informasi karhutla
-              </span>
-            </div>
-          </Link>
-
-          {/* Navigation Links */}
-          <nav className="hidden md:flex items-center gap-8 text-sm font-medium">
-            <Link
-              href="/"
-              className="relative py-2 text-[#155E42] font-semibold"
-            >
-              Beranda
-              <span className="absolute inset-x-0 -bottom-0.5 h-0.5 rounded-full bg-[#155E42]" />
-            </Link>
-            <Link
-              href="/dashboard"
-              className="py-2 text-[#5F6F66] hover:text-[#14231B] transition-colors"
-            >
-              Dashboard
-            </Link>
-            <Link
-              href="/berita"
-              className="py-2 text-[#5F6F66] hover:text-[#14231B] transition-colors"
-            >
-              Berita
-            </Link>
-          </nav>
-
-          {/* CTA Button */}
-          <Link
-            href="/pelapor"
-            className="inline-flex items-center justify-center rounded-lg bg-[#C85A28] hover:bg-[#B04B1D] active:bg-[#9B4017] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors"
-          >
-            Laporkan kebakaran
-          </Link>
-        </div>
-      </header>
+      <PublicNavbar currentUser={currentUser} />
 
       {/* Main Content */}
       <main className="flex-1 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-8 sm:py-10 space-y-7">
@@ -490,6 +333,12 @@ export default function LandingExplorer({
                   : appliedFilters.wilayah}
               </p>
             </div>
+            <Link
+              href="/peta"
+              className="self-start sm:self-auto rounded-lg border border-[#DCE2DA] bg-[#FBFBFA] px-3.5 py-2 text-xs font-semibold text-[#155E42] hover:bg-[#EAF1EC] transition-colors"
+            >
+              Buka Peta Karhutla &rarr;
+            </Link>
           </div>
 
           {/* Map Viewport & Detail Card Layout */}
@@ -608,11 +457,7 @@ export default function LandingExplorer({
 
               {/* Pin Titik Laporan Interaktif pada Peta */}
               {filteredLaporan
-                .filter(
-                  (item) =>
-                    Number.isFinite(item.latitude) &&
-                    Number.isFinite(item.longitude)
-                )
+                .filter((item) => isValidLatLng(item.latitude, item.longitude))
                 .map((item) => {
                   const pos = projectToIndonesiaMap(
                     item.latitude,
@@ -708,8 +553,10 @@ export default function LandingExplorer({
                     <div className="py-2.5 flex items-center justify-between gap-4">
                       <dt className="text-[#6B7A71]">Koordinat</dt>
                       <dd className="font-semibold text-[#14231B] text-right">
-                        {Number.isFinite(selectedReport.latitude) &&
-                        Number.isFinite(selectedReport.longitude)
+                        {isValidLatLng(
+                          selectedReport.latitude,
+                          selectedReport.longitude
+                        )
                           ? `${selectedReport.latitude}, ${selectedReport.longitude}`
                           : "-"}
                       </dd>
@@ -828,11 +675,19 @@ export default function LandingExplorer({
 
         {/* Berita Terbaru Section */}
         <section className="space-y-4 pt-3">
-          <div>
-            <h2 className="text-xl font-bold text-[#12241B]">Berita terbaru</h2>
-            <p className="text-xs sm:text-sm text-[#606F67]">
-              Informasi dan imbauan terbaru dari admin SIPKARHUTLA.
-            </p>
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">
+            <div>
+              <h2 className="text-xl font-bold text-[#12241B]">Berita terbaru</h2>
+              <p className="text-xs sm:text-sm text-[#606F67]">
+                Informasi dan imbauan terbaru dari admin HotMap.
+              </p>
+            </div>
+            <Link
+              href="/berita"
+              className="text-xs font-semibold text-[#155E42] hover:underline"
+            >
+              Lihat semua berita &rarr;
+            </Link>
           </div>
 
           {beritaList.length === 0 ? (
@@ -842,7 +697,7 @@ export default function LandingExplorer({
               {beritaList.map((berita) => (
                 <Link
                   key={berita.id}
-                  href={`/berita/${berita.slug}`}
+                  href={`/berita/${berita.id}`}
                   className="group rounded-xl bg-white border border-[#E3E8E1] p-3.5 shadow-2xs hover:border-[#C5D1C8] hover:shadow-sm transition-all flex flex-col justify-between"
                 >
                   <div>
@@ -875,22 +730,7 @@ export default function LandingExplorer({
         </section>
       </main>
 
-      {/* Footer */}
-      <footer className="mt-12 border-t border-[#E3E8E1] bg-[#F6F7F3]">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#6B7A71]">
-          <span className="font-bold text-[#14231B]">SIPKARHUTLA</span>
-          <span className="text-center">
-            Informasi kebakaran hutan dan lahan &bull; Laporan warga &amp;
-            tindak lanjut petugas
-          </span>
-          <Link
-            href="#leaflet-map-slot"
-            className="hover:text-[#14231B] transition-colors"
-          >
-            Peta Indonesia
-          </Link>
-        </div>
-      </footer>
+      <PublicFooter />
     </div>
   );
 }
