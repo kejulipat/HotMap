@@ -13,7 +13,8 @@ export const metadata = {
 export default async function AdminDetailLaporanPage({ params }) {
   const { id } = await params;
   const { supabase } = await requireRole(["admin"]);
-  const { laporan, error } = await fetchLaporanById(supabase, id);
+  const { laporan, fotoList, penugasanList, riwayatList, relationsReady, error } =
+    await fetchLaporanById(supabase, id);
 
   if (error) {
     return (
@@ -35,6 +36,10 @@ export default async function AdminDetailLaporanPage({ params }) {
   return (
     <LaporanDetailView
       laporan={laporan}
+      fotoList={fotoList}
+      penugasanList={penugasanList}
+      riwayatList={riwayatList}
+      relationsReady={relationsReady}
       backHref="/admin/laporan"
       backLabel="Kembali ke Manajemen Laporan"
     >

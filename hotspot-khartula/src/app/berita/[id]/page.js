@@ -28,6 +28,11 @@ export default async function DetailBeritaPage({ params }) {
     decodedId
   );
 
+  const visibleBerita =
+    berita && (berita.status === "published" || role === "admin")
+      ? berita
+      : null;
+
   const currentUser = user
     ? {
         id: user.id,
@@ -43,7 +48,7 @@ export default async function DetailBeritaPage({ params }) {
         items={[
           { label: "Beranda", href: "/" },
           { label: "Berita", href: "/berita" },
-          { label: berita ? berita.judul : "Detail Berita" },
+          { label: visibleBerita ? visibleBerita.judul : "Detail Berita" },
         ]}
       />
 
@@ -58,41 +63,44 @@ export default async function DetailBeritaPage({ params }) {
           actionLabel="Kembali ke Daftar Berita"
           actionHref="/berita"
         />
-      ) : !berita ? (
+      ) : !visibleBerita ? (
         <EmptyState
           title="Berita tidak ditemukan"
-          description={`Artikel dengan pengenal "${decodedId}" tidak tersedia atau sudah dihapus.`}
+          description={`Artikel dengan pengenal "${decodedId}" tidak tersedia, belum dipublikasikan, atau sudah dihapus.`}
           actionLabel="Lihat Semua Berita"
           actionHref="/berita"
         />
       ) : (
         <article className="mx-auto max-w-3xl rounded-2xl border border-[#E3E8E1] bg-white p-6 sm:p-8 shadow-2xs space-y-6">
           <header className="space-y-3 border-b border-[#ECEFE9] pb-5">
-            <span className="inline-block rounded-md bg-[#EAF1EC] px-2.5 py-1 text-xs font-semibold text-[#155E42]">
-              Informasi Karhutla
+            <span className="inline-block rounded-md bg-[#EAF1EC] px-2.5 py-1 text-xs font-semibold capitalize text-[#155E42]">
+              {visibleBerita.kategori || "Informasi Karhutla"}
             </span>
             <h1 className="text-2xl sm:text-3xl font-bold text-[#12241B] leading-snug">
-              {berita.judul}
+              {visibleBerita.judul}
             </h1>
+            {visibleBerita.ringkasan && (
+              <p className="text-sm text-[#606F67]">{visibleBerita.ringkasan}</p>
+            )}
             <p className="text-xs text-[#6B7A71]">
-              Dipublikasikan {formatDate(berita.tanggal, "long")} &bull; Oleh{" "}
+              Dipublikasikan {formatDate(visibleBerita.tanggal, "long")} &bull; Oleh{" "}
               <span className="font-semibold text-[#14231B]">
-                {berita.penulis}
+                {visibleBerita.penulis}
               </span>
             </p>
           </header>
 
-          {berita.gambarUrl && (
+          {visibleBerita.gambarUrl && (
             <div
               className="h-64 w-full rounded-xl bg-cover bg-center border border-[#E3E8E1]"
               style={{
-                backgroundImage: `url("${encodeURI(berita.gambarUrl)}")`,
+                backgroundImage: `url("${encodeURI(visibleBerita.gambarUrl)}")`,
               }}
             />
           )}
 
           <div className="prose prose-sm max-w-none text-[#2B3B32] leading-relaxed whitespace-pre-line">
-            {berita.isi || "Konten artikel belum tersedia."}
+            {visibleBerita.isi || "Konten artikel belum tersedia."}
           </div>
 
           <div className="pt-4 border-t border-[#ECEFE9]">

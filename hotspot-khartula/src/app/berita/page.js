@@ -81,6 +81,11 @@ export default async function BeritaPage() {
                       : undefined
                   }
                 />
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <span className="inline-block rounded-md bg-[#EAF1EC] px-2 py-0.5 text-[11px] font-semibold capitalize text-[#155E42]">
+                    {berita.kategori}
+                  </span>
+                </div>
                 <h2 className="text-base font-bold text-[#14231B] group-hover:text-[#155E42] transition-colors leading-snug">
                   {berita.judul}
                 </h2>

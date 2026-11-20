@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { EmptyState, ErrorBanner } from "@/components/ui/SharedUI";
+import AdminBeritaManager from "@/components/admin/AdminBeritaManager";
+import { ErrorBanner } from "@/components/ui/SharedUI";
 import { requireRole } from "@/lib/auth";
-import { fetchBeritaList, formatDate } from "@/lib/normalizers";
+import { fetchBeritaList } from "@/lib/normalizers";
 
 export const dynamic = "force-dynamic";
 
@@ -12,7 +13,11 @@ export const metadata = {
 
 export default async function AdminBeritaPage() {
   const { supabase } = await requireRole(["admin"]);
-  const { beritaList, tableReady, error } = await fetchBeritaList(supabase, 50);
+  const { beritaList, tableReady, error } = await fetchBeritaList(
+    supabase,
+    100,
+    { includeAllStatuses: true }
+  );
 
   return (
     <div className="space-y-6">
@@ -22,7 +27,7 @@ export default async function AdminBeritaPage() {
             Manajemen Berita
           </h1>
           <p className="mt-1 text-sm text-[#606F67]">
-            Kelola informasi dan imbauan karhutla untuk halaman publik. Operasi tulis berita disiapkan pada Fase 4.
+            Buat, sunting, publikasikan, dan hapus berita karhutla beserta gambar sampulnya.
           </p>
         </div>
         <Link
@@ -37,55 +42,7 @@ export default async function AdminBeritaPage() {
         <ErrorBanner message="Gagal memuat daftar berita dari database." />
       )}
 
-      {!tableReady ? (
-        <EmptyState
-          title="Tabel `public.berita` Belum Tersedia"
-          description="Saat pemeriksaan database, tabel `public.berita` belum ditemukan di Supabase schema cache. Siapkan tabel `berita` melalui migrasi sebelum mengaktifkan CRUD berita di Fase 4."
-        />
-      ) : beritaList.length === 0 ? (
-        <EmptyState
-          title="Belum ada artikel berita"
-          description="Tabel berita sudah siap, namun belum ada artikel yang diterbitkan."
-        />
-      ) : (
-        <div className="rounded-xl bg-white border border-[#E3E8E1] overflow-hidden shadow-2xs">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-[#EEF2EC] border-b border-[#E1E7DF] text-[11px] font-bold uppercase tracking-wider text-[#5B6B61]">
-                  <th className="py-3.5 px-4 sm:px-6">Judul</th>
-                  <th className="py-3.5 px-4">Penulis</th>
-                  <th className="py-3.5 px-4">Tanggal</th>
-                  <th className="py-3.5 px-4 sm:px-6 text-right">Pratinjau</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#ECEFE9] text-sm">
-                {beritaList.map((b) => (
-                  <tr key={b.id} className="hover:bg-[#F9FAF8]">
-                    <td className="py-3.5 px-4 sm:px-6 font-semibold text-[#14231B]">
-                      {b.judul}
-                    </td>
-                    <td className="py-3.5 px-4 text-xs text-[#5F6F66]">
-                      {b.penulis}
-                    </td>
-                    <td className="py-3.5 px-4 text-xs text-[#5F6F66]">
-                      {formatDate(b.tanggal, "short")}
-                    </td>
-                    <td className="py-3.5 px-4 sm:px-6 text-right">
-                      <Link
-                        href={`/berita/${b.id}`}
-                        className="text-xs font-semibold text-[#155E42] hover:underline"
-                      >
-                        Buka &rarr;
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
+      <AdminBeritaManager beritaList={beritaList} tableReady={tableReady} />
     </div>
   );
 }

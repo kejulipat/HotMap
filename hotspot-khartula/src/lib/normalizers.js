@@ -1,3 +1,8 @@
+import {
+  getBeritaImagePublicUrl,
+  getLaporanEvidenceSignedUrl,
+} from "@/lib/storage";
+
 export const STATUS_META = {
   menunggu_verifikasi: {
     label: "Menunggu verifikasi",
@@ -163,8 +168,41 @@ export function computeStatusCounts(laporanList = []) {
   return counts;
 }
 
+const BASE_LAPORAN_COLS =
+  "id, judul, deskripsi, wilayah_id, created_at, updated_at, status, latitude, longitude, pelapor_id, catatan_verifikasi";
+
+const EXTENDED_LAPORAN_COLS = `${BASE_LAPORAN_COLS}, jenis_kejadian, alamat_lokasi, estimasi_luas, tingkat_keparahan, petugas_id, verified_by, verified_at`;
+
 function isMissingTableError(error) {
   return error?.code === "PGRST205";
+}
+
+function isMissingColumnError(error) {
+  return error?.code === "42703";
+}
+
+function normalizeBeritaRow(b, idx, supabase, profileById = new Map()) {
+  const resolvedGambarUrl =
+    b.gambar_url ||
+    (b.gambar_path ? getBeritaImagePublicUrl(supabase, b.gambar_path) : null);
+
+  return {
+    id: String(b.id ?? b.slug ?? `berita-${idx + 1}`),
+    slug: b.slug ?? String(b.id ?? `berita-${idx + 1}`),
+    judul: b.judul ?? `Berita #${idx + 1}`,
+    ringkasan: b.ringkasan ?? b.isi ?? "",
+    isi: b.isi ?? b.konten ?? b.deskripsi ?? "",
+    kategori: b.kategori ?? "informasi",
+    status: b.status ?? "published",
+    tanggal: normalizeDate(b.published_at ?? b.created_at),
+    publishedAt: b.published_at ?? null,
+    createdAt: b.created_at ?? null,
+    updatedAt: b.updated_at ?? null,
+    authorId: b.author_id ?? null,
+    penulis: b.penulis ?? profileById.get(b.author_id) ?? "Admin",
+    gambarPath: b.gambar_path ?? null,
+    gambarUrl: resolvedGambarUrl ?? null,
+  };
 }
 
 function normalizeLaporanRow(row, idx, wilayahById, profileById) {
@@ -180,6 +218,9 @@ function normalizeLaporanRow(row, idx, wilayahById, profileById) {
     id: row.id ?? `lap-${idx + 1}`,
     judul: row.judul ?? `Laporan Karhutla #${idx + 1}`,
     deskripsi: row.deskripsi ?? "",
+    jenisKejadian: row.jenis_kejadian ?? null,
+    alamatLokasi: row.alamat_lokasi ?? null,
+    tingkatKeparahan: row.tingkat_keparahan ?? null,
     lokasiSingkat: wilayahNama,
     wilayahId: row.wilayah_id ?? null,
     wilayah: wilayahNama,
@@ -193,7 +234,10 @@ function normalizeLaporanRow(row, idx, wilayahById, profileById) {
     longitude: parseCoord(row.longitude),
     pelaporId: row.pelapor_id ?? null,
     pelapor: pelaporNama,
+    petugasId: row.petugas_id ?? null,
     petugas: petugasNama,
+    verifiedBy: row.verified_by ?? null,
+    verifiedAt: row.verified_at ?? null,
     catatanVerifikasi: row.catatan_verifikasi ?? "",
   };
 }
@@ -204,9 +248,7 @@ export async function fetchNormalizedDataset(
 ) {
   let laporanQuery = supabase
     .from("laporan_karhutla")
-    .select(
-      "id, judul, deskripsi, wilayah_id, created_at, updated_at, status, latitude, longitude, pelapor_id, catatan_verifikasi"
-    )
+    .select(BASE_LAPORAN_COLS)
     .order("created_at", { ascending: false })
     .limit(limit);
 
@@ -223,6 +265,8 @@ export async function fetchNormalizedDataset(
     supabase
       .from("berita")
       .select("*")
+      .eq("status", "published")
+      .order("published_at", { ascending: false, nullsFirst: false })
       .order("created_at", { ascending: false })
       .limit(beritaLimit),
   ]);
@@ -230,12 +274,13 @@ export async function fetchNormalizedDataset(
   const rawWilayah = wilayahRes.data ?? [];
   const rawLaporan = laporanRes.data ?? [];
   const beritaTableReady = !isMissingTableError(beritaRes.error);
-  const rawBerita = beritaTableReady ? beritaRes.data ?? [] : [];
+  const rawBerita = beritaTableReady && !beritaRes.error ? beritaRes.data ?? [] : [];
 
   const profileIds = Array.from(
     new Set(
       [
         ...rawLaporan.map((row) => row.pelapor_id),
+        ...rawLaporan.map((row) => row.petugas_id),
         ...rawBerita.map((b) => b.author_id),
       ].filter(Boolean)
     )
@@ -275,16 +320,9 @@ export async function fetchNormalizedDataset(
     normalizeLaporanRow(row, idx, wilayahById, profileById)
   );
 
-  const beritaList = rawBerita.map((b, idx) => ({
-    id: String(b.id ?? b.slug ?? `berita-${idx + 1}`),
-    slug: b.slug ?? String(b.id ?? `berita-${idx + 1}`),
-    judul: b.judul ?? `Berita #${idx + 1}`,
-    ringkasan: b.ringkasan ?? b.isi ?? "",
-    isi: b.isi ?? "",
-    tanggal: normalizeDate(b.published_at ?? b.created_at),
-    penulis: b.penulis ?? profileById.get(b.author_id) ?? "Admin",
-    gambarUrl: b.gambar_url ?? null,
-  }));
+  const beritaList = rawBerita.map((b, idx) =>
+    normalizeBeritaRow(b, idx, supabase, profileById)
+  );
 
   const beritaRealError =
     beritaRes.error && !isMissingTableError(beritaRes.error)
@@ -303,21 +341,46 @@ export async function fetchNormalizedDataset(
 }
 
 export async function fetchLaporanById(supabase, id) {
-  if (!id) return { laporan: null, error: null };
+  if (!id) {
+    return {
+      laporan: null,
+      fotoList: [],
+      penugasanList: [],
+      riwayatList: [],
+      relationsReady: false,
+      error: null,
+    };
+  }
 
-  const { data: row, error } = await supabase
+  let { data: row, error } = await supabase
     .from("laporan_karhutla")
-    .select(
-      "id, judul, deskripsi, wilayah_id, created_at, updated_at, status, latitude, longitude, pelapor_id, catatan_verifikasi"
-    )
+    .select(EXTENDED_LAPORAN_COLS)
     .eq("id", id)
     .maybeSingle();
 
-  if (error || !row) {
-    return { laporan: null, error };
+  // Kompatibel sebelum migration 002 diterapkan ke database live
+  if (isMissingColumnError(error)) {
+    const fallback = await supabase
+      .from("laporan_karhutla")
+      .select(BASE_LAPORAN_COLS)
+      .eq("id", id)
+      .maybeSingle();
+    row = fallback.data;
+    error = fallback.error;
   }
 
-  const [wilayahRes, profileRes] = await Promise.all([
+  if (error || !row) {
+    return {
+      laporan: null,
+      fotoList: [],
+      penugasanList: [],
+      riwayatList: [],
+      relationsReady: false,
+      error,
+    };
+  }
+
+  const [wilayahRes, fotoRes, penugasanRes, riwayatRes] = await Promise.all([
     row.wilayah_id
       ? supabase
           .from("wilayah")
@@ -325,14 +388,54 @@ export async function fetchLaporanById(supabase, id) {
           .eq("id", row.wilayah_id)
           .maybeSingle()
       : Promise.resolve({ data: null }),
-    row.pelapor_id
-      ? supabase
-          .from("profiles")
-          .select("id, full_name")
-          .eq("id", row.pelapor_id)
-          .maybeSingle()
-      : Promise.resolve({ data: null }),
+    supabase
+      .from("laporan_foto")
+      .select("id, storage_path, uploaded_by, jenis_foto, mime_type, file_size, created_at")
+      .eq("laporan_id", row.id)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("penugasan_laporan")
+      .select("id, petugas_id, assigned_by, status_penugasan, catatan, assigned_at, completed_at")
+      .eq("laporan_id", row.id)
+      .order("assigned_at", { ascending: false }),
+    supabase
+      .from("laporan_riwayat_status")
+      .select("id, status_sebelumnya, status_baru, changed_by, catatan, created_at")
+      .eq("laporan_id", row.id)
+      .order("created_at", { ascending: false }),
   ]);
+
+  const relationsReady =
+    !isMissingTableError(fotoRes.error) &&
+    !isMissingTableError(penugasanRes.error) &&
+    !isMissingTableError(riwayatRes.error);
+
+  const rawFoto = !fotoRes.error ? fotoRes.data ?? [] : [];
+  const rawPenugasan = !penugasanRes.error ? penugasanRes.data ?? [] : [];
+  const rawRiwayat = !riwayatRes.error ? riwayatRes.data ?? [] : [];
+
+  const profileIds = Array.from(
+    new Set(
+      [
+        row.pelapor_id,
+        row.petugas_id,
+        row.verified_by,
+        ...rawPenugasan.map((p) => p.petugas_id),
+        ...rawPenugasan.map((p) => p.assigned_by),
+        ...rawRiwayat.map((r) => r.changed_by),
+      ].filter(Boolean)
+    )
+  );
+
+  const rawProfiles =
+    profileIds.length > 0
+      ? (
+          await supabase
+            .from("profiles")
+            .select("id, full_name")
+            .in("id", profileIds)
+        ).data ?? []
+      : [];
 
   const wilayahById = new Map();
   if (wilayahRes.data?.id && wilayahRes.data?.nama_wilayah) {
@@ -340,20 +443,73 @@ export async function fetchLaporanById(supabase, id) {
   }
 
   const profileById = new Map();
-  if (profileRes.data?.id && profileRes.data?.full_name) {
-    profileById.set(profileRes.data.id, profileRes.data.full_name);
+  for (const p of rawProfiles) {
+    if (p.id && p.full_name) {
+      profileById.set(p.id, p.full_name);
+    }
   }
+
+  const fotoList = await Promise.all(
+    rawFoto.map(async (f) => {
+      const { signedUrl } = await getLaporanEvidenceSignedUrl(
+        supabase,
+        f.storage_path,
+        3600
+      );
+      return {
+        id: f.id,
+        storagePath: f.storage_path,
+        jenisFoto: f.jenis_foto,
+        mimeType: f.mime_type,
+        fileSize: f.file_size,
+        createdAt: f.created_at,
+        signedUrl,
+      };
+    })
+  );
+
+  const penugasanList = rawPenugasan.map((p) => ({
+    id: p.id,
+    petugasId: p.petugas_id,
+    petugasNama: profileById.get(p.petugas_id) ?? "Petugas",
+    assignedByNama: profileById.get(p.assigned_by) ?? "Admin",
+    statusPenugasan: p.status_penugasan,
+    catatan: p.catatan ?? "",
+    assignedAt: p.assigned_at,
+    completedAt: p.completed_at,
+  }));
+
+  const riwayatList = rawRiwayat.map((r) => ({
+    id: r.id,
+    statusSebelumnya: r.status_sebelumnya,
+    statusBaru: r.status_baru,
+    changedByNama: r.changed_by ? profileById.get(r.changed_by) ?? "Sistem" : "Sistem",
+    catatan: r.catatan ?? "",
+    createdAt: r.created_at,
+  }));
 
   return {
     laporan: normalizeLaporanRow(row, 0, wilayahById, profileById),
+    fotoList,
+    penugasanList,
+    riwayatList,
+    relationsReady,
     error: null,
   };
 }
 
-export async function fetchBeritaList(supabase, limit = 50) {
-  const { data, error } = await supabase
-    .from("berita")
-    .select("*")
+export async function fetchBeritaList(
+  supabase,
+  limit = 50,
+  { includeAllStatuses = false } = {}
+) {
+  let query = supabase.from("berita").select("*");
+  if (!includeAllStatuses) {
+    query = query.eq("status", "published");
+  }
+
+  const { data, error } = await query
+    .order("published_at", { ascending: false, nullsFirst: false })
     .order("created_at", { ascending: false })
     .limit(limit);
 
@@ -366,17 +522,26 @@ export async function fetchBeritaList(supabase, limit = 50) {
   }
 
   const rows = data ?? [];
+  const authorIds = Array.from(
+    new Set(rows.map((b) => b.author_id).filter(Boolean))
+  );
+  const rawProfiles =
+    authorIds.length > 0
+      ? (
+          await supabase
+            .from("profiles")
+            .select("id, full_name")
+            .in("id", authorIds)
+        ).data ?? []
+      : [];
+  const profileById = new Map(
+    rawProfiles.map((p) => [p.id, p.full_name]).filter(([, n]) => Boolean(n))
+  );
+
   return {
-    beritaList: rows.map((b, idx) => ({
-      id: String(b.id ?? b.slug ?? `berita-${idx + 1}`),
-      slug: b.slug ?? String(b.id ?? `berita-${idx + 1}`),
-      judul: b.judul ?? `Berita #${idx + 1}`,
-      ringkasan: b.ringkasan ?? b.isi ?? "",
-      isi: b.isi ?? "",
-      tanggal: normalizeDate(b.published_at ?? b.created_at),
-      penulis: b.penulis ?? "Admin",
-      gambarUrl: b.gambar_url ?? null,
-    })),
+    beritaList: rows.map((b, idx) =>
+      normalizeBeritaRow(b, idx, supabase, profileById)
+    ),
     tableReady: true,
     error: null,
   };
@@ -404,7 +569,6 @@ export async function fetchBeritaById(supabase, idOrSlug) {
     return { berita: null, tableReady: false, error: null };
   }
 
-  // Fallback jika ID yang dikirim bukan UUID/angka (misal string id non-standar)
   if (!res.data && !res.error && !isUuidOrInt) {
     const byId = await supabase
       .from("berita")
@@ -421,16 +585,20 @@ export async function fetchBeritaById(supabase, idOrSlug) {
   }
 
   const b = res.data;
+  const profileById = new Map();
+  if (b.author_id) {
+    const { data: authorProfile } = await supabase
+      .from("profiles")
+      .select("id, full_name")
+      .eq("id", b.author_id)
+      .maybeSingle();
+    if (authorProfile?.full_name) {
+      profileById.set(authorProfile.id, authorProfile.full_name);
+    }
+  }
+
   return {
-    berita: {
-      id: String(b.id ?? b.slug ?? idOrSlug),
-      slug: b.slug ?? String(b.id ?? idOrSlug),
-      judul: b.judul ?? "Detail Berita",
-      isi: b.isi ?? b.konten ?? b.deskripsi ?? "",
-      tanggal: normalizeDate(b.published_at ?? b.created_at),
-      penulis: b.penulis ?? "Admin",
-      gambarUrl: b.gambar_url ?? null,
-    },
+    berita: normalizeBeritaRow(b, 0, supabase, profileById),
     tableReady: true,
     error: null,
   };
