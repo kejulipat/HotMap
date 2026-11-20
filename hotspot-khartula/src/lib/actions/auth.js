@@ -4,9 +4,6 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import {
   ROLE_HOME,
-  ROLE_LABELS,
-  getDemoCredentialsForRole,
-  isFastLoginEnabled,
   isPathAllowedForRole,
   normalizeRole,
 } from "@/lib/auth";
@@ -107,65 +104,6 @@ export async function registerAction(_prevState, formData) {
     success:
       "Registrasi berhasil! Jika verifikasi email diaktifkan, silakan cek email Anda sebelum masuk melalui halaman Login.",
   };
-}
-
-export async function fastLoginAction(_prevState, formData) {
-  if (!isFastLoginEnabled()) {
-    return {
-      error: "Fast Login dinonaktifkan pada lingkungan produksi.",
-    };
-  }
-
-  const targetRole = String(formData.get("targetRole") ?? "")
-    .toLowerCase()
-    .trim();
-
-  if (!ROLE_HOME[targetRole]) {
-    return { error: "Role Fast Login tidak dikenali." };
-  }
-
-  const creds = getDemoCredentialsForRole(targetRole);
-  if (!creds) {
-    return {
-      error: `Akun demo ${ROLE_LABELS[targetRole]} belum dikonfigurasi pada environment server (DEMO_${targetRole.toUpperCase()}_EMAIL & DEMO_${targetRole.toUpperCase()}_PASSWORD).`,
-    };
-  }
-
-  const supabase = await createClient();
-  const { data, error } = await supabase.auth.signInWithPassword(creds);
-
-  if (error || !data?.user) {
-    return {
-      error: `Gagal login Fast Login ${ROLE_LABELS[targetRole]}: ${mapAuthError(
-        error?.message
-      )}`,
-    };
-  }
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const { data: profile, error: profileError } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user?.id ?? data.user.id)
-    .maybeSingle();
-
-  const actualRole = profile?.role
-    ? String(profile.role).toLowerCase().trim()
-    : null;
-
-  if (profileError || actualRole !== targetRole) {
-    await supabase.auth.signOut();
-    return {
-      error: `Akses dibatalkan: role akun pada database (${
-        actualRole ?? "tidak ditemukan"
-      }) tidak sesuai dengan Fast Login ${ROLE_LABELS[targetRole]}.`,
-    };
-  }
-
-  redirect(ROLE_HOME[targetRole]);
 }
 
 export async function logoutAction() {
