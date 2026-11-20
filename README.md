@@ -23,6 +23,7 @@
 ### Fitur Aktif
 - **Portal Publik:** Beranda ringkasan kejadian, halaman peta sebaran laporan, serta berita dan informasi karhutla.
 - **Autentikasi & Hak Akses Berbasis Role:** Login, registrasi, proteksi route, dan kebijakan Row Level Security (RLS) untuk peran **Admin**, **Petugas**, dan **Pelapor**.
+- **Fast Login (Pengujian Role):** Masuk cepat satu klik untuk akun demo **Admin**, **Petugas**, dan **Pelapor** pada lingkungan development/staging (`ENABLE_FAST_LOGIN` dan `DEMO_*`), diproses di server tanpa mengekspos kredensial ke client serta divalidasi terhadap role di database.
 - **Dashboard Multi-Role:** Navigasi dan halaman khusus sesuai peran untuk memantau laporan, wilayah, pengguna, dan profil.
 - **Manajemen Berita:** Pengelolaan artikel berita oleh Admin beserta unggah gambar melalui Supabase Storage.
 - **Monitoring Data Laporan:** Daftar laporan, detail kejadian, dan riwayat penanganan yang terhubung langsung ke Supabase.
