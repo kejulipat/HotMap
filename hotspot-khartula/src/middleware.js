@@ -71,8 +71,10 @@ export async function middleware(request) {
   // Route terproteksi tapi belum login -> ke /login.
   if (rulePrefix && !user) {
     const url = request.nextUrl.clone();
+    const redirectTarget = `${pathname}${request.nextUrl.search}`;
     url.pathname = "/login";
-    url.searchParams.set("redirectTo", pathname);
+    url.search = "";
+    url.searchParams.set("redirectTo", redirectTarget);
     return redirectWithCookies(url, response);
   }
 
@@ -81,7 +83,7 @@ export async function middleware(request) {
     .from("profiles")
     .select("role")
     .eq("id", user.id)
-    .single();
+    .maybeSingle();
 
   const rawRole = profile?.role
     ? String(profile.role).toLowerCase().trim()

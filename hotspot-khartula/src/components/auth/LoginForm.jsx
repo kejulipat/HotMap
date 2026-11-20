@@ -217,9 +217,9 @@ export default function LoginForm({
                   <button
                     key={item.key}
                     type="button"
-                    disabled={isBusy}
+                    disabled={isBusy || !isConfigured}
                     onClick={() => handleFastLogin(item.key)}
-                    className={`w-full flex items-center justify-between gap-3 rounded-xl border p-3 text-left transition-all disabled:opacity-60 cursor-pointer ${item.accent}`}
+                    className={`w-full flex items-center justify-between gap-3 rounded-xl border p-3 text-left transition-all disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer ${item.accent}`}
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <span

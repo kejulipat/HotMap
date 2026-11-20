@@ -78,6 +78,10 @@ export async function createBeritaAction(_prevState, formData) {
     ? slugify(validated.slugInput)
     : `${slugify(validated.judul)}-${Date.now().toString(36).slice(-4)}`;
 
+  if (slug.length < 3) {
+    return { error: "Slug URL berita minimal 3 karakter alfanumerik." };
+  }
+
   let gambarPath = null;
   let gambarUrl = null;
   const imageFile = formData.get("gambar");
@@ -135,7 +139,7 @@ export async function updateBeritaAction(_prevState, formData) {
 
   const { data: existing, error: fetchErr } = await supabase
     .from("berita")
-    .select("id, gambar_path, gambar_url, published_at")
+    .select("id, slug, gambar_path, gambar_url, published_at")
     .eq("id", id)
     .maybeSingle();
 
@@ -144,6 +148,14 @@ export async function updateBeritaAction(_prevState, formData) {
   }
   if (!existing) {
     return { error: "Berita tidak ditemukan." };
+  }
+
+  const slug = validated.slugInput
+    ? slugify(validated.slugInput)
+    : existing.slug || slugify(validated.judul);
+
+  if (slug.length < 3) {
+    return { error: "Slug URL berita minimal 3 karakter alfanumerik." };
   }
 
   let gambarPath = existing.gambar_path;
@@ -160,10 +172,6 @@ export async function updateBeritaAction(_prevState, formData) {
     gambarPath = uploadRes.path;
     gambarUrl = uploadRes.publicUrl;
   }
-
-  const slug = validated.slugInput
-    ? slugify(validated.slugInput)
-    : slugify(validated.judul);
 
   const publishedAt =
     validated.status === "published"
@@ -207,6 +215,8 @@ export async function updateBeritaAction(_prevState, formData) {
   revalidatePath("/");
   revalidatePath("/berita");
   revalidatePath(`/berita/${id}`);
+  if (existing.slug) revalidatePath(`/berita/${existing.slug}`);
+  if (slug && slug !== existing.slug) revalidatePath(`/berita/${slug}`);
   revalidatePath("/admin/berita");
 
   return {

@@ -1,6 +1,11 @@
 import { EmptyState, ErrorBanner } from "@/components/ui/SharedUI";
 import { requireRole } from "@/lib/auth";
-import { formatDate, normalizeDate } from "@/lib/normalizers";
+import {
+  formatDate,
+  isValidLatLng,
+  normalizeDate,
+  parseCoord,
+} from "@/lib/normalizers";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +19,7 @@ export default async function AdminWilayahPage() {
 
   const { data, error } = await supabase
     .from("wilayah")
-    .select("id, nama_wilayah, created_at")
+    .select("id, nama_wilayah, kabupaten_kota, center_lat, center_lng, created_at")
     .order("nama_wilayah", { ascending: true });
 
   const wilayahList = data ?? [];
@@ -48,26 +53,36 @@ export default async function AdminWilayahPage() {
               <thead>
                 <tr className="bg-[#EEF2EC] border-b border-[#E1E7DF] text-[11px] font-bold uppercase tracking-wider text-[#5B6B61]">
                   <th className="py-3.5 px-4 sm:px-6">Nama Wilayah</th>
-                  <th className="py-3.5 px-4">ID</th>
+                  <th className="py-3.5 px-4">Kabupaten / Kota</th>
+                  <th className="py-3.5 px-4">Koordinat Pusat</th>
                   <th className="py-3.5 px-4 sm:px-6">Dibuat</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#ECEFE9] text-sm">
-                {wilayahList.map((w) => (
-                  <tr key={w.id} className="hover:bg-[#F9FAF8]">
-                    <td className="py-3.5 px-4 sm:px-6 font-semibold text-[#14231B]">
-                      {w.nama_wilayah}
-                    </td>
-                    <td className="py-3.5 px-4 font-mono text-xs text-[#6B7A71]">
-                      {w.id}
-                    </td>
-                    <td className="py-3.5 px-4 sm:px-6 text-xs text-[#5F6F66]">
-                      {w.created_at
-                        ? formatDate(normalizeDate(w.created_at), "short")
-                        : "-"}
-                    </td>
-                  </tr>
-                ))}
+                {wilayahList.map((w) => {
+                  const lat = parseCoord(w.center_lat);
+                  const lng = parseCoord(w.center_lng);
+                  return (
+                    <tr key={w.id} className="hover:bg-[#F9FAF8]">
+                      <td className="py-3.5 px-4 sm:px-6 font-semibold text-[#14231B]">
+                        {w.nama_wilayah}
+                      </td>
+                      <td className="py-3.5 px-4 text-xs sm:text-sm text-[#4E5E55]">
+                        {w.kabupaten_kota || "-"}
+                      </td>
+                      <td className="py-3.5 px-4 font-mono text-xs text-[#6B7A71]">
+                        {isValidLatLng(lat, lng)
+                          ? `${lat.toFixed(4)}, ${lng.toFixed(4)}`
+                          : "-"}
+                      </td>
+                      <td className="py-3.5 px-4 sm:px-6 text-xs text-[#5F6F66]">
+                        {w.created_at
+                          ? formatDate(normalizeDate(w.created_at), "short")
+                          : "-"}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

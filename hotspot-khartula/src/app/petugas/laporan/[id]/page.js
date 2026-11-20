@@ -13,8 +13,15 @@ export const metadata = {
 export default async function PetugasDetailLaporanPage({ params }) {
   const { id } = await params;
   const { supabase } = await requireRole(["petugas", "admin"]);
-  const { laporan, fotoList, penugasanList, riwayatList, relationsReady, error } =
-    await fetchLaporanById(supabase, id);
+  const {
+    laporan,
+    fotoList,
+    penugasanList,
+    riwayatList,
+    penangananLogList,
+    relationsReady,
+    error,
+  } = await fetchLaporanById(supabase, id);
 
   if (error) {
     return (
@@ -39,12 +46,13 @@ export default async function PetugasDetailLaporanPage({ params }) {
       fotoList={fotoList}
       penugasanList={penugasanList}
       riwayatList={riwayatList}
+      penangananLogList={penangananLogList}
       relationsReady={relationsReady}
       backHref="/petugas/laporan"
       backLabel="Kembali ke Daftar Laporan"
     >
       <div className="rounded-xl border border-[#C5DCF8] bg-[#EBF4FF] p-4 text-xs sm:text-sm text-[#1E62B5]">
-        <strong>Modul Tindak Lanjut Lapangan (Fase 3):</strong> Pembaruan status penanganan (<em>Ditangani</em> &rarr; <em>Selesai</em>) dan unggah dokumentasi lapangan akan diaktifkan pada Fase 3 setelah kolom penugasan petugas tersedia.
+        <strong>Modul Tindak Lanjut Lapangan (Fase 3):</strong> Struktur database penugasan dan log penanganan sudah siap; aksi pembaruan status (<em>Ditangani</em> &rarr; <em>Selesai</em>) dan unggah dokumentasi lapangan akan diaktifkan pada Fase 3.
       </div>
     </LaporanDetailView>
   );

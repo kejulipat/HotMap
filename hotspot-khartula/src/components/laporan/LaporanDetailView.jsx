@@ -1,19 +1,19 @@
 import Link from "next/link";
 import { StatusBadge } from "@/components/ui/SharedUI";
-import { formatDate, normalizeDate } from "@/lib/normalizers";
+import { formatDate, isValidLatLng, normalizeDate } from "@/lib/normalizers";
 
 export default function LaporanDetailView({
   laporan,
   fotoList = [],
   penugasanList = [],
   riwayatList = [],
+  penangananLogList = [],
   relationsReady = false,
   backHref,
   backLabel = "Kembali ke daftar",
   children = null,
 }) {
-  const hasCoords =
-    Number.isFinite(laporan.latitude) && Number.isFinite(laporan.longitude);
+  const hasCoords = isValidLatLng(laporan.latitude, laporan.longitude);
 
   return (
     <div className="space-y-6">
@@ -202,6 +202,40 @@ export default function LaporanDetailView({
               )}
             </section>
           </div>
+
+          {/* Log Penanganan Lapangan */}
+          <section className="rounded-2xl border border-[#E3E8E1] bg-white p-6 shadow-2xs space-y-3">
+            <h2 className="text-sm font-bold uppercase tracking-wider text-[#5B6B61]">
+              Log Penanganan Lapangan
+            </h2>
+            {penangananLogList.length === 0 ? (
+              <p className="text-xs text-[#6B7A71]">
+                Belum ada catatan log penanganan dari petugas lapangan.
+              </p>
+            ) : (
+              <ul className="space-y-3 text-xs">
+                {penangananLogList.map((log) => (
+                  <li
+                    key={log.id}
+                    className="rounded-lg border border-[#ECEFE9] bg-[#FBFBFA] p-3 space-y-1"
+                  >
+                    <div className="flex items-center justify-between gap-2 font-semibold text-[#14231B]">
+                      <span>{log.petugasNama}</span>
+                      <span className="capitalize text-[#155E42]">
+                        {String(log.statusUpdate ?? "").replace("_", " ")}
+                      </span>
+                    </div>
+                    <p className="text-[#6B7A71]">
+                      {formatDate(normalizeDate(log.createdAt), "short")}
+                    </p>
+                    {log.catatanPenanganan && (
+                      <p className="text-[#2B3B32]">{log.catatanPenanganan}</p>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
         </div>
 
         <aside className="rounded-2xl border border-[#E3E8E1] bg-white p-6 shadow-2xs space-y-4 h-fit">

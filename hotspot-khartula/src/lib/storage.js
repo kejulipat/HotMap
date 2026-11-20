@@ -101,10 +101,67 @@ export function getBeritaImagePublicUrl(supabase, path) {
   return data?.publicUrl ?? null;
 }
 
+export async function verifyImageMagicBytes(file, expectedMimeType) {
+  if (!file || typeof file.slice !== "function") {
+    return true;
+  }
+
+  try {
+    const buffer = await file.slice(0, 12).arrayBuffer();
+    const bytes = new Uint8Array(buffer);
+    if (bytes.length < 4) return false;
+
+    if (expectedMimeType === "image/jpeg") {
+      return bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
+    }
+
+    if (expectedMimeType === "image/png") {
+      return (
+        bytes.length >= 8 &&
+        bytes[0] === 0x89 &&
+        bytes[1] === 0x50 &&
+        bytes[2] === 0x4e &&
+        bytes[3] === 0x47 &&
+        bytes[4] === 0x0d &&
+        bytes[5] === 0x0a &&
+        bytes[6] === 0x1a &&
+        bytes[7] === 0x0a
+      );
+    }
+
+    if (expectedMimeType === "image/webp") {
+      return (
+        bytes.length >= 12 &&
+        bytes[0] === 0x52 &&
+        bytes[1] === 0x49 &&
+        bytes[2] === 0x46 &&
+        bytes[3] === 0x46 &&
+        bytes[8] === 0x57 &&
+        bytes[9] === 0x45 &&
+        bytes[10] === 0x42 &&
+        bytes[11] === 0x50
+      );
+    }
+
+    return false;
+  } catch {
+    return false;
+  }
+}
+
 export async function uploadBeritaImage(supabase, userId, file) {
   const check = validateUploadFile(file);
   if (!check.valid) {
     return { path: null, publicUrl: null, error: check.error };
+  }
+
+  const signatureValid = await verifyImageMagicBytes(file, check.mimeType);
+  if (!signatureValid) {
+    return {
+      path: null,
+      publicUrl: null,
+      error: "Konten file tidak sesuai dengan format gambar yang diizinkan (JPEG/PNG/WebP).",
+    };
   }
 
   const storagePath = generateSafeStoragePath(userId, "berita", file.name);
@@ -136,6 +193,14 @@ export async function uploadLaporanEvidence(supabase, userId, laporanId, file) {
   const check = validateUploadFile(file);
   if (!check.valid) {
     return { path: null, error: check.error };
+  }
+
+  const signatureValid = await verifyImageMagicBytes(file, check.mimeType);
+  if (!signatureValid) {
+    return {
+      path: null,
+      error: "Konten file tidak sesuai dengan format gambar yang diizinkan (JPEG/PNG/WebP).",
+    };
   }
 
   const storagePath = generateSafeStoragePath(

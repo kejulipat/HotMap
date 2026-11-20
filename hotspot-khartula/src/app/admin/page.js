@@ -20,13 +20,17 @@ export const metadata = {
 export default async function AdminDashboardPage() {
   const { supabase } = await requireRole(["admin"]);
 
-  const [dataset, profilesCountRes] = await Promise.all([
+  const [dataset, profilesCountRes, beritaCountRes] = await Promise.all([
     fetchNormalizedDataset(supabase, { limit: 100 }),
     supabase.from("profiles").select("id", { count: "exact", head: true }),
+    supabase.from("berita").select("id", { count: "exact", head: true }),
   ]);
 
   const counts = computeStatusCounts(dataset.laporanList);
   const totalPengguna = profilesCountRes.count ?? 0;
+  const beritaReady =
+    beritaCountRes.error?.code !== "PGRST205" && dataset.beritaTableReady;
+  const totalBerita = beritaCountRes.count ?? dataset.beritaList.length;
 
   return (
     <div className="space-y-6">
@@ -102,7 +106,7 @@ export default async function AdminDashboardPage() {
             Artikel Berita
           </span>
           <p className="mt-1 text-2xl font-bold text-[#14231B]">
-            {dataset.beritaTableReady ? dataset.beritaList.length : "Belum siap"}
+            {beritaReady ? totalBerita : "Belum siap"}
           </p>
           <span className="mt-2 inline-block text-xs font-semibold text-[#155E42]">
             Manajemen Berita &rarr;

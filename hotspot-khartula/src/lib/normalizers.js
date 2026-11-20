@@ -113,6 +113,24 @@ export function parseCoord(val) {
   return Number.isFinite(num) ? num : null;
 }
 
+export function isValidLatLng(lat, lng) {
+  return (
+    Number.isFinite(lat) &&
+    Number.isFinite(lng) &&
+    lat >= -90 &&
+    lat <= 90 &&
+    lng >= -180 &&
+    lng <= 180
+  );
+}
+
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export function isUuid(val) {
+  return typeof val === "string" && UUID_REGEX.test(val.trim());
+}
+
 export function normalizeLuas(row) {
   const val = row?.estimasi_luas ?? row?.luas ?? null;
   if (val === null || val === undefined || val === "") return "-";
@@ -248,7 +266,7 @@ export async function fetchNormalizedDataset(
 ) {
   let laporanQuery = supabase
     .from("laporan_karhutla")
-    .select(BASE_LAPORAN_COLS)
+    .select(EXTENDED_LAPORAN_COLS)
     .order("created_at", { ascending: false })
     .limit(limit);
 
@@ -256,10 +274,10 @@ export async function fetchNormalizedDataset(
     laporanQuery = laporanQuery.eq("pelapor_id", pelaporId);
   }
 
-  const [wilayahRes, laporanRes, beritaRes] = await Promise.all([
+  let [wilayahRes, laporanRes, beritaRes] = await Promise.all([
     supabase
       .from("wilayah")
-      .select("id, nama_wilayah, created_at")
+      .select("id, nama_wilayah, kabupaten_kota, center_lat, center_lng, created_at")
       .order("nama_wilayah", { ascending: true }),
     laporanQuery,
     supabase
@@ -270,6 +288,25 @@ export async function fetchNormalizedDataset(
       .order("created_at", { ascending: false })
       .limit(beritaLimit),
   ]);
+
+  if (isMissingColumnError(laporanRes.error)) {
+    let fallbackQuery = supabase
+      .from("laporan_karhutla")
+      .select(BASE_LAPORAN_COLS)
+      .order("created_at", { ascending: false })
+      .limit(limit);
+    if (pelaporId) {
+      fallbackQuery = fallbackQuery.eq("pelapor_id", pelaporId);
+    }
+    laporanRes = await fallbackQuery;
+  }
+
+  if (isMissingColumnError(wilayahRes.error)) {
+    wilayahRes = await supabase
+      .from("wilayah")
+      .select("id, nama_wilayah, created_at")
+      .order("nama_wilayah", { ascending: true });
+  }
 
   const rawWilayah = wilayahRes.data ?? [];
   const rawLaporan = laporanRes.data ?? [];
@@ -313,6 +350,9 @@ export async function fetchNormalizedDataset(
   const wilayahList = rawWilayah.map((w, idx) => ({
     id: w.id ?? `w-${idx}`,
     nama: w.nama_wilayah ?? `Wilayah ${idx + 1}`,
+    kabupatenKota: w.kabupaten_kota ?? null,
+    centerLat: parseCoord(w.center_lat),
+    centerLng: parseCoord(w.center_lng),
     createdAt: w.created_at ?? null,
   }));
 
@@ -341,13 +381,14 @@ export async function fetchNormalizedDataset(
 }
 
 export async function fetchLaporanById(supabase, id) {
-  if (!id) {
+  if (!id || !isUuid(id)) {
     return {
       laporan: null,
       fotoList: [],
       penugasanList: [],
       riwayatList: [],
-      relationsReady: false,
+      penangananLogList: [],
+      relationsReady: true,
       error: null,
     };
   }
@@ -375,35 +416,46 @@ export async function fetchLaporanById(supabase, id) {
       fotoList: [],
       penugasanList: [],
       riwayatList: [],
+      penangananLogList: [],
       relationsReady: false,
       error,
     };
   }
 
-  const [wilayahRes, fotoRes, penugasanRes, riwayatRes] = await Promise.all([
-    row.wilayah_id
-      ? supabase
-          .from("wilayah")
-          .select("id, nama_wilayah")
-          .eq("id", row.wilayah_id)
-          .maybeSingle()
-      : Promise.resolve({ data: null }),
-    supabase
-      .from("laporan_foto")
-      .select("id, storage_path, uploaded_by, jenis_foto, mime_type, file_size, created_at")
-      .eq("laporan_id", row.id)
-      .order("created_at", { ascending: false }),
-    supabase
-      .from("penugasan_laporan")
-      .select("id, petugas_id, assigned_by, status_penugasan, catatan, assigned_at, completed_at")
-      .eq("laporan_id", row.id)
-      .order("assigned_at", { ascending: false }),
-    supabase
-      .from("laporan_riwayat_status")
-      .select("id, status_sebelumnya, status_baru, changed_by, catatan, created_at")
-      .eq("laporan_id", row.id)
-      .order("created_at", { ascending: false }),
-  ]);
+  const [wilayahRes, fotoRes, penugasanRes, riwayatRes, logRes] =
+    await Promise.all([
+      row.wilayah_id
+        ? supabase
+            .from("wilayah")
+            .select("id, nama_wilayah")
+            .eq("id", row.wilayah_id)
+            .maybeSingle()
+        : Promise.resolve({ data: null }),
+      supabase
+        .from("laporan_foto")
+        .select(
+          "id, storage_path, uploaded_by, jenis_foto, mime_type, file_size, created_at"
+        )
+        .eq("laporan_id", row.id)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("penugasan_laporan")
+        .select(
+          "id, petugas_id, assigned_by, status_penugasan, catatan, assigned_at, completed_at"
+        )
+        .eq("laporan_id", row.id)
+        .order("assigned_at", { ascending: false }),
+      supabase
+        .from("laporan_riwayat_status")
+        .select("id, status_sebelumnya, status_baru, changed_by, catatan, created_at")
+        .eq("laporan_id", row.id)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("penanganan_log")
+        .select("id, petugas_id, status_update, catatan_penanganan, foto_bukti_url, created_at")
+        .eq("laporan_id", row.id)
+        .order("created_at", { ascending: false }),
+    ]);
 
   const relationsReady =
     !isMissingTableError(fotoRes.error) &&
@@ -413,6 +465,7 @@ export async function fetchLaporanById(supabase, id) {
   const rawFoto = !fotoRes.error ? fotoRes.data ?? [] : [];
   const rawPenugasan = !penugasanRes.error ? penugasanRes.data ?? [] : [];
   const rawRiwayat = !riwayatRes.error ? riwayatRes.data ?? [] : [];
+  const rawLogs = !logRes.error ? logRes.data ?? [] : [];
 
   const profileIds = Array.from(
     new Set(
@@ -423,6 +476,7 @@ export async function fetchLaporanById(supabase, id) {
         ...rawPenugasan.map((p) => p.petugas_id),
         ...rawPenugasan.map((p) => p.assigned_by),
         ...rawRiwayat.map((r) => r.changed_by),
+        ...rawLogs.map((l) => l.petugas_id),
       ].filter(Boolean)
     )
   );
@@ -488,11 +542,23 @@ export async function fetchLaporanById(supabase, id) {
     createdAt: r.created_at,
   }));
 
+  const penangananLogList = rawLogs.map((l) => ({
+    id: l.id,
+    statusUpdate: l.status_update,
+    petugasNama: l.petugas_id
+      ? profileById.get(l.petugas_id) ?? "Petugas Lapangan"
+      : "Petugas Lapangan",
+    catatanPenanganan: l.catatan_penanganan ?? "",
+    fotoBuktiUrl: l.foto_bukti_url ?? null,
+    createdAt: l.created_at,
+  }));
+
   return {
     laporan: normalizeLaporanRow(row, 0, wilayahById, profileById),
     fotoList,
     penugasanList,
     riwayatList,
+    penangananLogList,
     relationsReady,
     error: null,
   };
@@ -552,12 +618,8 @@ export async function fetchBeritaById(supabase, idOrSlug) {
     return { berita: null, tableReady: true, error: null };
   }
 
-  const isUuidOrInt =
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-      idOrSlug
-    ) || /^\d+$/.test(idOrSlug);
-
-  let res = isUuidOrInt
+  const byUuid = isUuid(idOrSlug);
+  const res = byUuid
     ? await supabase.from("berita").select("*").eq("id", idOrSlug).maybeSingle()
     : await supabase
         .from("berita")
@@ -567,17 +629,6 @@ export async function fetchBeritaById(supabase, idOrSlug) {
 
   if (res.error && isMissingTableError(res.error)) {
     return { berita: null, tableReady: false, error: null };
-  }
-
-  if (!res.data && !res.error && !isUuidOrInt) {
-    const byId = await supabase
-      .from("berita")
-      .select("*")
-      .eq("id", idOrSlug)
-      .maybeSingle();
-    if (!byId.error && byId.data) {
-      res = byId;
-    }
   }
 
   if (res.error || !res.data) {

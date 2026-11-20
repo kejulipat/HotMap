@@ -80,19 +80,50 @@ function formatCell(value) {
 export default async function TestDbPage() {
   const { supabase } = await requireRole(["admin"]);
 
-  const [profiles, wilayah, laporan, berita] = await Promise.all([
+  const [
+    profiles,
+    wilayah,
+    laporan,
+    penangananLog,
+    berita,
+    laporanFoto,
+    penugasanLaporan,
+    riwayatStatus,
+  ] = await Promise.all([
     supabase
       .from("profiles")
       .select("id, role, full_name, wilayah_id, created_at")
       .limit(50),
-    supabase.from("wilayah").select("id, nama_wilayah, created_at").limit(50),
+    supabase
+      .from("wilayah")
+      .select("id, nama_wilayah, kabupaten_kota, center_lat, center_lng, created_at")
+      .limit(50),
     supabase
       .from("laporan_karhutla")
       .select(
-        "id, judul, status, wilayah_id, latitude, longitude, pelapor_id, created_at"
+        "id, judul, status, wilayah_id, latitude, longitude, pelapor_id, petugas_id, created_at"
       )
       .limit(50),
-    supabase.from("berita").select("*").limit(50),
+    supabase
+      .from("penanganan_log")
+      .select("id, laporan_id, petugas_id, status_update, created_at")
+      .limit(50),
+    supabase
+      .from("berita")
+      .select("id, judul, slug, kategori, status, published_at, created_at")
+      .limit(50),
+    supabase
+      .from("laporan_foto")
+      .select("id, laporan_id, jenis_foto, mime_type, file_size, created_at")
+      .limit(50),
+    supabase
+      .from("penugasan_laporan")
+      .select("id, laporan_id, petugas_id, status_penugasan, assigned_at")
+      .limit(50),
+    supabase
+      .from("laporan_riwayat_status")
+      .select("id, laporan_id, status_sebelumnya, status_baru, created_at")
+      .limit(50),
   ]);
 
   return (
@@ -131,7 +162,11 @@ export default async function TestDbPage() {
         <DataTable title="profiles" result={profiles} />
         <DataTable title="wilayah" result={wilayah} />
         <DataTable title="laporan_karhutla" result={laporan} />
+        <DataTable title="penanganan_log" result={penangananLog} />
         <DataTable title="berita" result={berita} />
+        <DataTable title="laporan_foto" result={laporanFoto} />
+        <DataTable title="penugasan_laporan" result={penugasanLaporan} />
+        <DataTable title="laporan_riwayat_status" result={riwayatStatus} />
       </div>
     </main>
   );

@@ -13,8 +13,15 @@ export const metadata = {
 export default async function PelaporDetailLaporanPage({ params }) {
   const { id } = await params;
   const { supabase, user, role } = await requireRole(["pelapor", "admin"]);
-  const { laporan, fotoList, penugasanList, riwayatList, relationsReady, error } =
-    await fetchLaporanById(supabase, id);
+  const {
+    laporan,
+    fotoList,
+    penugasanList,
+    riwayatList,
+    penangananLogList,
+    relationsReady,
+    error,
+  } = await fetchLaporanById(supabase, id);
 
   const isAuthorized =
     laporan && (role === "admin" || laporan.pelaporId === user.id);
@@ -42,6 +49,7 @@ export default async function PelaporDetailLaporanPage({ params }) {
       fotoList={fotoList}
       penugasanList={penugasanList}
       riwayatList={riwayatList}
+      penangananLogList={penangananLogList}
       relationsReady={relationsReady}
       backHref="/pelapor/laporan"
       backLabel="Kembali ke Laporan Saya"

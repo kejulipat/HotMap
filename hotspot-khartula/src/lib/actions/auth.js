@@ -90,7 +90,6 @@ export async function registerAction(_prevState, formData) {
     options: {
       data: {
         full_name: fullName,
-        role: "pelapor",
       },
     },
   });
@@ -99,22 +98,8 @@ export async function registerAction(_prevState, formData) {
     return { error: mapAuthError(error.message) };
   }
 
-  // Pastikan profil tersedia jika sesi langsung aktif dan trigger DB belum membuatnya.
+  // Trigger DB `on_auth_user_created` (`public.handle_new_user`) otomatis membuat profil `pelapor`.
   if (data?.session && data?.user) {
-    const { data: existingProfile } = await supabase
-      .from("profiles")
-      .select("id")
-      .eq("id", data.user.id)
-      .maybeSingle();
-
-    if (!existingProfile) {
-      await supabase.from("profiles").insert({
-        id: data.user.id,
-        full_name: fullName,
-        role: "pelapor",
-      });
-    }
-
     redirect("/pelapor");
   }
 

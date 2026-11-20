@@ -3,6 +3,7 @@ import {
   STATUS_META,
   SUMMARY_CARDS,
   formatDate,
+  isValidLatLng,
   projectToIndonesiaMap,
 } from "@/lib/normalizers";
 
@@ -175,8 +176,8 @@ export function MapOverviewBox({
   subtitle = "Menampilkan titik koordinat laporan warga yang valid. Integrasi peta GIS interaktif (Leaflet) dijadwalkan pada Fase 2.",
   detailHrefPrefix = null,
 }) {
-  const geoPoints = laporan.filter(
-    (item) => Number.isFinite(item.latitude) && Number.isFinite(item.longitude)
+  const geoPoints = laporan.filter((item) =>
+    isValidLatLng(item.latitude, item.longitude)
   );
 
   return (
@@ -337,7 +338,7 @@ export function LaporanTable({
                   {item.wilayah}
                 </td>
                 <td className="py-3.5 px-4 text-xs font-mono text-[#5F6F66]">
-                  {Number.isFinite(item.latitude) && Number.isFinite(item.longitude)
+                  {isValidLatLng(item.latitude, item.longitude)
                     ? `${item.latitude.toFixed(4)}, ${item.longitude.toFixed(4)}`
                     : "-"}
                 </td>

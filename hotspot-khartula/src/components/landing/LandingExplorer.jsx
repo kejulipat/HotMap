@@ -10,6 +10,7 @@ import {
   SUMMARY_CARDS,
   computeStatusCounts,
   formatDate,
+  isValidLatLng,
   projectToIndonesiaMap,
 } from "@/lib/normalizers";
 
@@ -456,11 +457,7 @@ export default function LandingExplorer({
 
               {/* Pin Titik Laporan Interaktif pada Peta */}
               {filteredLaporan
-                .filter(
-                  (item) =>
-                    Number.isFinite(item.latitude) &&
-                    Number.isFinite(item.longitude)
-                )
+                .filter((item) => isValidLatLng(item.latitude, item.longitude))
                 .map((item) => {
                   const pos = projectToIndonesiaMap(
                     item.latitude,
@@ -556,8 +553,10 @@ export default function LandingExplorer({
                     <div className="py-2.5 flex items-center justify-between gap-4">
                       <dt className="text-[#6B7A71]">Koordinat</dt>
                       <dd className="font-semibold text-[#14231B] text-right">
-                        {Number.isFinite(selectedReport.latitude) &&
-                        Number.isFinite(selectedReport.longitude)
+                        {isValidLatLng(
+                          selectedReport.latitude,
+                          selectedReport.longitude
+                        )
                           ? `${selectedReport.latitude}, ${selectedReport.longitude}`
                           : "-"}
                       </dd>
