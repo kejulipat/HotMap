@@ -1,12 +1,9 @@
 import Link from "next/link";
-import {
-  ErrorBanner,
-  LaporanTable,
-  SummaryCardsGrid,
-} from "@/components/ui/SharedUI";
+import LaporanFilterTable from "@/components/laporan/LaporanFilterTable";
+import { ErrorBanner, SummaryCardsGrid } from "@/components/ui/SharedUI";
 import { requireRole } from "@/lib/auth";
 import {
-  computeStatusCounts,
+  fetchExactStatusCounts,
   fetchNormalizedDataset,
 } from "@/lib/normalizers";
 
@@ -14,21 +11,19 @@ export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "Daftar Laporan Petugas | HotMap",
-  description: "Daftar laporan karhutla untuk penanganan petugas.",
+  description: "Daftar laporan karhutla dan tugas aktif untuk petugas.",
 };
 
 export default async function PetugasLaporanListPage({ searchParams }) {
-  const { supabase } = await requireRole(["petugas", "admin"]);
+  const { supabase, user } = await requireRole(["petugas", "admin"]);
   const resolvedParams = await searchParams;
   const activeStatus =
     typeof resolvedParams?.status === "string" ? resolvedParams.status : "semua";
 
-  const dataset = await fetchNormalizedDataset(supabase, { limit: 150 });
-  const counts = computeStatusCounts(dataset.laporanList);
-  const filteredLaporan =
-    activeStatus === "semua"
-      ? dataset.laporanList
-      : dataset.laporanList.filter((item) => item.statusKey === activeStatus);
+  const [dataset, counts] = await Promise.all([
+    fetchNormalizedDataset(supabase, { limit: 200 }),
+    fetchExactStatusCounts(supabase),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -38,7 +33,8 @@ export default async function PetugasLaporanListPage({ searchParams }) {
             Daftar Laporan Operasional
           </h1>
           <p className="mt-1 text-sm text-[#606F67]">
-            Daftar kejadian karhutla beserta status dan koordinat lokasi untuk tindak lanjut petugas.
+            Saring tugas yang ditugaskan kepada Anda atau pantau laporan lintas
+            wilayah.
           </p>
         </div>
 
@@ -60,13 +56,14 @@ export default async function PetugasLaporanListPage({ searchParams }) {
         hrefBase="/petugas/laporan"
       />
 
-      <LaporanTable
-        laporan={filteredLaporan}
+      <LaporanFilterTable
+        laporanList={dataset.laporanList}
+        wilayahList={dataset.wilayahList}
         detailHrefPrefix="/petugas/laporan"
-        emptyTitle="Belum ada laporan pada filter ini"
-        emptyDescription="Belum ada laporan kejadian karhutla yang sesuai dengan status terpilih."
-        actionLabel={activeStatus !== "semua" ? "Tampilkan Semua" : null}
-        actionHref={activeStatus !== "semua" ? "/petugas/laporan" : null}
+        initialStatus={activeStatus}
+        currentUserId={user.id}
+        enablePetugasScope={true}
+        initialScope={activeStatus === "semua" ? "tugas_saya" : "semua"}
       />
     </div>
   );

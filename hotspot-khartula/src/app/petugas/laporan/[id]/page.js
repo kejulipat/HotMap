@@ -1,4 +1,5 @@
 import LaporanDetailView from "@/components/laporan/LaporanDetailView";
+import PetugasPenangananPanel from "@/components/laporan/PetugasPenangananPanel";
 import { EmptyState, ErrorBanner } from "@/components/ui/SharedUI";
 import { requireRole } from "@/lib/auth";
 import { fetchLaporanById } from "@/lib/normalizers";
@@ -7,12 +8,12 @@ export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "Tindak Lanjut Laporan Petugas | HotMap",
-  description: "Detail dan kesiapan tindak lanjut laporan untuk petugas.",
+  description: "Detail dan pembaruan progres penanganan laporan oleh petugas.",
 };
 
 export default async function PetugasDetailLaporanPage({ params }) {
   const { id } = await params;
-  const { supabase } = await requireRole(["petugas", "admin"]);
+  const { supabase, user, role } = await requireRole(["petugas", "admin"]);
   const {
     laporan,
     fotoList,
@@ -40,6 +41,8 @@ export default async function PetugasDetailLaporanPage({ params }) {
     );
   }
 
+  const isAssignedToMe = Boolean(laporan.petugasId && laporan.petugasId === user.id);
+
   return (
     <LaporanDetailView
       laporan={laporan}
@@ -51,9 +54,11 @@ export default async function PetugasDetailLaporanPage({ params }) {
       backHref="/petugas/laporan"
       backLabel="Kembali ke Daftar Laporan"
     >
-      <div className="rounded-xl border border-[#C5DCF8] bg-[#EBF4FF] p-4 text-xs sm:text-sm text-[#1E62B5]">
-        <strong>Modul Tindak Lanjut Lapangan (Fase 3):</strong> Struktur database penugasan dan log penanganan sudah siap; aksi pembaruan status (<em>Ditangani</em> &rarr; <em>Selesai</em>) dan unggah dokumentasi lapangan akan diaktifkan pada Fase 3.
-      </div>
+      <PetugasPenangananPanel
+        laporan={laporan}
+        isAssignedToMe={isAssignedToMe}
+        isAdmin={role === "admin"}
+      />
     </LaporanDetailView>
   );
 }

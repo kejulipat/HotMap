@@ -2,11 +2,12 @@ import DashboardShell from "@/components/layout/DashboardShell";
 import { requireRole } from "@/lib/auth";
 
 export default async function PetugasLayout({ children }) {
-  const { user, profile } = await requireRole(["petugas", "admin"]);
+  const { user, profile, role } = await requireRole(["petugas", "admin"]);
 
   return (
     <DashboardShell
       role="petugas"
+      actualRole={role}
       userInfo={{
         id: user.id,
         email: user.email ?? "",

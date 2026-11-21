@@ -191,7 +191,7 @@ export function computeStatusCounts(laporanList = []) {
 }
 
 const BASE_LAPORAN_COLS =
-  "id, judul, deskripsi, wilayah_id, created_at, updated_at, status, latitude, longitude, pelapor_id, catatan_verifikasi";
+  "id, judul, deskripsi, wilayah_id, waktu_kejadian, created_at, updated_at, status, latitude, longitude, pelapor_id, catatan_verifikasi";
 
 const EXTENDED_LAPORAN_COLS = `${BASE_LAPORAN_COLS}, jenis_kejadian, alamat_lokasi, estimasi_luas, tingkat_keparahan, petugas_id, verified_by, verified_at`;
 
@@ -246,7 +246,8 @@ function normalizeLaporanRow(row, idx, wilayahById, profileById) {
     lokasiSingkat: wilayahNama,
     wilayahId: row.wilayah_id ?? null,
     wilayah: wilayahNama,
-    tanggal: normalizeDate(row.created_at),
+    tanggal: normalizeDate(row.waktu_kejadian ?? row.created_at),
+    waktuKejadian: row.waktu_kejadian ?? row.created_at ?? null,
     createdAt: row.created_at ?? null,
     updatedAt: row.updated_at ?? null,
     statusRaw: row.status ?? "menunggu_verifikasi",
@@ -755,5 +756,158 @@ export async function fetchBeritaById(supabase, idOrSlug) {
       };
     },
     (res) => !res?.error
+  );
+}
+
+/**
+ * Menghitung jumlah laporan per status secara akurat langsung di Postgres (`count: exact, head: true`),
+ * sehingga angka KPI tidak terpotong oleh batas `limit` fetch tabel.
+ */
+export async function fetchExactStatusCounts(
+  supabase,
+  { pelaporId = null, petugasId = null } = {}
+) {
+  const scope = resolveDatasetScope(supabase);
+  const cacheKey = `exactCounts:${scope}:${pelaporId ?? "all"}:${petugasId ?? "all"}`;
+
+  return readCachedOrFetch(
+    "data",
+    cacheKey,
+    DATA_CACHE_TTL_MS,
+    async () => {
+      const statuses = [
+        "menunggu_verifikasi",
+        "terverifikasi",
+        "ditangani",
+        "selesai",
+        "ditolak",
+      ];
+
+      const makeQuery = (statusValue = null) => {
+        let q = supabase
+          .from("laporan_karhutla")
+          .select("id", { count: "exact", head: true });
+        if (pelaporId) q = q.eq("pelapor_id", pelaporId);
+        if (petugasId) q = q.eq("petugas_id", petugasId);
+        if (statusValue) q = q.eq("status", statusValue);
+        return q;
+      };
+
+      const [totalRes, ...statusResList] = await Promise.all([
+        makeQuery(null),
+        ...statuses.map((st) => makeQuery(st)),
+      ]);
+
+      const counts = {
+        semua: totalRes.count ?? 0,
+        menunggu_verifikasi: 0,
+        terverifikasi: 0,
+        ditangani: 0,
+        selesai: 0,
+        ditolak: 0,
+      };
+
+      statuses.forEach((st, idx) => {
+        counts[st] = statusResList[idx]?.count ?? 0;
+      });
+
+      return counts;
+    },
+    (res) => Boolean(res && typeof res.semua === "number")
+  );
+}
+
+/**
+ * Mengambil analitik operasional aktual untuk Dashboard Admin (100% dari Supabase).
+ */
+export async function fetchAdminAnalytics(supabase) {
+  const scope = resolveDatasetScope(supabase);
+  const cacheKey = `adminAnalytics:${scope}`;
+
+  return readCachedOrFetch(
+    "data",
+    cacheKey,
+    DATA_CACHE_TTL_MS,
+    async () => {
+      const [
+        exactCounts,
+        penugasanRes,
+        recentLogsRes,
+        profilesRes,
+        beritaRes,
+      ] = await Promise.all([
+        fetchExactStatusCounts(supabase),
+        supabase
+          .from("penugasan_laporan")
+          .select("id, petugas_id, status_penugasan, assigned_at, completed_at")
+          .order("assigned_at", { ascending: false })
+          .limit(300),
+        supabase
+          .from("penanganan_log")
+          .select("id, laporan_id, petugas_id, status_update, catatan_penanganan, created_at")
+          .order("created_at", { ascending: false })
+          .limit(8),
+        supabase
+          .from("profiles")
+          .select("id, full_name, role"),
+        supabase
+          .from("berita")
+          .select("id, status"),
+      ]);
+
+      const profiles = profilesRes.data ?? [];
+      const profileNameById = new Map(
+        profiles.map((p) => [p.id, p.full_name || "Petugas"])
+      );
+
+      const roleCounts = { admin: 0, petugas: 0, pelapor: 0 };
+      for (const p of profiles) {
+        const r = String(p.role ?? "pelapor").toLowerCase().trim();
+        if (roleCounts[r] !== undefined) roleCounts[r] += 1;
+      }
+
+      const penugasanRows = !penugasanRes.error ? penugasanRes.data ?? [] : [];
+      const penugasanStats = {
+        total: penugasanRows.length,
+        aktif: penugasanRows.filter((p) =>
+          ["ditugaskan", "diterima", "dalam_penanganan"].includes(p.status_penugasan)
+        ).length,
+        selesai: penugasanRows.filter((p) => p.status_penugasan === "selesai").length,
+        dibatalkan: penugasanRows.filter((p) => p.status_penugasan === "dibatalkan").length,
+      };
+
+      const beritaRows = !beritaRes.error ? beritaRes.data ?? [] : [];
+      const beritaStats = {
+        total: beritaRows.length,
+        published: beritaRows.filter((b) => b.status === "published").length,
+        draft: beritaRows.filter((b) => b.status === "draft").length,
+        archived: beritaRows.filter((b) => b.status === "archived").length,
+        tableReady: !isMissingTableError(beritaRes.error),
+      };
+
+      const recentActivities = (!recentLogsRes.error ? recentLogsRes.data ?? [] : []).map(
+        (log) => ({
+          id: log.id,
+          laporanId: log.laporan_id,
+          petugasNama: log.petugas_id
+            ? profileNameById.get(log.petugas_id) ?? "Petugas Lapangan"
+            : "Petugas Lapangan",
+          statusUpdate: log.status_update,
+          catatan: log.catatan_penanganan,
+          createdAt: log.created_at,
+        })
+      );
+
+      return {
+        exactCounts,
+        totalPengguna: profiles.length,
+        roleCounts,
+        penugasanStats,
+        beritaStats,
+        recentActivities,
+        hasError: Boolean(profilesRes.error),
+      };
+    },
+    (res) => !res?.hasError
   );
 }

@@ -1,8 +1,5 @@
-import {
-  ErrorBanner,
-  LaporanTable,
-  MapOverviewBox,
-} from "@/components/ui/SharedUI";
+import PetaLaporanExplorer from "@/components/map/PetaLaporanExplorer";
+import { ErrorBanner } from "@/components/ui/SharedUI";
 import { requireRole } from "@/lib/auth";
 import { fetchNormalizedDataset } from "@/lib/normalizers";
 
@@ -10,7 +7,8 @@ export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "Monitoring Peta | Admin HotMap",
-  description: "Peta monitoring seluruh kejadian karhutla untuk admin.",
+  description:
+    "Peta GIS interaktif monitoring seluruh kejadian karhutla untuk admin.",
 };
 
 export default async function AdminPetaPage() {
@@ -24,7 +22,8 @@ export default async function AdminPetaPage() {
           Monitoring Peta Karhutla
         </h1>
         <p className="mt-1 text-sm text-[#606F67]">
-          Pemantauan menyeluruh koordinat laporan masyarakat di seluruh wilayah.
+          Pemantauan menyeluruh koordinat laporan masyarakat di seluruh wilayah
+          beserta akses langsung ke verifikasi dan penugasan petugas.
         </p>
       </div>
 
@@ -32,18 +31,12 @@ export default async function AdminPetaPage() {
         <ErrorBanner message="Gagal memuat data koordinat laporan dari database." />
       )}
 
-      <MapOverviewBox
-        laporan={dataset.laporanList}
+      <PetaLaporanExplorer
+        laporanList={dataset.laporanList}
+        wilayahList={dataset.wilayahList}
         detailHrefPrefix="/admin/laporan"
         title="Sebaran Laporan Seluruh Wilayah"
-        subtitle="Pilih titik laporan untuk membuka detail dan verifikasi."
-      />
-
-      <LaporanTable
-        laporan={dataset.laporanList}
-        detailHrefPrefix="/admin/laporan"
-        emptyTitle="Belum ada data koordinat"
-        emptyDescription="Belum ada laporan karhutla yang masuk ke sistem."
+        subtitle="Klik titik pada peta atau baris pada daftar untuk fokus lokasi dan membuka panel verifikasi/penugasan."
       />
     </div>
   );

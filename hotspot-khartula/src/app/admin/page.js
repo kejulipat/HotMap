@@ -6,31 +6,69 @@ import {
 } from "@/components/ui/SharedUI";
 import { requireRole } from "@/lib/auth";
 import {
-  computeStatusCounts,
+  fetchAdminAnalytics,
   fetchNormalizedDataset,
+  formatDate,
+  normalizeDate,
 } from "@/lib/normalizers";
 
 export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "Dashboard Admin | HotMap",
-  description: "Pusat kontrol operasional, laporan, pengguna, dan wilayah HotMap.",
+  description:
+    "Pusat kontrol operasional, analitik laporan, penugasan, pengguna, dan wilayah HotMap.",
 };
+
+function buildWilayahDistribution(laporanList = []) {
+  const map = new Map();
+  for (const item of laporanList) {
+    const key = item.wilayah || "Lainnya";
+    map.set(key, (map.get(key) ?? 0) + 1);
+  }
+  return Array.from(map.entries())
+    .map(([nama, total]) => ({ nama, total }))
+    .sort((a, b) => b.total - a.total)
+    .slice(0, 6);
+}
+
+function buildRecent14DayTrend(laporanList = []) {
+  const countsByDay = new Map();
+  for (const item of laporanList) {
+    const day = item.tanggal;
+    if (day) countsByDay.set(day, (countsByDay.get(day) ?? 0) + 1);
+  }
+
+  const days = [];
+  const today = new Date();
+  for (let i = 13; i >= 0; i--) {
+    const d = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
+    const iso = normalizeDate(d.toISOString());
+    days.push({
+      date: iso,
+      label: iso.slice(5),
+      count: countsByDay.get(iso) ?? 0,
+    });
+  }
+  return days;
+}
 
 export default async function AdminDashboardPage() {
   const { supabase } = await requireRole(["admin"]);
 
-  const [dataset, profilesCountRes, beritaCountRes] = await Promise.all([
-    fetchNormalizedDataset(supabase, { limit: 100 }),
-    supabase.from("profiles").select("id", { count: "exact", head: true }),
-    supabase.from("berita").select("id", { count: "exact", head: true }),
+  const [dataset, analytics] = await Promise.all([
+    fetchNormalizedDataset(supabase, { limit: 200 }),
+    fetchAdminAnalytics(supabase),
   ]);
 
-  const counts = computeStatusCounts(dataset.laporanList);
-  const totalPengguna = profilesCountRes.count ?? 0;
-  const beritaReady =
-    beritaCountRes.error?.code !== "PGRST205" && dataset.beritaTableReady;
-  const totalBerita = beritaCountRes.count ?? dataset.beritaList.length;
+  const counts = analytics.exactCounts;
+  const belumDitangani =
+    (counts.menunggu_verifikasi ?? 0) + (counts.terverifikasi ?? 0);
+  const wilayahDist = buildWilayahDistribution(dataset.laporanList);
+  const maxWilayahCount = Math.max(1, ...wilayahDist.map((w) => w.total));
+
+  const trend14Days = buildRecent14DayTrend(dataset.laporanList);
+  const maxTrendCount = Math.max(1, ...trend14Days.map((d) => d.count));
 
   return (
     <div className="space-y-6">
@@ -40,7 +78,8 @@ export default async function AdminDashboardPage() {
             Dashboard Administrasi HotMap
           </h1>
           <p className="mt-1 text-sm text-[#606F67]">
-            Ringkasan operasional laporan karhutla, pengguna terdaftar, dan cakupan wilayah.
+            Ringkasan operasional laporan karhutla, penugasan petugas, distribusi
+            wilayah, dan publikasi berita dari data aktual Supabase.
           </p>
         </div>
 
@@ -60,24 +99,48 @@ export default async function AdminDashboardPage() {
         </div>
       </div>
 
-      {(dataset.hasQueryError || profilesCountRes.error) && (
+      {(dataset.hasQueryError || analytics.hasError) && (
         <ErrorBanner message="Sebagian statistik gagal dimuat dari database Supabase." />
       )}
 
       <SummaryCardsGrid counts={counts} hrefBase="/admin/laporan" />
 
-      {/* Pintasan Modul Manajemen */}
+      {/* Ringkasan Operasional & Modul */}
       <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="rounded-xl border border-[#F3C8B8] bg-white p-4">
+          <span className="text-xs font-semibold text-[#B83E1B]">
+            Belum Ditangani
+          </span>
+          <p className="mt-1 text-2xl font-bold text-[#14231B]">
+            {belumDitangani}
+          </p>
+          <span className="mt-1 block text-[11px] text-[#6B7A71]">
+            {counts.menunggu_verifikasi} menunggu verifikasi &bull;{" "}
+            {counts.terverifikasi} terverifikasi
+          </span>
+          <Link
+            href="/admin/laporan?status=menunggu_verifikasi"
+            className="mt-2 inline-block text-xs font-semibold text-[#B83E1B] hover:underline"
+          >
+            Tinjau antrean &rarr;
+          </Link>
+        </div>
+
         <Link
           href="/admin/pengguna"
           className="rounded-xl border border-[#E3E8E1] bg-white p-4 hover:border-[#155E42] transition-colors"
         >
           <span className="text-xs font-semibold text-[#6B7A71]">
-            Pengguna Terdaftar
+            Pengguna &amp; Petugas
           </span>
           <p className="mt-1 text-2xl font-bold text-[#14231B]">
-            {totalPengguna}
+            {analytics.totalPengguna}
           </p>
+          <span className="mt-1 block text-[11px] text-[#6B7A71]">
+            Admin: {analytics.roleCounts.admin} &bull; Petugas:{" "}
+            {analytics.roleCounts.petugas} &bull; Pelapor:{" "}
+            {analytics.roleCounts.pelapor}
+          </span>
           <span className="mt-2 inline-block text-xs font-semibold text-[#155E42]">
             Manajemen Pengguna &rarr;
           </span>
@@ -88,11 +151,15 @@ export default async function AdminDashboardPage() {
           className="rounded-xl border border-[#E3E8E1] bg-white p-4 hover:border-[#155E42] transition-colors"
         >
           <span className="text-xs font-semibold text-[#6B7A71]">
-            Cakupan Wilayah
+            Cakupan Wilayah &amp; Penugasan
           </span>
           <p className="mt-1 text-2xl font-bold text-[#14231B]">
-            {dataset.wilayahList.length}
+            {dataset.wilayahList.length} wilayah
           </p>
+          <span className="mt-1 block text-[11px] text-[#6B7A71]">
+            Penugasan aktif: {analytics.penugasanStats.aktif} &bull; Selesai:{" "}
+            {analytics.penugasanStats.selesai}
+          </span>
           <span className="mt-2 inline-block text-xs font-semibold text-[#155E42]">
             Manajemen Wilayah &rarr;
           </span>
@@ -103,32 +170,154 @@ export default async function AdminDashboardPage() {
           className="rounded-xl border border-[#E3E8E1] bg-white p-4 hover:border-[#155E42] transition-colors"
         >
           <span className="text-xs font-semibold text-[#6B7A71]">
-            Artikel Berita
+            Ringkasan Berita
           </span>
           <p className="mt-1 text-2xl font-bold text-[#14231B]">
-            {beritaReady ? totalBerita : "Belum siap"}
+            {analytics.beritaStats.tableReady
+              ? analytics.beritaStats.total
+              : "Belum siap"}
           </p>
+          <span className="mt-1 block text-[11px] text-[#6B7A71]">
+            Published: {analytics.beritaStats.published} &bull; Draft:{" "}
+            {analytics.beritaStats.draft} &bull; Arsip:{" "}
+            {analytics.beritaStats.archived}
+          </span>
           <span className="mt-2 inline-block text-xs font-semibold text-[#155E42]">
             Manajemen Berita &rarr;
           </span>
         </Link>
-
-        <Link
-          href="/admin/pengaturan"
-          className="rounded-xl border border-[#E3E8E1] bg-white p-4 hover:border-[#155E42] transition-colors"
-        >
-          <span className="text-xs font-semibold text-[#6B7A71]">
-            Konfigurasi Sistem
-          </span>
-          <p className="mt-1 text-lg font-bold text-[#14231B]">
-            Auth &amp; Diagnostik
-          </p>
-          <span className="mt-2 inline-block text-xs font-semibold text-[#155E42]">
-            Buka Pengaturan &rarr;
-          </span>
-        </Link>
       </section>
 
+      {/* Analitik Distribusi Wilayah & Tren 14 Hari */}
+      <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="rounded-2xl border border-[#E3E8E1] bg-white p-5 shadow-2xs space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-base font-bold text-[#12241B]">
+              Distribusi Laporan per Wilayah
+            </h2>
+            <span className="text-xs text-[#6B7A71]">Top 6 wilayah</span>
+          </div>
+
+          {wilayahDist.length === 0 ? (
+            <p className="text-xs text-[#6B7A71] py-6 text-center">
+              Belum ada laporan untuk menampilkan distribusi wilayah.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {wilayahDist.map((row) => (
+                <div key={row.nama} className="space-y-1">
+                  <div className="flex justify-between text-xs">
+                    <span className="font-semibold text-[#14231B]">
+                      {row.nama}
+                    </span>
+                    <span className="font-mono font-bold text-[#155E42]">
+                      {row.total} laporan
+                    </span>
+                  </div>
+                  <div className="h-2.5 w-full rounded-full bg-[#EEF2EC] overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-[#155E42]"
+                      style={{
+                        width: `${Math.max(
+                          8,
+                          Math.round((row.total / maxWilayahCount) * 100)
+                        )}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="rounded-2xl border border-[#E3E8E1] bg-white p-5 shadow-2xs space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-base font-bold text-[#12241B]">
+              Tren Laporan (14 Hari Terakhir)
+            </h2>
+            <span className="text-xs text-[#6B7A71]">Harian (WIB)</span>
+          </div>
+
+          <div className="flex items-end gap-1.5 h-36 pt-4">
+            {trend14Days.map((d) => (
+              <div
+                key={d.date}
+                title={`${d.date}: ${d.count} laporan`}
+                className="flex-1 flex flex-col items-center justify-end gap-1 h-full"
+              >
+                <span className="text-[10px] font-semibold text-[#5F6F66]">
+                  {d.count > 0 ? d.count : ""}
+                </span>
+                <div
+                  className={`w-full rounded-t-md transition-all ${
+                    d.count > 0 ? "bg-[#C85A28]" : "bg-[#EEF2EC]"
+                  }`}
+                  style={{
+                    height:
+                      d.count > 0
+                        ? `${Math.max(
+                            14,
+                            Math.round((d.count / maxTrendCount) * 84)
+                          )}%`
+                        : "6px",
+                  }}
+                />
+                <span className="text-[9px] text-[#6B7A71] hidden sm:block">
+                  {d.label}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Aktivitas Petugas Terbaru */}
+      <section className="rounded-2xl border border-[#E3E8E1] bg-white p-5 shadow-2xs space-y-3">
+        <h2 className="text-base font-bold text-[#12241B]">
+          Aktivitas Penanganan Petugas Terbaru
+        </h2>
+        {analytics.recentActivities.length === 0 ? (
+          <p className="text-xs text-[#6B7A71]">
+            Belum ada log penanganan lapangan yang tercatat dari petugas.
+          </p>
+        ) : (
+          <ul className="divide-y divide-[#ECEFE9] text-xs">
+            {analytics.recentActivities.map((act) => (
+              <li
+                key={act.id}
+                className="py-2.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2"
+              >
+                <div className="space-y-0.5">
+                  <p className="font-semibold text-[#14231B]">
+                    {act.petugasNama}{" "}
+                    <span className="font-normal text-[#6B7A71]">
+                      memperbarui status ke
+                    </span>{" "}
+                    <span className="capitalize text-[#155E42]">
+                      {String(act.statusUpdate ?? "").replace(/_/g, " ")}
+                    </span>
+                  </p>
+                  <p className="text-[#4E5E55] line-clamp-1">{act.catatan}</p>
+                </div>
+                <div className="flex items-center gap-3 shrink-0">
+                  <span className="text-[#6B7A71]">
+                    {formatDate(normalizeDate(act.createdAt), "short")}
+                  </span>
+                  <Link
+                    href={`/admin/laporan/${act.laporanId}`}
+                    className="font-semibold text-[#155E42] hover:underline"
+                  >
+                    Lihat &rarr;
+                  </Link>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      {/* 8 Laporan Masuk Terbaru */}
       <section className="space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold text-[#12241B]">

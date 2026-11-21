@@ -1,12 +1,9 @@
 import Link from "next/link";
-import {
-  ErrorBanner,
-  LaporanTable,
-  SummaryCardsGrid,
-} from "@/components/ui/SharedUI";
+import LaporanFilterTable from "@/components/laporan/LaporanFilterTable";
+import { ErrorBanner, SummaryCardsGrid } from "@/components/ui/SharedUI";
 import { requireRole } from "@/lib/auth";
 import {
-  computeStatusCounts,
+  fetchExactStatusCounts,
   fetchNormalizedDataset,
 } from "@/lib/normalizers";
 
@@ -23,15 +20,13 @@ export default async function PelaporLaporanListPage({ searchParams }) {
   const activeStatus =
     typeof resolvedParams?.status === "string" ? resolvedParams.status : "semua";
 
-  const dataset = await fetchNormalizedDataset(supabase, {
-    pelaporId: user.id,
-    limit: 100,
-  });
-  const counts = computeStatusCounts(dataset.laporanList);
-  const filteredLaporan =
-    activeStatus === "semua"
-      ? dataset.laporanList
-      : dataset.laporanList.filter((item) => item.statusKey === activeStatus);
+  const [dataset, counts] = await Promise.all([
+    fetchNormalizedDataset(supabase, {
+      pelaporId: user.id,
+      limit: 200,
+    }),
+    fetchExactStatusCounts(supabase, { pelaporId: user.id }),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -39,7 +34,8 @@ export default async function PelaporLaporanListPage({ searchParams }) {
         <div>
           <h1 className="text-2xl font-bold text-[#12241B]">Laporan Saya</h1>
           <p className="mt-1 text-sm text-[#606F67]">
-            Seluruh riwayat laporan kejadian karhutla yang dikirim menggunakan akun Anda.
+            Seluruh riwayat laporan kejadian karhutla yang dikirim menggunakan
+            akun Anda.
           </p>
         </div>
 
@@ -61,19 +57,13 @@ export default async function PelaporLaporanListPage({ searchParams }) {
         hrefBase="/pelapor/laporan"
       />
 
-      <LaporanTable
-        laporan={filteredLaporan}
+      <LaporanFilterTable
+        laporanList={dataset.laporanList}
+        wilayahList={dataset.wilayahList}
         detailHrefPrefix="/pelapor/laporan"
-        emptyTitle="Tidak ada laporan ditemukan"
-        emptyDescription={
-          activeStatus === "semua"
-            ? "Anda belum pernah mengirimkan laporan kejadian karhutla."
-            : "Tidak ada laporan Anda dengan status yang dipilih."
-        }
-        actionLabel={activeStatus === "semua" ? "Buat Laporan Baru" : "Tampilkan Semua"}
-        actionHref={
-          activeStatus === "semua" ? "/pelapor/laporan/buat" : "/pelapor/laporan"
-        }
+        initialStatus={activeStatus}
+        emptyActionLabel="Buat Laporan Baru"
+        emptyActionHref="/pelapor/laporan/buat"
       />
     </div>
   );

@@ -3,6 +3,9 @@ const nextConfig = {
   /* config options here */
   reactCompiler: true,
   experimental: {
+    serverActions: {
+      bodySizeLimit: "16mb",
+    },
     staleTimes: {
       dynamic: 60,
       static: 300,

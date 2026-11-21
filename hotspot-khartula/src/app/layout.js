@@ -12,7 +12,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "SIPKARHUTLA | Sistem Informasi Karhutla",
+  title: "HotMap | SIPKARHUTLA — Sistem Informasi Karhutla",
   description:
     "Pantau titik karhutla di seluruh wilayah, dari laporan warga sampai penanganan selesai.",
 };
