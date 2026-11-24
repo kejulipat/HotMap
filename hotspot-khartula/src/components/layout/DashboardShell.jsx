@@ -72,6 +72,7 @@ function buildBreadcrumbs(pathname) {
 
 export default function DashboardShell({
   role = "pelapor",
+  actualRole = null,
   userInfo = {},
   children,
 }) {
@@ -160,6 +161,7 @@ export default function DashboardShell({
               <Link
                 key={item.href}
                 href={item.href}
+                prefetch={true}
                 onClick={() => setSidebarOpen(false)}
                 className={`flex items-center justify-between rounded-lg px-3.5 py-2.5 text-sm font-medium transition-colors ${
                   active
@@ -175,6 +177,14 @@ export default function DashboardShell({
         </nav>
 
         <div className="border-t border-[#E3E8E1] p-3.5 space-y-2">
+          {actualRole === "admin" && role !== "admin" && (
+            <Link
+              href="/admin"
+              className="block rounded-lg border border-[#155E42] bg-[#EAF1EC] px-3.5 py-2 text-center text-xs font-semibold text-[#155E42] hover:bg-[#DCE8E0] transition-colors"
+            >
+              Kembali ke Portal Admin
+            </Link>
+          )}
           <Link
             href="/"
             className="block rounded-lg border border-[#DCE2DA] bg-[#FBFBFA] px-3.5 py-2 text-center text-xs font-semibold text-[#4E5E55] hover:bg-[#EAF1EC] hover:text-[#155E42] transition-colors"

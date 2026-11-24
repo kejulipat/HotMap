@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f6f7f3;
+  --foreground: #14231b;
 }
 
 @theme inline {
@@ -12,15 +12,62 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+/* Custom Leaflet & MarkerCluster overrides agar selaras dengan identitas HotMap */
+.leaflet-container {
+  font-family: inherit;
+  z-index: 1;
+}
+
+.leaflet-popup-content-wrapper {
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 25px -5px rgba(18, 36, 27, 0.16);
+  border: 1px solid #dce4df;
+  padding: 0;
+}
+
+.leaflet-popup-content {
+  margin: 0;
+  min-width: 210px;
+}
+
+.hotmap-marker-icon {
+  background: transparent;
+  border: 0;
+}
+
+.hotmap-cluster-icon {
+  background: transparent;
+  border: 0;
+}
+
+.hotmap-cluster-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #ffffff;
+  border: 3px solid rgba(255, 255, 255, 0.92);
+  box-shadow: 0 4px 12px rgba(18, 36, 27, 0.25);
+}
+
+.hotmap-cluster-sm {
+  background: #155e42;
+}
+
+.hotmap-cluster-md {
+  background: #d9822b;
+}
+
+.hotmap-cluster-lg {
+  background: #c85a28;
 }

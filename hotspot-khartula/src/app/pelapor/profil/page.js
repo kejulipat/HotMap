@@ -14,15 +14,17 @@ export default async function PelaporProfilPage() {
     "admin",
   ]);
 
-  let wilayahName = "-";
-  if (profile?.wilayah_id) {
-    const { data: wilayah } = await supabase
-      .from("wilayah")
-      .select("nama_wilayah")
-      .eq("id", profile.wilayah_id)
-      .maybeSingle();
-    wilayahName = wilayah?.nama_wilayah ?? "-";
-  }
+  const { data: wilayahList } = await supabase
+    .from("wilayah")
+    .select("id, nama_wilayah, kabupaten_kota")
+    .order("nama_wilayah", { ascending: true });
+
+  const matched = (wilayahList ?? []).find((w) => w.id === profile?.wilayah_id);
+  const wilayahName = matched
+    ? `${matched.nama_wilayah}${
+        matched.kabupaten_kota ? ` — ${matched.kabupaten_kota}` : ""
+      }`
+    : "-";
 
   return (
     <ProfileSummaryView
@@ -30,6 +32,7 @@ export default async function PelaporProfilPage() {
       profile={profile}
       role={role}
       wilayahName={wilayahName}
+      wilayahList={wilayahList ?? []}
       actionLinks={[
         { href: "/pelapor", label: "Dashboard Pelapor" },
         { href: "/pelapor/laporan", label: "Laporan Saya" },

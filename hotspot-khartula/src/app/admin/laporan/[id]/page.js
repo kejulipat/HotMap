@@ -1,3 +1,4 @@
+import AdminLaporanActionPanel from "@/components/laporan/AdminLaporanActionPanel";
 import LaporanDetailView from "@/components/laporan/LaporanDetailView";
 import { EmptyState, ErrorBanner } from "@/components/ui/SharedUI";
 import { requireRole } from "@/lib/auth";
@@ -7,12 +8,24 @@ export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "Detail & Verifikasi Laporan | Admin HotMap",
-  description: "Panel detail dan kesiapan verifikasi laporan oleh admin.",
+  description:
+    "Panel detail, verifikasi status, penentuan prioritas, dan penugasan petugas oleh admin.",
 };
 
 export default async function AdminDetailLaporanPage({ params }) {
   const { id } = await params;
   const { supabase } = await requireRole(["admin"]);
+
+  const [detailRes, petugasRes, wilayahRes] = await Promise.all([
+    fetchLaporanById(supabase, id),
+    supabase
+      .from("profiles")
+      .select("id, full_name, role, wilayah_id")
+      .eq("role", "petugas")
+      .order("full_name", { ascending: true }),
+    supabase.from("wilayah").select("id, nama_wilayah"),
+  ]);
+
   const {
     laporan,
     fotoList,
@@ -21,7 +34,7 @@ export default async function AdminDetailLaporanPage({ params }) {
     penangananLogList,
     relationsReady,
     error,
-  } = await fetchLaporanById(supabase, id);
+  } = detailRes;
 
   if (error) {
     return (
@@ -40,6 +53,14 @@ export default async function AdminDetailLaporanPage({ params }) {
     );
   }
 
+  const wilayahMap = new Map(
+    (wilayahRes.data ?? []).map((w) => [w.id, w.nama_wilayah])
+  );
+  const petugasList = (petugasRes.data ?? []).map((p) => ({
+    ...p,
+    wilayahNama: p.wilayah_id ? wilayahMap.get(p.wilayah_id) ?? null : null,
+  }));
+
   return (
     <LaporanDetailView
       laporan={laporan}
@@ -51,9 +72,7 @@ export default async function AdminDetailLaporanPage({ params }) {
       backHref="/admin/laporan"
       backLabel="Kembali ke Manajemen Laporan"
     >
-      <div className="rounded-xl border border-[#F3C8B8] bg-[#FDF2EA] p-4 text-xs sm:text-sm text-[#9B4017]">
-        <strong>Panel Verifikasi &amp; Penugasan Petugas (Fase 3):</strong> Aksi persetujuan/penolakan laporan, pencatatan log verifikasi, dan penugasan petugas lapangan akan diaktifkan pada Fase 3.
-      </div>
+      <AdminLaporanActionPanel laporan={laporan} petugasList={petugasList} />
     </LaporanDetailView>
   );
 }

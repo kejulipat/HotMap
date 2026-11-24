@@ -1,8 +1,5 @@
-import {
-  ErrorBanner,
-  LaporanTable,
-  MapOverviewBox,
-} from "@/components/ui/SharedUI";
+import PetaLaporanExplorer from "@/components/map/PetaLaporanExplorer";
+import { ErrorBanner } from "@/components/ui/SharedUI";
 import { requireRole } from "@/lib/auth";
 import { fetchNormalizedDataset } from "@/lib/normalizers";
 
@@ -10,11 +7,12 @@ export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "Peta Operasional Petugas | HotMap",
-  description: "Peta pemantauan lokasi kejadian untuk petugas lapangan.",
+  description:
+    "Peta GIS interaktif lokasi kejadian dan penugasan untuk petugas lapangan.",
 };
 
 export default async function PetugasPetaPage() {
-  const { supabase } = await requireRole(["petugas", "admin"]);
+  const { supabase, user } = await requireRole(["petugas", "admin"]);
   const dataset = await fetchNormalizedDataset(supabase, { limit: 200 });
 
   return (
@@ -24,7 +22,8 @@ export default async function PetugasPetaPage() {
           Peta Operasional Petugas
         </h1>
         <p className="mt-1 text-sm text-[#606F67]">
-          Pantau sebaran titik laporan kejadian beserta koordinat untuk orientasi tim lapangan.
+          Pantau titik kejadian di seluruh wilayah atau saring khusus laporan
+          yang ditugaskan kepada Anda beserta tautan arah navigasi.
         </p>
       </div>
 
@@ -32,18 +31,14 @@ export default async function PetugasPetaPage() {
         <ErrorBanner message="Gagal memuat data koordinat laporan dari database." />
       )}
 
-      <MapOverviewBox
-        laporan={dataset.laporanList}
+      <PetaLaporanExplorer
+        laporanList={dataset.laporanList}
+        wilayahList={dataset.wilayahList}
         detailHrefPrefix="/petugas/laporan"
-        title="Sebaran Titik Operasional"
-        subtitle="Klik titik pada peta untuk membuka detail tindak lanjut laporan."
-      />
-
-      <LaporanTable
-        laporan={dataset.laporanList}
-        detailHrefPrefix="/petugas/laporan"
-        emptyTitle="Belum ada koordinat laporan"
-        emptyDescription="Belum ada laporan yang tersimpan di database."
+        currentUserId={user.id}
+        enablePetugasScope={true}
+        title="Sebaran Titik Operasional Lapangan"
+        subtitle="Gunakan tombol 'Ditugaskan ke Saya' untuk memfokuskan peta pada tugas aktif Anda."
       />
     </div>
   );

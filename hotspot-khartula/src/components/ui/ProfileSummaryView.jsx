@@ -1,5 +1,9 @@
+"use client";
+
+import { useActionState } from "react";
 import Link from "next/link";
-import { ROLE_LABELS } from "@/lib/auth";
+import { updateMyProfileAction } from "@/lib/actions/users";
+import { ROLE_LABELS } from "@/lib/workflow";
 import { formatDate, normalizeDate } from "@/lib/normalizers";
 
 export default function ProfileSummaryView({
@@ -7,8 +11,14 @@ export default function ProfileSummaryView({
   profile,
   role,
   wilayahName = "-",
+  wilayahList = [],
   actionLinks = [],
 }) {
+  const [state, dispatch, isPending] = useActionState(
+    updateMyProfileAction,
+    null
+  );
+
   const fullName =
     profile?.full_name || user?.user_metadata?.full_name || "Belum diisi";
   const createdDate = normalizeDate(profile?.created_at ?? user?.created_at);
@@ -28,53 +38,141 @@ export default function ProfileSummaryView({
         </p>
       </div>
 
-      <div className="rounded-2xl border border-[#E3E8E1] bg-white p-6 shadow-2xs space-y-5 max-w-2xl">
-        <div className="flex items-center gap-4 pb-5 border-b border-[#ECEFE9]">
-          <div className="h-12 w-12 rounded-xl bg-[#155E42] text-white flex items-center justify-center font-bold text-lg">
-            {String(fullName).slice(0, 1).toUpperCase()}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+        <div className="rounded-2xl border border-[#E3E8E1] bg-white p-6 shadow-2xs space-y-5">
+          <div className="flex items-center gap-4 pb-5 border-b border-[#ECEFE9]">
+            <div className="h-12 w-12 rounded-xl bg-[#155E42] text-white flex items-center justify-center font-bold text-lg">
+              {String(fullName).slice(0, 1).toUpperCase()}
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-[#14231B]">{fullName}</h2>
+              <p className="text-xs text-[#6B7A71]">{user?.email}</p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-lg font-bold text-[#14231B]">{fullName}</h2>
-            <p className="text-xs text-[#6B7A71]">{user?.email}</p>
-          </div>
+
+          <dl className="divide-y divide-[#ECEFE9] text-sm">
+            <div className="py-3 flex flex-col sm:flex-row sm:justify-between gap-1">
+              <dt className="text-[#6B7A71]">User ID</dt>
+              <dd className="font-mono text-xs text-[#14231B]">{user?.id}</dd>
+            </div>
+            <div className="py-3 flex flex-col sm:flex-row sm:justify-between gap-1">
+              <dt className="text-[#6B7A71]">Role Akun</dt>
+              <dd className="font-semibold text-[#155E42]">
+                {ROLE_LABELS[role] ?? role}
+              </dd>
+            </div>
+            <div className="py-3 flex flex-col sm:flex-row sm:justify-between gap-1">
+              <dt className="text-[#6B7A71]">Wilayah Tugas / Domisili</dt>
+              <dd className="font-semibold text-[#14231B]">{wilayahName}</dd>
+            </div>
+            <div className="py-3 flex flex-col sm:flex-row sm:justify-between gap-1">
+              <dt className="text-[#6B7A71]">Terdaftar Sejak</dt>
+              <dd className="font-semibold text-[#14231B]">
+                {createdDate ? formatDate(createdDate, "long") : "-"}
+              </dd>
+            </div>
+          </dl>
+
+          {actionLinks.length > 0 && (
+            <div className="pt-4 border-t border-[#ECEFE9] flex flex-wrap gap-3">
+              {actionLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="rounded-lg border border-[#DCE2DA] bg-[#FBFBFA] px-4 py-2 text-xs font-semibold text-[#14231B] hover:border-[#155E42] hover:bg-[#EAF1EC] transition-colors"
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
 
-        <dl className="divide-y divide-[#ECEFE9] text-sm">
-          <div className="py-3 flex flex-col sm:flex-row sm:justify-between gap-1">
-            <dt className="text-[#6B7A71]">User ID</dt>
-            <dd className="font-mono text-xs text-[#14231B]">{user?.id}</dd>
+        {/* Form Ubah Profil Diri Sendiri (Hanya Nama & Wilayah — Role dikunci di server & RLS) */}
+        <div className="rounded-2xl border border-[#E3E8E1] bg-white p-6 shadow-2xs space-y-4">
+          <div>
+            <h2 className="text-base font-bold text-[#12241B]">
+              Perbarui Profil Saya
+            </h2>
+            <p className="text-xs text-[#6B7A71]">
+              Ubah nama tampilan dan wilayah domisili/tugas Anda. Perubahan role
+              hanya dapat dilakukan oleh Admin.
+            </p>
           </div>
-          <div className="py-3 flex flex-col sm:flex-row sm:justify-between gap-1">
-            <dt className="text-[#6B7A71]">Role Akun</dt>
-            <dd className="font-semibold text-[#155E42]">
-              {ROLE_LABELS[role] ?? role}
-            </dd>
-          </div>
-          <div className="py-3 flex flex-col sm:flex-row sm:justify-between gap-1">
-            <dt className="text-[#6B7A71]">Wilayah Tugas / Domisili</dt>
-            <dd className="font-semibold text-[#14231B]">{wilayahName}</dd>
-          </div>
-          <div className="py-3 flex flex-col sm:flex-row sm:justify-between gap-1">
-            <dt className="text-[#6B7A71]">Terdaftar Sejak</dt>
-            <dd className="font-semibold text-[#14231B]">
-              {createdDate ? formatDate(createdDate, "long") : "-"}
-            </dd>
-          </div>
-        </dl>
 
-        {actionLinks.length > 0 && (
-          <div className="pt-4 border-t border-[#ECEFE9] flex flex-wrap gap-3">
-            {actionLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="rounded-lg border border-[#DCE2DA] bg-[#FBFBFA] px-4 py-2 text-xs font-semibold text-[#14231B] hover:border-[#155E42] hover:bg-[#EAF1EC] transition-colors"
+          {state?.error && (
+            <div
+              role="alert"
+              className="rounded-lg border border-[#E5B8A7] bg-[#FDF2EA] px-3.5 py-2.5 text-xs text-[#9B4017]"
+            >
+              {state.error}
+            </div>
+          )}
+          {state?.success && (
+            <div
+              role="status"
+              className="rounded-lg border border-[#C4E2CE] bg-[#EAF5EE] px-3.5 py-2.5 text-xs text-[#1F6B41]"
+            >
+              {state.success}
+            </div>
+          )}
+
+          <form action={dispatch} className="space-y-4">
+            <div>
+              <label
+                htmlFor="profile-full-name"
+                className="block text-xs font-semibold text-[#4E5E55] mb-1.5"
               >
-                {link.label}
-              </Link>
-            ))}
-          </div>
-        )}
+                Nama Lengkap <span className="text-[#C85A28]">*</span>
+              </label>
+              <input
+                id="profile-full-name"
+                name="full_name"
+                type="text"
+                required
+                minLength={2}
+                maxLength={100}
+                disabled={isPending}
+                defaultValue={profile?.full_name ?? ""}
+                className="w-full rounded-lg border border-[#DCE2DA] bg-[#FBFBFA] px-3.5 py-2 text-sm text-[#14231B] focus:border-[#155E42] focus:outline-none"
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="profile-wilayah"
+                className="block text-xs font-semibold text-[#4E5E55] mb-1.5"
+              >
+                Wilayah Tugas / Domisili
+              </label>
+              <select
+                id="profile-wilayah"
+                name="wilayah_id"
+                disabled={isPending}
+                defaultValue={profile?.wilayah_id ?? ""}
+                className="w-full rounded-lg border border-[#DCE2DA] bg-[#FBFBFA] px-3.5 py-2 text-sm text-[#14231B] focus:border-[#155E42] focus:outline-none"
+              >
+                <option value="">— Belum ditetapkan —</option>
+                {wilayahList.map((w) => (
+                  <option key={w.id} value={w.id}>
+                    {w.nama_wilayah}
+                    {w.kabupaten_kota ? ` — ${w.kabupaten_kota}` : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex justify-end">
+              <button
+                type="submit"
+                disabled={isPending}
+                className="rounded-lg bg-[#155E42] hover:bg-[#114B35] px-5 py-2 text-xs font-semibold text-white transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                {isPending ? "Menyimpan..." : "Simpan Profil"}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );

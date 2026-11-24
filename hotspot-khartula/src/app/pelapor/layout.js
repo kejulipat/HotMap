@@ -2,11 +2,12 @@ import DashboardShell from "@/components/layout/DashboardShell";
 import { requireRole } from "@/lib/auth";
 
 export default async function PelaporLayout({ children }) {
-  const { user, profile } = await requireRole(["pelapor", "admin"]);
+  const { user, profile, role } = await requireRole(["pelapor", "admin"]);
 
   return (
     <DashboardShell
       role="pelapor"
+      actualRole={role}
       userInfo={{
         id: user.id,
         email: user.email ?? "",

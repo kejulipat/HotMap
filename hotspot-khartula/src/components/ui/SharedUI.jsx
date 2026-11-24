@@ -4,7 +4,6 @@ import {
   SUMMARY_CARDS,
   formatDate,
   isValidLatLng,
-  projectToIndonesiaMap,
 } from "@/lib/normalizers";
 
 export function StatusBadge({ statusKey, className = "" }) {
@@ -144,6 +143,25 @@ export function LoadingSpinner({ label = "Memuat data..." }) {
   );
 }
 
+/** Skeleton area konten dashboard; sidebar & header tetap tampil saat pindah halaman. */
+export function DashboardPageSkeleton() {
+  const block = "rounded-xl bg-[#E6ECE7] animate-pulse";
+  return (
+    <div className="space-y-6" aria-busy="true" aria-label="Memuat halaman">
+      <div className="space-y-2">
+        <div className={`${block} h-7 w-64 max-w-full`} />
+        <div className={`${block} h-4 w-96 max-w-full`} />
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className={`${block} h-20`} />
+        ))}
+      </div>
+      <div className={`${block} h-72`} />
+    </div>
+  );
+}
+
 export function Breadcrumb({ items = [] }) {
   if (items.length === 0) return null;
   return (
@@ -167,129 +185,6 @@ export function Breadcrumb({ items = [] }) {
         );
       })}
     </nav>
-  );
-}
-
-export function MapOverviewBox({
-  laporan = [],
-  title = "Pratinjau Sebaran Koordinat Laporan",
-  subtitle = "Menampilkan titik koordinat laporan warga yang valid. Integrasi peta GIS interaktif (Leaflet) dijadwalkan pada Fase 2.",
-  detailHrefPrefix = null,
-}) {
-  const geoPoints = laporan.filter((item) =>
-    isValidLatLng(item.latitude, item.longitude)
-  );
-
-  return (
-    <section className="rounded-2xl bg-white border border-[#E3E8E1] p-4 sm:p-6 shadow-2xs space-y-4">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-        <div>
-          <h2 className="text-lg font-bold text-[#12241B]">{title}</h2>
-          <p className="text-xs text-[#6B7A71]">{subtitle}</p>
-        </div>
-        <span className="self-start sm:self-auto rounded-lg bg-[#EAF1EC] border border-[#D5E2D8] px-3 py-1.5 text-xs font-semibold text-[#155E42]">
-          {geoPoints.length} titik koordinat valid
-        </span>
-      </div>
-
-      <div className="relative rounded-xl bg-[#DFECE6] border border-[#CFE0D8] min-h-[340px] sm:min-h-[400px] overflow-hidden">
-        <div
-          className="absolute inset-0 opacity-35 pointer-events-none"
-          style={{
-            backgroundImage:
-              "linear-gradient(to right, #bdd2c8 1px, transparent 1px), linear-gradient(to bottom, #bdd2c8 1px, transparent 1px)",
-            backgroundSize: "72px 72px",
-          }}
-        />
-
-        <div className="absolute top-3 right-3 z-10 w-8 h-10 rounded-lg bg-white/95 border border-[#D5E0DA] shadow-xs flex flex-col items-center justify-center text-[10px] font-bold text-[#33423A]">
-          <span>N</span>
-          <span className="text-xs leading-none">&uarr;</span>
-        </div>
-
-        <svg
-          viewBox="0 0 1000 450"
-          className="w-full h-full min-h-[340px] sm:min-h-[400px] object-contain p-5 opacity-90"
-          aria-label="Pratinjau Kanvas Peta Wilayah Indonesia"
-        >
-          <path
-            d="M75,90 L135,120 L215,215 L245,275 L210,300 L145,225 L90,145 Z"
-            fill="#C4D7B8"
-            stroke="#7D9B76"
-            strokeWidth="1.5"
-          />
-          <path
-            d="M235,320 L385,332 L415,348 L360,358 L235,342 Z"
-            fill="#C4D7B8"
-            stroke="#7D9B76"
-            strokeWidth="1.5"
-          />
-          <path
-            d="M295,125 L385,105 L440,145 L425,235 L350,255 L290,215 Z"
-            fill="#C4D7B8"
-            stroke="#7D9B76"
-            strokeWidth="1.5"
-          />
-          <path
-            d="M475,145 L545,135 L555,165 L505,190 L535,235 L505,270 L470,225 L485,175 Z"
-            fill="#C4D7B8"
-            stroke="#7D9B76"
-            strokeWidth="1.5"
-          />
-          <path
-            d="M430,342 L530,346 L575,358 L525,368 L430,356 Z"
-            fill="#C4D7B8"
-            stroke="#7D9B76"
-            strokeWidth="1.5"
-          />
-          <path
-            d="M600,175 L645,165 L655,220 L615,235 Z"
-            fill="#C4D7B8"
-            stroke="#7D9B76"
-            strokeWidth="1.5"
-          />
-          <path
-            d="M685,185 L785,175 L845,225 L840,310 L765,285 L705,240 Z"
-            fill="#C4D7B8"
-            stroke="#7D9B76"
-            strokeWidth="1.5"
-          />
-        </svg>
-
-        {geoPoints.map((item) => {
-          const pos = projectToIndonesiaMap(item.latitude, item.longitude);
-          const meta = STATUS_META[item.statusKey] ?? STATUS_META.menunggu_verifikasi;
-          const markerDot = (
-            <span
-              title={`${item.judul} (${item.wilayah}) — ${item.latitude}, ${item.longitude}`}
-              className={`flex items-center justify-center w-6 h-6 rounded-full ring-4 ${meta.pinRing} bg-white shadow-md hover:scale-110 transition-transform`}
-            >
-              <span className={`w-3 h-3 rounded-full ${meta.pinBg}`} />
-            </span>
-          );
-
-          return (
-            <div
-              key={item.id}
-              style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
-              className="absolute -translate-x-1/2 -translate-y-1/2 z-10"
-            >
-              {detailHrefPrefix ? (
-                <Link href={`${detailHrefPrefix}/${item.id}`}>
-                  {markerDot}
-                </Link>
-              ) : (
-                markerDot
-              )}
-            </div>
-          );
-        })}
-
-        <p className="absolute bottom-3 left-4 text-[11px] text-[#4E5E55] bg-white/80 backdrop-blur px-2.5 py-1 rounded-md border border-[#D5E2D8]">
-          Titik menunjukkan laporan warga, bukan deteksi hotspot satelit.
-        </p>
-      </div>
-    </section>
   );
 }
 

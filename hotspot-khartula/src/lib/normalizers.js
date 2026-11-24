@@ -2,6 +2,10 @@ import {
   getBeritaImagePublicUrl,
   getLaporanEvidenceSignedUrl,
 } from "@/lib/storage";
+import {
+  DATA_CACHE_TTL_MS,
+  readCachedOrFetch,
+} from "@/lib/server-cache";
 
 export const STATUS_META = {
   menunggu_verifikasi: {
@@ -187,7 +191,7 @@ export function computeStatusCounts(laporanList = []) {
 }
 
 const BASE_LAPORAN_COLS =
-  "id, judul, deskripsi, wilayah_id, created_at, updated_at, status, latitude, longitude, pelapor_id, catatan_verifikasi";
+  "id, judul, deskripsi, wilayah_id, waktu_kejadian, created_at, updated_at, status, latitude, longitude, pelapor_id, catatan_verifikasi";
 
 const EXTENDED_LAPORAN_COLS = `${BASE_LAPORAN_COLS}, jenis_kejadian, alamat_lokasi, estimasi_luas, tingkat_keparahan, petugas_id, verified_by, verified_at`;
 
@@ -242,7 +246,8 @@ function normalizeLaporanRow(row, idx, wilayahById, profileById) {
     lokasiSingkat: wilayahNama,
     wilayahId: row.wilayah_id ?? null,
     wilayah: wilayahNama,
-    tanggal: normalizeDate(row.created_at),
+    tanggal: normalizeDate(row.waktu_kejadian ?? row.created_at),
+    waktuKejadian: row.waktu_kejadian ?? row.created_at ?? null,
     createdAt: row.created_at ?? null,
     updatedAt: row.updated_at ?? null,
     statusRaw: row.status ?? "menunggu_verifikasi",
@@ -260,10 +265,26 @@ function normalizeLaporanRow(row, idx, wilayahById, profileById) {
   };
 }
 
-export async function fetchNormalizedDataset(
+const BASE_CACHE_LAPORAN_LIMIT = 200;
+const BASE_CACHE_BERITA_LIMIT = 50;
+
+function resolveDatasetScope(supabase) {
+  if (supabase?.__sessionScope) return supabase.__sessionScope;
+  return supabase?.__authFingerprint ? "auth" : "anon";
+}
+
+async function fetchBaseDatasetUncached(
   supabase,
-  { pelaporId = null, limit = 100, beritaLimit = 3 } = {}
+  {
+    pelaporId = null,
+    limit = BASE_CACHE_LAPORAN_LIMIT,
+    beritaLimit = BASE_CACHE_BERITA_LIMIT,
+  } = {}
 ) {
+  const isAuthenticated = Boolean(
+    supabase?.__isAuthenticated ?? supabase?.__authFingerprint
+  );
+
   let laporanQuery = supabase
     .from("laporan_karhutla")
     .select(EXTENDED_LAPORAN_COLS)
@@ -274,7 +295,9 @@ export async function fetchNormalizedDataset(
     laporanQuery = laporanQuery.eq("pelapor_id", pelaporId);
   }
 
-  let [wilayahRes, laporanRes, beritaRes] = await Promise.all([
+  // Jalankan seluruh query dalam 1 batch paralel (termasuk profiles jika user login).
+  // Untuk pengunjung anon, tabel profiles tidak memiliki GRANT SELECT sehingga tidak perlu di-query.
+  let [wilayahRes, laporanRes, beritaRes, profilesRes] = await Promise.all([
     supabase
       .from("wilayah")
       .select("id, nama_wilayah, kabupaten_kota, center_lat, center_lng, created_at")
@@ -287,6 +310,9 @@ export async function fetchNormalizedDataset(
       .order("published_at", { ascending: false, nullsFirst: false })
       .order("created_at", { ascending: false })
       .limit(beritaLimit),
+    isAuthenticated
+      ? supabase.from("profiles").select("id, full_name, role").limit(500)
+      : Promise.resolve({ data: [] }),
   ]);
 
   if (isMissingColumnError(laporanRes.error)) {
@@ -311,27 +337,9 @@ export async function fetchNormalizedDataset(
   const rawWilayah = wilayahRes.data ?? [];
   const rawLaporan = laporanRes.data ?? [];
   const beritaTableReady = !isMissingTableError(beritaRes.error);
-  const rawBerita = beritaTableReady && !beritaRes.error ? beritaRes.data ?? [] : [];
-
-  const profileIds = Array.from(
-    new Set(
-      [
-        ...rawLaporan.map((row) => row.pelapor_id),
-        ...rawLaporan.map((row) => row.petugas_id),
-        ...rawBerita.map((b) => b.author_id),
-      ].filter(Boolean)
-    )
-  );
-
-  const rawProfiles =
-    profileIds.length > 0
-      ? (
-          await supabase
-            .from("profiles")
-            .select("id, full_name, role")
-            .in("id", profileIds)
-        ).data ?? []
-      : [];
+  const rawBerita =
+    beritaTableReady && !beritaRes.error ? beritaRes.data ?? [] : [];
+  const rawProfiles = profilesRes?.data ?? [];
 
   const wilayahById = new Map();
   for (const w of rawWilayah) {
@@ -378,6 +386,47 @@ export async function fetchNormalizedDataset(
       wilayahRes.error || laporanRes.error || beritaRealError
     ),
   };
+}
+
+async function getSharedBaseDataset(supabase, { pelaporId = null } = {}) {
+  const scope = resolveDatasetScope(supabase);
+  const cacheKey = `dataset:${scope}:${pelaporId ?? "all"}`;
+
+  return readCachedOrFetch(
+    "data",
+    cacheKey,
+    DATA_CACHE_TTL_MS,
+    () =>
+      fetchBaseDatasetUncached(supabase, {
+        pelaporId,
+        limit: BASE_CACHE_LAPORAN_LIMIT,
+        beritaLimit: BASE_CACHE_BERITA_LIMIT,
+      }),
+    (res) => !res?.hasQueryError
+  );
+}
+
+export async function fetchNormalizedDataset(
+  supabase,
+  { pelaporId = null, limit = 100, beritaLimit = 3 } = {}
+) {
+  if (
+    limit <= BASE_CACHE_LAPORAN_LIMIT &&
+    beritaLimit <= BASE_CACHE_BERITA_LIMIT
+  ) {
+    const base = await getSharedBaseDataset(supabase, { pelaporId });
+    return {
+      ...base,
+      laporanList: base.laporanList.slice(0, limit),
+      beritaList: base.beritaList.slice(0, beritaLimit),
+    };
+  }
+
+  return fetchBaseDatasetUncached(supabase, {
+    pelaporId,
+    limit,
+    beritaLimit,
+  });
 }
 
 export async function fetchLaporanById(supabase, id) {
@@ -569,48 +618,69 @@ export async function fetchBeritaList(
   limit = 50,
   { includeAllStatuses = false } = {}
 ) {
-  let query = supabase.from("berita").select("*");
-  if (!includeAllStatuses) {
-    query = query.eq("status", "published");
-  }
-
-  const { data, error } = await query
-    .order("published_at", { ascending: false, nullsFirst: false })
-    .order("created_at", { ascending: false })
-    .limit(limit);
-
-  if (error) {
+  // Untuk halaman publik (/berita), gunakan cache dataset bersama agar pindah
+  // antara Beranda (/), Peta (/peta), dan Berita (/berita) tidak query ulang ke Supabase.
+  if (!includeAllStatuses && limit <= BASE_CACHE_BERITA_LIMIT) {
+    const base = await getSharedBaseDataset(supabase);
     return {
-      beritaList: [],
-      tableReady: !isMissingTableError(error),
-      error: isMissingTableError(error) ? null : error,
+      beritaList: base.beritaList.slice(0, limit),
+      tableReady: base.beritaTableReady,
+      error: null,
     };
   }
 
-  const rows = data ?? [];
-  const authorIds = Array.from(
-    new Set(rows.map((b) => b.author_id).filter(Boolean))
+  const scope = resolveDatasetScope(supabase);
+  const isAuthenticated = Boolean(
+    supabase?.__isAuthenticated ?? supabase?.__authFingerprint
   );
-  const rawProfiles =
-    authorIds.length > 0
-      ? (
-          await supabase
-            .from("profiles")
-            .select("id, full_name")
-            .in("id", authorIds)
-        ).data ?? []
-      : [];
-  const profileById = new Map(
-    rawProfiles.map((p) => [p.id, p.full_name]).filter(([, n]) => Boolean(n))
-  );
+  const cacheKey = `beritaList:${scope}:${includeAllStatuses ? "all" : "pub"}:${limit}`;
 
-  return {
-    beritaList: rows.map((b, idx) =>
-      normalizeBeritaRow(b, idx, supabase, profileById)
-    ),
-    tableReady: true,
-    error: null,
-  };
+  return readCachedOrFetch(
+    "data",
+    cacheKey,
+    DATA_CACHE_TTL_MS,
+    async () => {
+      let query = supabase.from("berita").select("*");
+      if (!includeAllStatuses) {
+        query = query.eq("status", "published");
+      }
+
+      const [beritaRes, profilesRes] = await Promise.all([
+        query
+          .order("published_at", { ascending: false, nullsFirst: false })
+          .order("created_at", { ascending: false })
+          .limit(limit),
+        isAuthenticated
+          ? supabase.from("profiles").select("id, full_name").limit(500)
+          : Promise.resolve({ data: [] }),
+      ]);
+
+      const { data, error } = beritaRes;
+
+      if (error) {
+        return {
+          beritaList: [],
+          tableReady: !isMissingTableError(error),
+          error: isMissingTableError(error) ? null : error,
+        };
+      }
+
+      const rows = data ?? [];
+      const rawProfiles = profilesRes?.data ?? [];
+      const profileById = new Map(
+        rawProfiles.map((p) => [p.id, p.full_name]).filter(([, n]) => Boolean(n))
+      );
+
+      return {
+        beritaList: rows.map((b, idx) =>
+          normalizeBeritaRow(b, idx, supabase, profileById)
+        ),
+        tableReady: true,
+        error: null,
+      };
+    },
+    (res) => !res?.error
+  );
 }
 
 export async function fetchBeritaById(supabase, idOrSlug) {
@@ -618,39 +688,226 @@ export async function fetchBeritaById(supabase, idOrSlug) {
     return { berita: null, tableReady: true, error: null };
   }
 
-  const byUuid = isUuid(idOrSlug);
-  const res = byUuid
-    ? await supabase.from("berita").select("*").eq("id", idOrSlug).maybeSingle()
-    : await supabase
-        .from("berita")
-        .select("*")
-        .eq("slug", idOrSlug)
-        .maybeSingle();
-
-  if (res.error && isMissingTableError(res.error)) {
+  // Cek di cache daftar berita terlebih dahulu agar klik detail berita dari / atau /berita instan (0ms).
+  const base = await getSharedBaseDataset(supabase);
+  if (!base.beritaTableReady) {
     return { berita: null, tableReady: false, error: null };
   }
-
-  if (res.error || !res.data) {
-    return { berita: null, tableReady: true, error: res.error ?? null };
+  const cachedMatch = base.beritaList.find(
+    (b) => b.id === idOrSlug || b.slug === idOrSlug
+  );
+  if (cachedMatch) {
+    return {
+      berita: cachedMatch,
+      tableReady: true,
+      error: null,
+    };
   }
 
-  const b = res.data;
-  const profileById = new Map();
-  if (b.author_id) {
-    const { data: authorProfile } = await supabase
-      .from("profiles")
-      .select("id, full_name")
-      .eq("id", b.author_id)
-      .maybeSingle();
-    if (authorProfile?.full_name) {
-      profileById.set(authorProfile.id, authorProfile.full_name);
-    }
-  }
+  const scope = resolveDatasetScope(supabase);
+  const isAuthenticated = Boolean(
+    supabase?.__isAuthenticated ?? supabase?.__authFingerprint
+  );
+  const cacheKey = `beritaDetail:${scope}:${idOrSlug}`;
 
-  return {
-    berita: normalizeBeritaRow(b, 0, supabase, profileById),
-    tableReady: true,
-    error: null,
-  };
+  return readCachedOrFetch(
+    "data",
+    cacheKey,
+    DATA_CACHE_TTL_MS,
+    async () => {
+      const byUuid = isUuid(idOrSlug);
+      const res = byUuid
+        ? await supabase
+            .from("berita")
+            .select("*")
+            .eq("id", idOrSlug)
+            .maybeSingle()
+        : await supabase
+            .from("berita")
+            .select("*")
+            .eq("slug", idOrSlug)
+            .maybeSingle();
+
+      if (res.error && isMissingTableError(res.error)) {
+        return { berita: null, tableReady: false, error: null };
+      }
+
+      if (res.error || !res.data) {
+        return { berita: null, tableReady: true, error: res.error ?? null };
+      }
+
+      const b = res.data;
+      const profileById = new Map();
+      if (b.author_id && isAuthenticated) {
+        const { data: authorProfile } = await supabase
+          .from("profiles")
+          .select("id, full_name")
+          .eq("id", b.author_id)
+          .maybeSingle();
+        if (authorProfile?.full_name) {
+          profileById.set(authorProfile.id, authorProfile.full_name);
+        }
+      }
+
+      return {
+        berita: normalizeBeritaRow(b, 0, supabase, profileById),
+        tableReady: true,
+        error: null,
+      };
+    },
+    (res) => !res?.error
+  );
+}
+
+/**
+ * Menghitung jumlah laporan per status secara akurat langsung di Postgres (`count: exact, head: true`),
+ * sehingga angka KPI tidak terpotong oleh batas `limit` fetch tabel.
+ */
+export async function fetchExactStatusCounts(
+  supabase,
+  { pelaporId = null, petugasId = null } = {}
+) {
+  const scope = resolveDatasetScope(supabase);
+  const cacheKey = `exactCounts:${scope}:${pelaporId ?? "all"}:${petugasId ?? "all"}`;
+
+  return readCachedOrFetch(
+    "data",
+    cacheKey,
+    DATA_CACHE_TTL_MS,
+    async () => {
+      const statuses = [
+        "menunggu_verifikasi",
+        "terverifikasi",
+        "ditangani",
+        "selesai",
+        "ditolak",
+      ];
+
+      const makeQuery = (statusValue = null) => {
+        let q = supabase
+          .from("laporan_karhutla")
+          .select("id", { count: "exact", head: true });
+        if (pelaporId) q = q.eq("pelapor_id", pelaporId);
+        if (petugasId) q = q.eq("petugas_id", petugasId);
+        if (statusValue) q = q.eq("status", statusValue);
+        return q;
+      };
+
+      const [totalRes, ...statusResList] = await Promise.all([
+        makeQuery(null),
+        ...statuses.map((st) => makeQuery(st)),
+      ]);
+
+      const counts = {
+        semua: totalRes.count ?? 0,
+        menunggu_verifikasi: 0,
+        terverifikasi: 0,
+        ditangani: 0,
+        selesai: 0,
+        ditolak: 0,
+      };
+
+      statuses.forEach((st, idx) => {
+        counts[st] = statusResList[idx]?.count ?? 0;
+      });
+
+      return counts;
+    },
+    (res) => Boolean(res && typeof res.semua === "number")
+  );
+}
+
+/**
+ * Mengambil analitik operasional aktual untuk Dashboard Admin (100% dari Supabase).
+ */
+export async function fetchAdminAnalytics(supabase) {
+  const scope = resolveDatasetScope(supabase);
+  const cacheKey = `adminAnalytics:${scope}`;
+
+  return readCachedOrFetch(
+    "data",
+    cacheKey,
+    DATA_CACHE_TTL_MS,
+    async () => {
+      const [
+        exactCounts,
+        penugasanRes,
+        recentLogsRes,
+        profilesRes,
+        beritaRes,
+      ] = await Promise.all([
+        fetchExactStatusCounts(supabase),
+        supabase
+          .from("penugasan_laporan")
+          .select("id, petugas_id, status_penugasan, assigned_at, completed_at")
+          .order("assigned_at", { ascending: false })
+          .limit(300),
+        supabase
+          .from("penanganan_log")
+          .select("id, laporan_id, petugas_id, status_update, catatan_penanganan, created_at")
+          .order("created_at", { ascending: false })
+          .limit(8),
+        supabase
+          .from("profiles")
+          .select("id, full_name, role"),
+        supabase
+          .from("berita")
+          .select("id, status"),
+      ]);
+
+      const profiles = profilesRes.data ?? [];
+      const profileNameById = new Map(
+        profiles.map((p) => [p.id, p.full_name || "Petugas"])
+      );
+
+      const roleCounts = { admin: 0, petugas: 0, pelapor: 0 };
+      for (const p of profiles) {
+        const r = String(p.role ?? "pelapor").toLowerCase().trim();
+        if (roleCounts[r] !== undefined) roleCounts[r] += 1;
+      }
+
+      const penugasanRows = !penugasanRes.error ? penugasanRes.data ?? [] : [];
+      const penugasanStats = {
+        total: penugasanRows.length,
+        aktif: penugasanRows.filter((p) =>
+          ["ditugaskan", "diterima", "dalam_penanganan"].includes(p.status_penugasan)
+        ).length,
+        selesai: penugasanRows.filter((p) => p.status_penugasan === "selesai").length,
+        dibatalkan: penugasanRows.filter((p) => p.status_penugasan === "dibatalkan").length,
+      };
+
+      const beritaRows = !beritaRes.error ? beritaRes.data ?? [] : [];
+      const beritaStats = {
+        total: beritaRows.length,
+        published: beritaRows.filter((b) => b.status === "published").length,
+        draft: beritaRows.filter((b) => b.status === "draft").length,
+        archived: beritaRows.filter((b) => b.status === "archived").length,
+        tableReady: !isMissingTableError(beritaRes.error),
+      };
+
+      const recentActivities = (!recentLogsRes.error ? recentLogsRes.data ?? [] : []).map(
+        (log) => ({
+          id: log.id,
+          laporanId: log.laporan_id,
+          petugasNama: log.petugas_id
+            ? profileNameById.get(log.petugas_id) ?? "Petugas Lapangan"
+            : "Petugas Lapangan",
+          statusUpdate: log.status_update,
+          catatan: log.catatan_penanganan,
+          createdAt: log.created_at,
+        })
+      );
+
+      return {
+        exactCounts,
+        totalPengguna: profiles.length,
+        roleCounts,
+        penugasanStats,
+        beritaStats,
+        recentActivities,
+        hasError: Boolean(profilesRes.error),
+      };
+    },
+    (res) => !res?.hasError
+  );
 }

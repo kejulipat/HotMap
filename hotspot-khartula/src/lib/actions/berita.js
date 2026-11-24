@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/auth";
+import { invalidateHotmapCache } from "@/lib/server-cache";
 import {
   STORAGE_BUCKETS,
   deleteStorageObject,
@@ -116,6 +117,7 @@ export async function createBeritaAction(_prevState, formData) {
     return { error: formatDbError(error, "Gagal menyimpan berita baru.") };
   }
 
+  invalidateHotmapCache({ data: true });
   revalidatePath("/");
   revalidatePath("/berita");
   revalidatePath("/admin/berita");
@@ -212,6 +214,7 @@ export async function updateBeritaAction(_prevState, formData) {
     );
   }
 
+  invalidateHotmapCache({ data: true });
   revalidatePath("/");
   revalidatePath("/berita");
   revalidatePath(`/berita/${id}`);
@@ -257,6 +260,7 @@ export async function deleteBeritaAction(formData) {
     );
   }
 
+  invalidateHotmapCache({ data: true });
   revalidatePath("/");
   revalidatePath("/berita");
   revalidatePath("/admin/berita");

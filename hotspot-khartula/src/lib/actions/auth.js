@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { invalidateHotmapCache } from "@/lib/server-cache";
 import {
   ROLE_HOME,
   ROLE_LABELS,
@@ -61,6 +62,7 @@ export async function loginAction(_prevState, formData) {
     ? redirectTo
     : ROLE_HOME[role] ?? "/pelapor";
 
+  invalidateHotmapCache({ auth: true, data: true });
   redirect(destination);
 }
 
@@ -99,6 +101,7 @@ export async function registerAction(_prevState, formData) {
   }
 
   // Trigger DB `on_auth_user_created` (`public.handle_new_user`) otomatis membuat profil `pelapor`.
+  invalidateHotmapCache({ auth: true, data: true });
   if (data?.session && data?.user) {
     redirect("/pelapor");
   }
@@ -165,11 +168,13 @@ export async function fastLoginAction(_prevState, formData) {
     };
   }
 
+  invalidateHotmapCache({ auth: true, data: true });
   redirect(ROLE_HOME[targetRole]);
 }
 
 export async function logoutAction() {
   const supabase = await createClient();
   await supabase.auth.signOut();
+  invalidateHotmapCache({ auth: true, data: true });
   redirect("/login");
 }

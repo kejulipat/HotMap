@@ -4,14 +4,18 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import PublicNavbar from "@/components/layout/PublicNavbar";
 import PublicFooter from "@/components/layout/PublicFooter";
+import HotmapMap from "@/components/map/HotmapMap";
 import { StatusBadge } from "@/components/ui/SharedUI";
+import {
+  formatCoordinates,
+  getGoogleMapsUrl,
+  isValidCoordinatePair,
+} from "@/lib/gis";
 import {
   STATUS_META,
   SUMMARY_CARDS,
   computeStatusCounts,
   formatDate,
-  isValidLatLng,
-  projectToIndonesiaMap,
 } from "@/lib/normalizers";
 
 export default function LandingExplorer({
@@ -21,13 +25,11 @@ export default function LandingExplorer({
   hasQueryError = false,
   currentUser = null,
 }) {
-  // Draft input filter pada form
   const [draftStartDate, setDraftStartDate] = useState("");
   const [draftEndDate, setDraftEndDate] = useState("");
   const [draftWilayah, setDraftWilayah] = useState("semua");
   const [draftStatus, setDraftStatus] = useState("semua");
 
-  // Filter aktif yang diterapkan
   const [appliedFilters, setAppliedFilters] = useState({
     startDate: "",
     endDate: "",
@@ -35,15 +37,22 @@ export default function LandingExplorer({
     status: "semua",
   });
 
-  // Laporan yang sedang dipilih pada panel detail peta & tabel
   const defaultSelected =
     initialLaporan.find((item) => item.statusKey === "ditangani") ??
     initialLaporan[0] ??
     null;
   const [selectedId, setSelectedId] = useState(defaultSelected?.id ?? null);
   const [isDetailOpen, setIsDetailOpen] = useState(true);
+  const [focusTarget, setFocusTarget] = useState(null);
 
-  // Filter laporan berdasarkan wilayah dan rentang tanggal aktif
+  const wilayahByName = useMemo(() => {
+    const map = new Map();
+    for (const w of wilayahList) {
+      if (w.nama) map.set(w.nama, w);
+    }
+    return map;
+  }, [wilayahList]);
+
   const baseFilteredLaporan = useMemo(() => {
     return initialLaporan.filter((item) => {
       if (
@@ -75,22 +84,19 @@ export default function LandingExplorer({
     appliedFilters.endDate,
   ]);
 
-  // Hitung ringkasan jumlah per status (mengikuti filter wilayah & tanggal)
   const counts = useMemo(
     () => computeStatusCounts(baseFilteredLaporan),
     [baseFilteredLaporan]
   );
 
-  // Daftar opsi wilayah unik
   const wilayahOptions = useMemo(() => {
     const set = new Set(wilayahList.map((w) => w.nama).filter(Boolean));
     for (const item of initialLaporan) {
       if (item.wilayah) set.add(item.wilayah);
     }
-    return Array.from(set);
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
   }, [wilayahList, initialLaporan]);
 
-  // Filter akhir termasuk filter status aktif
   const filteredLaporan = useMemo(() => {
     if (appliedFilters.status === "semua") return baseFilteredLaporan;
     return baseFilteredLaporan.filter(
@@ -114,6 +120,17 @@ export default function LandingExplorer({
       wilayah: draftWilayah,
       status: draftStatus,
     });
+    if (draftWilayah !== "semua") {
+      const w = wilayahByName.get(draftWilayah);
+      if (w && isValidCoordinatePair(w.centerLat, w.centerLng)) {
+        setFocusTarget((prev) => ({
+          lat: w.centerLat,
+          lng: w.centerLng,
+          zoom: 9,
+          seq: (prev?.seq ?? 0) + 1,
+        }));
+      }
+    }
   }
 
   function handleResetFilter() {
@@ -137,16 +154,31 @@ export default function LandingExplorer({
     }));
   }
 
-  function handleSelectReport(id) {
+  function handleSelectReport(id, shouldFly = false) {
     setSelectedId(id);
     setIsDetailOpen(true);
+    if (shouldFly) {
+      const found = filteredLaporan.find((r) => r.id === id);
+      if (found && isValidCoordinatePair(found.latitude, found.longitude)) {
+        setFocusTarget((prev) => ({
+          lat: found.latitude,
+          lng: found.longitude,
+          zoom: 12,
+          reportId: found.id,
+          seq: (prev?.seq ?? 0) + 1,
+        }));
+      }
+    }
   }
+
+  const googleMapsUrl = selectedReport
+    ? getGoogleMapsUrl(selectedReport.latitude, selectedReport.longitude)
+    : null;
 
   return (
     <div className="min-h-screen bg-[#F6F7F3] text-[#14231B] flex flex-col font-sans">
       <PublicNavbar currentUser={currentUser} />
 
-      {/* Main Content */}
       <main className="flex-1 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-8 sm:py-10 space-y-7">
         {hasQueryError && (
           <div
@@ -197,7 +229,7 @@ export default function LandingExplorer({
                 key={card.key}
                 type="button"
                 onClick={() => handleQuickStatusCard(card.key)}
-                className={`text-left rounded-xl p-4 transition-all border ${
+                className={`text-left rounded-xl p-4 transition-all border cursor-pointer ${
                   isPrimaryCard
                     ? "bg-[#155E42] text-white border-[#155E42] shadow-sm"
                     : isActive
@@ -318,9 +350,8 @@ export default function LandingExplorer({
           </form>
         </section>
 
-        {/* Peta Sebaran Karhutla Section (Layout Siap Integrasi Leaflet) */}
+        {/* Peta Sebaran Karhutla Interaktif (Leaflet) */}
         <section className="rounded-2xl bg-white border border-[#E3E8E1] p-4 sm:p-6 shadow-2xs space-y-4">
-          {/* Map Section Header */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
               <h2 className="text-lg font-bold text-[#12241B]">
@@ -341,172 +372,19 @@ export default function LandingExplorer({
             </Link>
           </div>
 
-          {/* Map Viewport & Detail Card Layout */}
-          <div className="relative rounded-xl bg-[#DFECE6] border border-[#CFE0D8] min-h-[460px] lg:min-h-[500px] overflow-hidden flex flex-col lg:flex-row">
-            {/*
-              SLOT UTAMA PETA LEAFLET:
-              Saat komponen React-Leaflet / Leaflet dipasang nanti,
-              cukup render <MapContainer> di dalam div #leaflet-map-slot ini.
-            */}
-            <div
-              id="leaflet-map-slot"
-              className="relative flex-1 min-h-[380px] lg:min-h-[500px] select-none overflow-hidden"
-            >
-              {/* Grid Latar Peta */}
-              <div
-                className="absolute inset-0 opacity-35 pointer-events-none"
-                style={{
-                  backgroundImage:
-                    "linear-gradient(to right, #bdd2c8 1px, transparent 1px), linear-gradient(to bottom, #bdd2c8 1px, transparent 1px)",
-                  backgroundSize: "72px 72px",
-                }}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+            <div className={isDetailOpen && selectedReport ? "lg:col-span-8" : "lg:col-span-12"}>
+              <HotmapMap
+                laporan={filteredLaporan}
+                selectedId={selectedReport?.id ?? null}
+                onSelectReport={(id) => handleSelectReport(id, false)}
+                focusTarget={focusTarget}
+                heightClass="h-[380px] sm:h-[440px] lg:h-[480px]"
               />
-
-              {/* Compass Control (N) */}
-              <div className="absolute top-4 right-4 z-10 w-8 h-11 rounded-lg bg-white/95 border border-[#D5E0DA] shadow-xs flex flex-col items-center justify-center text-[10px] font-bold text-[#33423A]">
-                <span>N</span>
-                <span className="text-xs leading-none">&uarr;</span>
-              </div>
-
-              {/* Kanvas Siluet Kepulauan Indonesia (Placeholder sebelum Leaflet di-mount) */}
-              <svg
-                viewBox="0 0 1000 450"
-                className="w-full h-full object-contain p-6 opacity-90"
-                aria-label="Layout Peta Sebaran Karhutla Indonesia"
-              >
-                {/* Sumatera */}
-                <path
-                  d="M75,90 L135,120 L215,215 L245,275 L210,300 L145,225 L90,145 Z"
-                  fill="#C4D7B8"
-                  stroke="#7D9B76"
-                  strokeWidth="1.5"
-                />
-                {/* Jawa */}
-                <path
-                  d="M235,320 L385,332 L415,348 L360,358 L235,342 Z"
-                  fill="#C4D7B8"
-                  stroke="#7D9B76"
-                  strokeWidth="1.5"
-                />
-                {/* Kalimantan */}
-                <path
-                  d="M295,125 L385,105 L440,145 L425,235 L350,255 L290,215 Z"
-                  fill="#C4D7B8"
-                  stroke="#7D9B76"
-                  strokeWidth="1.5"
-                />
-                {/* Sulawesi */}
-                <path
-                  d="M475,145 L545,135 L555,165 L505,190 L535,235 L505,270 L470,225 L485,175 Z"
-                  fill="#C4D7B8"
-                  stroke="#7D9B76"
-                  strokeWidth="1.5"
-                />
-                {/* Bali & Nusa Tenggara */}
-                <path
-                  d="M430,342 L530,346 L575,358 L525,368 L430,356 Z"
-                  fill="#C4D7B8"
-                  stroke="#7D9B76"
-                  strokeWidth="1.5"
-                />
-                {/* Maluku */}
-                <path
-                  d="M600,175 L645,165 L655,220 L615,235 Z"
-                  fill="#C4D7B8"
-                  stroke="#7D9B76"
-                  strokeWidth="1.5"
-                />
-                {/* Papua */}
-                <path
-                  d="M685,185 L785,175 L845,225 L840,310 L765,285 L705,240 Z"
-                  fill="#C4D7B8"
-                  stroke="#7D9B76"
-                  strokeWidth="1.5"
-                />
-
-                {/* Label Wilayah di Peta */}
-                <g
-                  fill="#4A5D52"
-                  fontSize="10"
-                  fontWeight="600"
-                  letterSpacing="0.08em"
-                >
-                  <text x="65" y="215">
-                    SUMATERA
-                  </text>
-                  <text x="315" y="88">
-                    KALIMANTAN
-                  </text>
-                  <text x="295" y="382">
-                    JAWA
-                  </text>
-                  <text x="455" y="295">
-                    SULAWESI
-                  </text>
-                  <text x="435" y="405">
-                    NUSA TENGGARA
-                  </text>
-                  <text x="585" y="260">
-                    MALUKU
-                  </text>
-                  <text x="745" y="250">
-                    PAPUA
-                  </text>
-                </g>
-              </svg>
-
-              {/* Pin Titik Laporan Interaktif pada Peta */}
-              {filteredLaporan
-                .filter((item) => isValidLatLng(item.latitude, item.longitude))
-                .map((item) => {
-                  const pos = projectToIndonesiaMap(
-                    item.latitude,
-                    item.longitude
-                  );
-                  const meta =
-                    STATUS_META[item.statusKey] ??
-                    STATUS_META.menunggu_verifikasi;
-                  const isSelected = selectedReport?.id === item.id;
-
-                  return (
-                    <div
-                      key={item.id}
-                      style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
-                      className="absolute -translate-x-1/2 -translate-y-1/2 z-10"
-                    >
-                      <button
-                        type="button"
-                        onClick={() => handleSelectReport(item.id)}
-                        title={`${item.judul} (${item.wilayah})`}
-                        className={`group relative flex items-center justify-center w-6 h-6 rounded-full ring-4 ${
-                          meta.pinRing
-                        } bg-white shadow-md transition-transform cursor-pointer ${
-                          isSelected ? "scale-125 z-20" : "hover:scale-110"
-                        }`}
-                      >
-                        <span
-                          className={`w-3 h-3 rounded-full ${meta.pinBg}`}
-                        />
-                      </button>
-
-                      {isSelected && (
-                        <div className="mt-1.5 whitespace-nowrap rounded-md bg-white px-2.5 py-1 text-[11px] font-semibold text-[#14231B] shadow-md border border-[#DCE4DF]">
-                          {item.lokasiSingkat || item.judul}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-
-              {/* Catatan Kaki Peta */}
-              <p className="absolute bottom-3 left-4 text-[11px] text-[#5B6E63]">
-                Titik menunjukkan laporan warga, bukan deteksi hotspot satelit.
-              </p>
             </div>
 
-            {/* Panel Kanan: LAPORAN TERPILIH */}
             {isDetailOpen && selectedReport && (
-              <aside className="w-full lg:w-[330px] shrink-0 bg-white lg:m-4 lg:rounded-xl border-t lg:border border-[#E2E8E0] p-5 shadow-sm flex flex-col justify-between z-20">
+              <aside className="lg:col-span-4 rounded-xl border border-[#E2E8E0] bg-[#FBFBFA] p-5 shadow-2xs flex flex-col justify-between space-y-4">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] font-bold uppercase tracking-widest text-[#6B7A71]">
@@ -532,8 +410,7 @@ export default function LandingExplorer({
                     />
                   </div>
 
-                  {/* Highlight Estimasi Luas */}
-                  <div className="rounded-lg bg-[#F4F6F2] p-3.5 border border-[#E7ECE5]">
+                  <div className="rounded-lg bg-white p-3.5 border border-[#E7ECE5]">
                     <span className="block text-xs text-[#6B7A71]">
                       Estimasi luas
                     </span>
@@ -542,7 +419,6 @@ export default function LandingExplorer({
                     </span>
                   </div>
 
-                  {/* Detail Atribut */}
                   <dl className="divide-y divide-[#ECEFE9] text-xs">
                     <div className="py-2.5 flex items-center justify-between gap-4">
                       <dt className="text-[#6B7A71]">Wilayah</dt>
@@ -552,13 +428,12 @@ export default function LandingExplorer({
                     </div>
                     <div className="py-2.5 flex items-center justify-between gap-4">
                       <dt className="text-[#6B7A71]">Koordinat</dt>
-                      <dd className="font-semibold text-[#14231B] text-right">
-                        {isValidLatLng(
+                      <dd className="font-mono font-semibold text-[#14231B] text-right">
+                        {formatCoordinates(
                           selectedReport.latitude,
-                          selectedReport.longitude
-                        )
-                          ? `${selectedReport.latitude}, ${selectedReport.longitude}`
-                          : "-"}
+                          selectedReport.longitude,
+                          5
+                        )}
                       </dd>
                     </div>
                     <div className="py-2.5 flex items-center justify-between gap-4">
@@ -576,9 +451,21 @@ export default function LandingExplorer({
                   </dl>
                 </div>
 
-                <p className="mt-5 pt-3 border-t border-[#ECEFE9] text-[11px] text-[#7A8880]">
-                  Laporan warga &bull; {formatDate(selectedReport.tanggal)}
-                </p>
+                <div className="pt-3 border-t border-[#ECEFE9] flex items-center justify-between gap-2 text-[11px] text-[#7A8880]">
+                  <span>
+                    Laporan warga &bull; {formatDate(selectedReport.tanggal)}
+                  </span>
+                  {googleMapsUrl && (
+                    <a
+                      href={googleMapsUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="font-semibold text-[#155E42] hover:underline"
+                    >
+                      Google Maps &rarr;
+                    </a>
+                  )}
+                </div>
               </aside>
             )}
           </div>
@@ -592,8 +479,8 @@ export default function LandingExplorer({
                 Daftar laporan
               </h2>
               <p className="text-xs sm:text-sm text-[#606F67]">
-                Pantau perkembangan setiap kejadian dari verifikasi hingga
-                selesai.
+                Klik baris kejadian untuk mengarahkan peta ke koordinat titik
+                laporan.
               </p>
             </div>
             <span className="text-xs font-medium text-[#606F67]">
@@ -631,7 +518,7 @@ export default function LandingExplorer({
                       return (
                         <tr
                           key={item.id}
-                          onClick={() => handleSelectReport(item.id)}
+                          onClick={() => handleSelectReport(item.id, true)}
                           className={`transition-colors cursor-pointer ${
                             isSelected
                               ? "bg-[#FDF2EA]"
@@ -697,24 +584,20 @@ export default function LandingExplorer({
               {beritaList.map((berita) => (
                 <Link
                   key={berita.id}
-                  href={`/berita/${berita.id}`}
+                  href={`/berita/${berita.slug || berita.id}`}
                   className="group rounded-xl bg-white border border-[#E3E8E1] p-3.5 shadow-2xs hover:border-[#C5D1C8] hover:shadow-sm transition-all flex flex-col justify-between"
                 >
                   <div>
-                    <div
-                      className="h-36 w-full rounded-lg overflow-hidden mb-3.5 bg-linear-to-b from-[#2E3834] via-[#7A5438] to-[#D47A42]"
-                      style={
-                        berita.gambarUrl
-                          ? {
-                              backgroundImage: `url("${encodeURI(
-                                berita.gambarUrl
-                              )}")`,
-                              backgroundSize: "cover",
-                              backgroundPosition: "center",
-                            }
-                          : undefined
-                      }
-                    />
+                    <div className="h-36 w-full rounded-lg overflow-hidden mb-3.5 bg-linear-to-b from-[#2E3834] via-[#7A5438] to-[#D47A42]">
+                      {berita.gambarUrl && (
+                        /* eslint-disable-next-line @next/next/no-img-element */
+                        <img
+                          src={berita.gambarUrl}
+                          alt={berita.judul}
+                          className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
+                        />
+                      )}
+                    </div>
                     <h3 className="text-sm sm:text-base font-bold text-[#14231B] group-hover:text-[#155E42] transition-colors leading-snug">
                       {berita.judul}
                     </h3>
@@ -734,4 +617,3 @@ export default function LandingExplorer({
     </div>
   );
 }
-

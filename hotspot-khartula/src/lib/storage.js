@@ -103,7 +103,7 @@ export function getBeritaImagePublicUrl(supabase, path) {
 
 export async function verifyImageMagicBytes(file, expectedMimeType) {
   if (!file || typeof file.slice !== "function") {
-    return true;
+    return false;
   }
 
   try {
