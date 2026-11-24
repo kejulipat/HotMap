@@ -9,7 +9,7 @@
 ## Versi & Status
 
 - **Versi Aplikasi:** `0.1.0`
-- **Status Pengembangan:** Implementasi Fase 2 selesai pada branch `feature/fitur-peta` *(menunggu penyelesaian temuan audit independen & penerapan migration hardening RLS `005` ke Supabase remote sebelum masuk ke Fase 3)*.
+- **Status Pengembangan:** Implementasi Fase 2 selesai pada `main` *(menunggu penyelesaian temuan audit independen & penerapan migration hardening RLS `005` ke Supabase remote sebelum masuk ke Fase 3)*.
 
 ## Teknologi yang Digunakan
 
@@ -32,7 +32,7 @@
 - **Verifikasi, Penugasan & Penanganan:** Panel admin untuk verifikasi/penolakan laporan, penentuan tingkat keparahan, dan penugasan petugas (`/admin/laporan/[id]`), serta panel tindak lanjut lapangan dan unggah bukti penanganan untuk petugas (`/petugas/laporan/[id]`) lengkap dengan riwayat status.
 - **Dashboard & Analitik Multi-Role (`/admin`, `/petugas`, `/pelapor`):** Kartu ringkasan status akurat (`count: exact`), distribusi laporan per wilayah, tren 14 hari terakhir, statistik penugasan, dan log aktivitas petugas terbaru.
 - **Manajemen Administrasi (`/admin/wilayah`, `/admin/pengguna`, `/admin/berita`):** CRUD data master wilayah beserta koordinat pusat, pengelolaan role/wilayah pengguna, CRUD berita karhutla, serta pembaruan profil mandiri (`/pelapor/profil`, `/petugas/profil`).
-- **Autentikasi, RBAC & Fast Login:** Login/registrasi Supabase Auth, proteksi route berbasis role (**Admin**, **Petugas**, **Pelapor**), dan Fast Login satu klik untuk pengujian role pada lingkungan development/preview (`ENABLE_FAST_LOGIN` dan `DEMO_*`, diproses di server tanpa mengekspos kredensial ke client).
+- **Autentikasi & Hak Akses Berbasis Role (RBAC):** Login dan registrasi melalui Supabase Auth, sesi SSR aman, serta proteksi route dan kebijakan Row Level Security (RLS) berbasis peran (**Admin**, **Petugas**, **Pelapor**).
 
 ### Catatan & Tahap Lanjutan
 - **Titik Peta:** Peta menampilkan laporan kejadian dari masyarakat (bukan deteksi hotspot satelit eksternal).
@@ -46,7 +46,7 @@ npm install
 cp .env.example .env.local
 ```
 
-Lengkapi `NEXT_PUBLIC_SUPABASE_URL` dan `NEXT_PUBLIC_SUPABASE_ANON_KEY` pada `.env.local` (serta variabel `DEMO_*` bila menggunakan Fast Login), lalu jalankan:
+Lengkapi `NEXT_PUBLIC_SUPABASE_URL` dan `NEXT_PUBLIC_SUPABASE_ANON_KEY` pada `.env.local`, lalu jalankan:
 
 ```bash
 npm run dev
