@@ -164,7 +164,28 @@ export default function HotmapCanvas({
     mapRef.current = map;
     const markerMap = markerMapRef.current;
 
+    let resizeFrame = 0;
+    const scheduleInvalidate = () => {
+      if (resizeFrame) window.cancelAnimationFrame(resizeFrame);
+      resizeFrame = window.requestAnimationFrame(() => {
+        resizeFrame = 0;
+        if (mapRef.current) {
+          mapRef.current.invalidateSize({ pan: false, animate: false });
+        }
+      });
+    };
+
+    // Sinkronkan ukuran kanvas Leaflet saat kontainer berubah (mis. panel detail dibuka/ditutup)
+    scheduleInvalidate();
+    const resizeObserver =
+      typeof ResizeObserver !== "undefined"
+        ? new ResizeObserver(scheduleInvalidate)
+        : null;
+    resizeObserver?.observe(container);
+
     return () => {
+      if (resizeFrame) window.cancelAnimationFrame(resizeFrame);
+      resizeObserver?.disconnect();
       if (markersLayerRef.current) {
         markersLayerRef.current.clearLayers();
         markersLayerRef.current = null;
@@ -392,14 +413,14 @@ export default function HotmapCanvas({
 
         {/* Peringatan Tile Error */}
         {tileError && (
-          <div className="pointer-events-none absolute top-3 left-1/2 z-[400] -translate-x-1/2 rounded-lg border border-[#E5B8A7] bg-[#FDF2EA]/95 px-3 py-1.5 text-[11px] font-medium text-[#9B4017] shadow-sm">
+          <div className="pointer-events-none absolute top-3 left-1/2 z-400 -translate-x-1/2 rounded-lg border border-[#E5B8A7] bg-[#FDF2EA]/95 px-3 py-1.5 text-[11px] font-medium text-[#9B4017] shadow-sm">
             Sebagian tile peta gagal dimuat. Anda dapat mengganti basemap pada tombol di atas.
           </div>
         )}
 
         {/* Indikator Empty State pada Peta */}
         {validPoints.length === 0 && !singleMarkerMode && (
-          <div className="pointer-events-none absolute bottom-12 left-1/2 z-[400] -translate-x-1/2 rounded-lg border border-[#DCE2DA] bg-white/95 px-3.5 py-2 text-xs font-medium text-[#4E5E55] shadow-sm text-center">
+          <div className="pointer-events-none absolute bottom-12 left-1/2 z-400 -translate-x-1/2 rounded-lg border border-[#DCE2DA] bg-white/95 px-3.5 py-2 text-xs font-medium text-[#4E5E55] shadow-sm text-center">
             Belum ada titik laporan dengan koordinat valid untuk filter saat ini.
           </div>
         )}

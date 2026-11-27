@@ -86,7 +86,28 @@ export default function CoordinatePickerMap({
 
     mapRef.current = map;
 
+    let resizeFrame = 0;
+    const scheduleInvalidate = () => {
+      if (resizeFrame) window.cancelAnimationFrame(resizeFrame);
+      resizeFrame = window.requestAnimationFrame(() => {
+        resizeFrame = 0;
+        if (mapRef.current) {
+          mapRef.current.invalidateSize({ pan: false, animate: false });
+        }
+      });
+    };
+
+    // Sinkronkan ukuran kanvas Leaflet saat kontainer berubah ukuran
+    scheduleInvalidate();
+    const resizeObserver =
+      typeof ResizeObserver !== "undefined"
+        ? new ResizeObserver(scheduleInvalidate)
+        : null;
+    resizeObserver?.observe(container);
+
     return () => {
+      if (resizeFrame) window.cancelAnimationFrame(resizeFrame);
+      resizeObserver?.disconnect();
       if (markerRef.current) {
         markerRef.current.remove();
         markerRef.current = null;
