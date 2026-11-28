@@ -71,6 +71,9 @@ export default function LandingExplorer({
   const [focusTarget, setFocusTarget] = useState(null);
   const [shouldMountMap, setShouldMountMap] = useState(false);
   const mapSectionRef = useRef(null);
+  const scrollContainerRef = useRef(null);
+  const wheelLockRef = useRef(false);
+  const wheelTimerRef = useRef(null);
 
   const rawCachedSnapshot = useSyncExternalStore(
     EMPTY_SUBSCRIBE,
@@ -122,6 +125,107 @@ export default function LandingExplorer({
     observer.observe(node);
     return () => observer.disconnect();
   }, [shouldMountMap]);
+
+  // Pada Desktop (>=1024px), satu guliran roda mouse langsung berpindah halus ke section berikutnya/sebelumnya
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const handleWheel = (e) => {
+      if (window.innerWidth < 1024) return;
+      if (e.ctrlKey || Math.abs(e.deltaY) < 16) return;
+
+      const targetEl = e.target;
+      if (
+        targetEl instanceof Element &&
+        targetEl.closest("select, textarea, [data-allow-wheel]")
+      ) {
+        return;
+      }
+
+      const sections = Array.from(
+        container.querySelectorAll("[data-snap-section]")
+      );
+      if (sections.length === 0) return;
+
+      const navOffset = 72;
+      const containerRect = container.getBoundingClientRect();
+      const maxScroll = Math.max(0, container.scrollHeight - container.clientHeight);
+      const direction = e.deltaY > 0 ? 1 : -1;
+      const lastIdx = sections.length - 1;
+      const isAtBottom = maxScroll > 0 && container.scrollTop >= maxScroll - 24;
+
+      const getSectionTop = (sec) =>
+        sec.getBoundingClientRect().top - containerRect.top + container.scrollTop;
+
+      let nextIdx;
+      if (isAtBottom && direction < 0) {
+        nextIdx = lastIdx - 1;
+      } else {
+        const currentScroll = container.scrollTop + navOffset;
+        let activeIdx = 0;
+        let minDist = Infinity;
+        sections.forEach((sec, idx) => {
+          const dist = Math.abs(getSectionTop(sec) - currentScroll);
+          if (dist < minDist) {
+            minDist = dist;
+            activeIdx = idx;
+          }
+        });
+
+        const activeSection = sections[activeIdx];
+        const activeTop = getSectionTop(activeSection);
+        const viewBottom = container.scrollTop + container.clientHeight;
+        const sectionBottom = activeTop + activeSection.offsetHeight;
+
+        // Jika section sedikit lebih tinggi dari layar, biarkan scroll internal mencapai tepi dulu
+        if (direction > 0 && sectionBottom - viewBottom > 24) {
+          return;
+        }
+        if (direction < 0 && container.scrollTop + navOffset - activeTop > 24) {
+          return;
+        }
+
+        nextIdx = activeIdx + direction;
+      }
+
+      if (nextIdx < 0 || nextIdx > lastIdx) return;
+
+      e.preventDefault();
+      if (wheelLockRef.current) return;
+
+      wheelLockRef.current = true;
+      if (nextIdx >= 2) {
+        setShouldMountMap(true);
+      }
+
+      const targetSection = sections[nextIdx];
+      const targetTop =
+        nextIdx === lastIdx
+          ? maxScroll
+          : Math.max(0, getSectionTop(targetSection) - navOffset);
+
+      container.scrollTo({
+        top: targetTop,
+        behavior: "smooth",
+      });
+
+      if (wheelTimerRef.current) {
+        window.clearTimeout(wheelTimerRef.current);
+      }
+      wheelTimerRef.current = window.setTimeout(() => {
+        wheelLockRef.current = false;
+      }, 620);
+    };
+
+    container.addEventListener("wheel", handleWheel, { passive: false });
+    return () => {
+      container.removeEventListener("wheel", handleWheel);
+      if (wheelTimerRef.current) {
+        window.clearTimeout(wheelTimerRef.current);
+      }
+    };
+  }, []);
 
   const effectiveLaporan =
     hasQueryError && initialLaporan.length === 0 && cachedFallback?.laporan
@@ -327,12 +431,18 @@ export default function LandingExplorer({
   ];
 
   return (
-    <div className="min-h-screen bg-white text-[#2C3325] flex flex-col font-sans">
+    <div
+      ref={scrollContainerRef}
+      className="min-h-screen lg:h-dvh lg:overflow-y-auto lg:snap-y lg:snap-mandatory lg:scroll-pt-18 scroll-smooth bg-white text-[#2C3325] flex flex-col font-sans"
+    >
       <PublicNavbar currentUser={currentUser} />
 
       <main className="flex-1">
         {/* 1. HERO SECTION (2 Kolom Asimetris + Foto Latar Full-Bleed WebP, Full Viewport) */}
-        <section className="relative w-full min-h-[calc(100dvh-110px)] flex items-center overflow-hidden bg-[#2C3B21]">
+        <section
+          data-snap-section
+          className="relative w-full min-h-[calc(100dvh-72px)] lg:snap-start lg:snap-always flex items-center overflow-hidden bg-[#2C3B21]"
+        >
           <Image
             src="/images/hero-forest.webp"
             alt=""
@@ -502,8 +612,11 @@ export default function LandingExplorer({
         </section>
 
         {/* 2. FEATURE STRIP (4 Kolom, Latar Krem Hangat #F7F8F2) */}
-        <section className="w-full bg-[#F7F8F2] border-b border-[#DCE0D5] py-16">
-          <div className="mx-auto max-w-300 px-4 sm:px-6">
+        <section
+          data-snap-section
+          className="w-full bg-[#F7F8F2] border-b border-[#DCE0D5] py-16 lg:py-10 lg:min-h-[calc(100dvh-72px)] lg:snap-start lg:snap-always flex items-center"
+        >
+          <div className="w-full mx-auto max-w-300 px-4 sm:px-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {featureItems.map((item, idx) => (
                 <RevealOnScroll key={item.title} delay={idx * 70} className="h-full">
@@ -533,10 +646,11 @@ export default function LandingExplorer({
         {/* 3. PETA SEBARAN RINGKAS (Switch Basemap + Reset Peta Indonesia di Pojok Kanan) */}
         <section
           id="peta-sebaran"
+          data-snap-section
           ref={mapSectionRef}
-          className="w-full bg-white py-16 scroll-mt-20"
+          className="w-full bg-white py-16 lg:py-8 lg:min-h-[calc(100dvh-72px)] lg:snap-start lg:snap-always flex items-center scroll-mt-18"
         >
-          <div className="mx-auto max-w-300 px-4 sm:px-6 space-y-6">
+          <div className="w-full mx-auto max-w-300 px-4 sm:px-6 space-y-5">
             {hasQueryError && (
               <div
                 role="alert"
@@ -593,10 +707,11 @@ export default function LandingExplorer({
                 focusTarget={focusTarget}
                 allowedBasemaps={LANDING_BASEMAPS}
                 showActionControls={false}
-                heightClass="h-100 sm:h-115 lg:h-125"
+                scrollWheelZoom={false}
+                heightClass="h-95 sm:h-105 lg:h-[min(54dvh,450px)]"
               />
             ) : (
-              <div className="h-100 sm:h-115 lg:h-125 w-full rounded-xl border border-[#DCE0D5] bg-[#EEF2E4] flex flex-col items-center justify-center gap-2 text-xs font-medium text-[#6B7263]">
+              <div className="h-95 sm:h-105 lg:h-[min(54dvh,450px)] w-full rounded-xl border border-[#DCE0D5] bg-[#EEF2E4] flex flex-col items-center justify-center gap-2 text-xs font-medium text-[#6B7263]">
                 <span>Peta interaktif akan dimuat otomatis saat area ini terlihat...</span>
               </div>
             )}
@@ -604,8 +719,11 @@ export default function LandingExplorer({
         </section>
 
         {/* 4. FEATURED ARTICLES / BERITA TERKINI (3 Kolom Tanpa Border Kartu Luar) */}
-        <section className="w-full bg-[#F7F8F2] border-y border-[#DCE0D5] py-16">
-          <div className="mx-auto max-w-300 px-4 sm:px-6 space-y-10">
+        <section
+          data-snap-section
+          className="w-full bg-[#F7F8F2] border-y border-[#DCE0D5] py-16 lg:py-10 lg:min-h-[calc(100dvh-72px)] lg:snap-start lg:snap-always flex items-center"
+        >
+          <div className="w-full mx-auto max-w-300 px-4 sm:px-6 space-y-8">
             <RevealOnScroll className="text-center max-w-2xl mx-auto space-y-2">
               <h2 className="font-serif text-[30px] font-bold text-[#2C3325]">
                 Berita &amp; Informasi Terkini
@@ -699,8 +817,11 @@ export default function LandingExplorer({
         </section>
 
         {/* 5. SHOWCASE / SOROTAN PENANGANAN & WILAYAH (3 Kolom, Rasio 4:3, Sudut Tajam + Bilah Caption Solid) */}
-        <section className="w-full bg-white py-16">
-          <div className="mx-auto max-w-300 px-4 sm:px-6 space-y-10">
+        <section
+          data-snap-section
+          className="w-full bg-white py-16 lg:py-10 lg:min-h-[calc(100dvh-72px)] lg:snap-start lg:snap-always flex items-center"
+        >
+          <div className="w-full mx-auto max-w-300 px-4 sm:px-6 space-y-8">
             <RevealOnScroll className="text-center max-w-2xl mx-auto space-y-2">
               <h2 className="font-serif text-[30px] font-bold text-[#2C3325]">
                 Sorotan Penanganan &amp; Wilayah
@@ -769,7 +890,9 @@ export default function LandingExplorer({
         </section>
       </main>
 
-      <PublicFooter />
+      <div data-snap-section className="lg:snap-end">
+        <PublicFooter />
+      </div>
     </div>
   );
 }

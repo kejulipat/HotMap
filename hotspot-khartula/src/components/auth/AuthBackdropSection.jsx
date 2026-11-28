@@ -6,7 +6,7 @@ import Image from "next/image";
  */
 export default function AuthBackdropSection({ children }) {
   return (
-    <section className="relative flex-1 w-full min-h-[calc(100dvh-110px)] flex items-center justify-center overflow-hidden bg-[#1D2716] px-4 sm:px-6 py-10 sm:py-14">
+    <section className="relative flex-1 w-full min-h-[calc(100dvh-72px)] flex items-center justify-center overflow-hidden bg-[#1D2716] px-4 sm:px-6 py-10 sm:py-14">
       <Image
         src="/images/auth-forest-fire.webp"
         alt=""

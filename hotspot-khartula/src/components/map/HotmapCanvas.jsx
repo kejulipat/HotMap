@@ -112,6 +112,7 @@ export default function HotmapCanvas({
   focusTarget = null,
   heightClass = "h-[420px] lg:h-[500px]",
   singleMarkerMode = false,
+  scrollWheelZoom = undefined,
   showControls = true,
   showActionControls = true,
   allowedBasemaps = null,
@@ -205,7 +206,10 @@ export default function HotmapCanvas({
       minZoom: 4,
       maxZoom: 18,
       zoomControl: true,
-      scrollWheelZoom: !singleMarkerMode,
+      scrollWheelZoom:
+        typeof scrollWheelZoom === "boolean"
+          ? scrollWheelZoom
+          : !singleMarkerMode,
     });
 
     mapRef.current = map;
@@ -242,7 +246,7 @@ export default function HotmapCanvas({
       mapRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [singleMarkerMode]);
+  }, [singleMarkerMode, scrollWheelZoom]);
 
   // Sinkronkan layer basemap
   useEffect(() => {

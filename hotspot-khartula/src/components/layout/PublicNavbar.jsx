@@ -42,17 +42,8 @@ export default function PublicNavbar({ currentUser = null }) {
 
   return (
     <>
-      {/* Top Utility Bar */}
-      <div className="w-full bg-[#3A4E1B]/95 backdrop-blur-md border-b border-white/15 text-white">
-        <div className="mx-auto max-w-300 px-4 sm:px-6 h-9 flex items-center justify-end gap-4 text-[12px] font-medium">
-          <span className="truncate text-white/95">
-            Posko Pemantauan Karhutla Indonesia &bull; Layanan Pelaporan Warga 24/7 &bull; siaga@hotmap.id
-          </span>
-        </div>
-      </div>
-
-      {/* Main Editorial Navbar (Semi-Transparan Hijau Olive) */}
-      <header className="sticky top-0 z-30 bg-[#465D21]/88 backdrop-blur-md border-b border-white/15 text-white shadow-xs">
+      {/* Main Editorial Navbar (Semi-Transparan Hijau Hutan Gelap) */}
+      <header className="sticky top-0 z-30 bg-[#243314]/88 backdrop-blur-md border-b border-white/15 text-white shadow-sm">
         <div className="mx-auto max-w-300 px-4 sm:px-6 h-18 flex items-center justify-between gap-4">
           {/* Brand Logo + Tagline */}
           <Link href="/" className="flex items-center gap-3 shrink-0 group">
@@ -167,7 +158,7 @@ export default function PublicNavbar({ currentUser = null }) {
 
         {/* Mobile Drawer Menu */}
         {mobileOpen && (
-          <div className="hm-animate-fade-fast lg:hidden border-t border-white/15 bg-[#3F551F]/95 backdrop-blur-md px-4 py-4 space-y-2">
+          <div className="hm-animate-fade-fast lg:hidden border-t border-white/15 bg-[#1E2B11]/95 backdrop-blur-md px-4 py-4 space-y-2">
             {navItems.map((item) => {
               const active = isActive(item.href);
               return (
