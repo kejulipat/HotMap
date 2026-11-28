@@ -44,7 +44,7 @@ export default function PublicNavbar({ currentUser = null }) {
     <>
       {/* Top Utility Bar */}
       <div className="w-full bg-[#3A4E1B]/95 backdrop-blur-md border-b border-white/15 text-white">
-        <div className="mx-auto max-w-[1200px] px-4 sm:px-6 h-9 flex items-center justify-end gap-4 text-[12px] font-medium">
+        <div className="mx-auto max-w-300 px-4 sm:px-6 h-9 flex items-center justify-end gap-4 text-[12px] font-medium">
           <span className="truncate text-white/95">
             Posko Pemantauan Karhutla Indonesia &bull; Layanan Pelaporan Warga 24/7 &bull; siaga@hotmap.id
           </span>
@@ -53,7 +53,7 @@ export default function PublicNavbar({ currentUser = null }) {
 
       {/* Main Editorial Navbar (Semi-Transparan Hijau Olive) */}
       <header className="sticky top-0 z-30 bg-[#465D21]/88 backdrop-blur-md border-b border-white/15 text-white shadow-xs">
-        <div className="mx-auto max-w-[1200px] px-4 sm:px-6 h-[72px] flex items-center justify-between gap-4">
+        <div className="mx-auto max-w-300 px-4 sm:px-6 h-18 flex items-center justify-between gap-4">
           {/* Brand Logo + Tagline */}
           <Link href="/" className="flex items-center gap-3 shrink-0 group">
             <BrandLogo size={40} />
@@ -79,7 +79,7 @@ export default function PublicNavbar({ currentUser = null }) {
                   key={item.href}
                   href={item.href}
                   prefetch={true}
-                  className={`rounded-[4px] px-3.5 py-2 transition-colors ${
+                  className={`rounded-sm px-3.5 py-2 transition-colors ${
                     active
                       ? "border border-white/40 bg-white/18 text-white font-semibold"
                       : "border border-transparent text-white/90 hover:bg-white/12 hover:text-white"
@@ -94,7 +94,7 @@ export default function PublicNavbar({ currentUser = null }) {
               <>
                 <Link
                   href={dashboardTarget.href}
-                  className={`rounded-[4px] px-3.5 py-2 transition-colors ${
+                  className={`rounded-sm px-3.5 py-2 transition-colors ${
                     isActive(dashboardTarget.href)
                       ? "border border-white/40 bg-white/18 text-white font-semibold"
                       : "border border-transparent text-white/90 hover:bg-white/12 hover:text-white"
@@ -105,7 +105,7 @@ export default function PublicNavbar({ currentUser = null }) {
                 <button
                   type="button"
                   onClick={() => setConfirmLogout(true)}
-                  className="rounded-[4px] border border-transparent px-3.5 py-2 text-white/85 hover:border-white/30 hover:bg-white/12 hover:text-white transition-colors cursor-pointer"
+                  className="rounded-sm border border-transparent px-3.5 py-2 text-white/85 hover:border-white/30 hover:bg-white/12 hover:text-white transition-colors cursor-pointer"
                 >
                   Keluar
                 </button>
@@ -114,7 +114,7 @@ export default function PublicNavbar({ currentUser = null }) {
               <>
                 <Link
                   href="/login"
-                  className={`rounded-[4px] px-3.5 py-2 transition-colors ${
+                  className={`rounded-sm px-3.5 py-2 transition-colors ${
                     isActive("/login")
                       ? "border border-white/40 bg-white/18 text-white font-semibold"
                       : "border border-transparent text-white/90 hover:bg-white/12 hover:text-white"
@@ -124,7 +124,7 @@ export default function PublicNavbar({ currentUser = null }) {
                 </Link>
                 <Link
                   href="/register"
-                  className={`rounded-[4px] px-3.5 py-2 transition-colors ${
+                  className={`rounded-sm px-3.5 py-2 transition-colors ${
                     isActive("/register")
                       ? "border border-white/40 bg-white/18 text-white font-semibold"
                       : "border border-transparent text-white/90 hover:bg-white/12 hover:text-white"
@@ -151,7 +151,7 @@ export default function PublicNavbar({ currentUser = null }) {
             onClick={() => setMobileOpen((prev) => !prev)}
             aria-label={mobileOpen ? "Tutup menu navigasi" : "Buka menu navigasi"}
             aria-expanded={mobileOpen}
-            className="lg:hidden inline-flex items-center justify-center rounded-[4px] border border-white/35 bg-white/10 p-2 text-white hover:bg-white/20 cursor-pointer"
+            className="lg:hidden inline-flex items-center justify-center rounded-sm border border-white/35 bg-white/10 p-2 text-white hover:bg-white/20 cursor-pointer"
           >
             {mobileOpen ? (
               <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -176,7 +176,7 @@ export default function PublicNavbar({ currentUser = null }) {
                   href={item.href}
                   prefetch={true}
                   onClick={() => setMobileOpen(false)}
-                  className={`block rounded-[4px] px-3.5 py-2.5 text-sm font-medium ${
+                  className={`block rounded-sm px-3.5 py-2.5 text-sm font-medium ${
                     active
                       ? "border border-white/35 bg-white/18 text-white font-semibold"
                       : "text-white/90 hover:bg-white/12 hover:text-white"
@@ -193,7 +193,7 @@ export default function PublicNavbar({ currentUser = null }) {
                   <Link
                     href={dashboardTarget.href}
                     onClick={() => setMobileOpen(false)}
-                    className="block rounded-[4px] bg-white/15 px-3.5 py-2.5 text-sm font-semibold text-white hover:bg-white/20"
+                    className="block rounded-sm bg-white/15 px-3.5 py-2.5 text-sm font-semibold text-white hover:bg-white/20"
                   >
                     {dashboardTarget.label}
                   </Link>
@@ -203,7 +203,7 @@ export default function PublicNavbar({ currentUser = null }) {
                       setMobileOpen(false);
                       setConfirmLogout(true);
                     }}
-                    className="w-full text-left rounded-[4px] px-3.5 py-2.5 text-sm font-medium text-[#FFD9CC] hover:bg-white/10 cursor-pointer"
+                    className="w-full text-left rounded-sm px-3.5 py-2.5 text-sm font-medium text-[#FFD9CC] hover:bg-white/10 cursor-pointer"
                   >
                     Keluar
                   </button>
@@ -213,7 +213,7 @@ export default function PublicNavbar({ currentUser = null }) {
                   <Link
                     href="/login"
                     onClick={() => setMobileOpen(false)}
-                    className={`text-center rounded-[4px] border px-3 py-2.5 text-sm font-semibold ${
+                    className={`text-center rounded-sm border px-3 py-2.5 text-sm font-semibold ${
                       isActive("/login")
                         ? "border-white/50 bg-white/20 text-white"
                         : "border-white/30 text-white/95 hover:bg-white/10"
@@ -224,7 +224,7 @@ export default function PublicNavbar({ currentUser = null }) {
                   <Link
                     href="/register"
                     onClick={() => setMobileOpen(false)}
-                    className={`text-center rounded-[4px] border px-3 py-2.5 text-sm font-semibold ${
+                    className={`text-center rounded-sm border px-3 py-2.5 text-sm font-semibold ${
                       isActive("/register")
                         ? "border-white/50 bg-white/20 text-white"
                         : "border-white/30 text-white/95 hover:bg-white/10"

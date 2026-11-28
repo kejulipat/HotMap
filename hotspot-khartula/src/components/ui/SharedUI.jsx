@@ -10,7 +10,7 @@ export function StatusBadge({ statusKey, className = "" }) {
   const meta = STATUS_META[statusKey] ?? STATUS_META.menunggu_verifikasi;
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-[4px] px-2.5 py-1 text-[12px] font-semibold ${meta.badgeBg} ${meta.badgeText} ${className}`}
+      className={`inline-flex items-center gap-1.5 rounded-sm px-2.5 py-1 text-[12px] font-semibold ${meta.badgeBg} ${meta.badgeText} ${className}`}
     >
       <span className={`h-1.5 w-1.5 rounded-full ${meta.dotColor}`} />
       {meta.label}
@@ -90,7 +90,7 @@ export function ErrorBanner({ message }) {
   return (
     <div
       role="alert"
-      className="rounded-[8px] border border-[#E5B8A7] bg-[#FDF2EA] px-4 py-3 text-sm text-[#9B3417]"
+      className="rounded-lg border border-[#E5B8A7] bg-[#FDF2EA] px-4 py-3 text-sm text-[#9B3417]"
     >
       {message}
     </div>
@@ -104,7 +104,7 @@ export function EmptyState({
   actionHref = null,
 }) {
   return (
-    <div className="rounded-[8px] border border-dashed border-[#8A947D] bg-[#F7F8F2] px-6 py-12 text-center">
+    <div className="rounded-lg border border-dashed border-[#8A947D] bg-[#F7F8F2] px-6 py-12 text-center">
       <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full border border-[#DCE0D5] bg-white text-[#6F8E3D]">
         <svg
           className="h-5 w-5"
@@ -211,7 +211,7 @@ export function LaporanTable({
   }
 
   return (
-    <div className="rounded-[8px] bg-white border border-[#DCE0D5] overflow-hidden">
+    <div className="rounded-lg bg-white border border-[#DCE0D5] overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
