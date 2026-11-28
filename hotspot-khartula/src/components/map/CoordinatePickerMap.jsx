@@ -86,7 +86,28 @@ export default function CoordinatePickerMap({
 
     mapRef.current = map;
 
+    let resizeFrame = 0;
+    const scheduleInvalidate = () => {
+      if (resizeFrame) window.cancelAnimationFrame(resizeFrame);
+      resizeFrame = window.requestAnimationFrame(() => {
+        resizeFrame = 0;
+        if (mapRef.current) {
+          mapRef.current.invalidateSize({ pan: false, animate: false });
+        }
+      });
+    };
+
+    // Sinkronkan ukuran kanvas Leaflet saat kontainer berubah ukuran
+    scheduleInvalidate();
+    const resizeObserver =
+      typeof ResizeObserver !== "undefined"
+        ? new ResizeObserver(scheduleInvalidate)
+        : null;
+    resizeObserver?.observe(container);
+
     return () => {
+      if (resizeFrame) window.cancelAnimationFrame(resizeFrame);
+      resizeObserver?.disconnect();
       if (markerRef.current) {
         markerRef.current.remove();
         markerRef.current = null;
@@ -197,8 +218,8 @@ export default function CoordinatePickerMap({
   }
 
   return (
-    <div className="rounded-xl border border-[#CFE0D8] overflow-hidden bg-white">
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#E3E8E1] bg-[#F6F7F3] px-3 py-2 text-xs">
+    <div className="rounded-xl border border-[#DCE0D5] overflow-hidden bg-white">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#DCE0D5] bg-[#F7F8F2] px-3 py-2 text-xs">
         <div className="flex flex-wrap items-center gap-1.5">
           {Object.values(BASEMAP_LAYERS).map((layer) => (
             <button
@@ -207,8 +228,8 @@ export default function CoordinatePickerMap({
               onClick={() => setActiveBasemap(layer.id)}
               className={`rounded-md px-2.5 py-1 font-semibold transition-colors cursor-pointer ${
                 activeBasemap === layer.id
-                  ? "bg-[#155E42] text-white"
-                  : "bg-white text-[#4E5E55] border border-[#DCE2DA] hover:bg-[#EAF1EC]"
+                  ? "bg-[#557029] text-white"
+                  : "bg-white text-[#4A5243] border border-[#8A947D] hover:bg-[#EEF2E4]"
               }`}
             >
               {layer.label}
@@ -232,7 +253,7 @@ export default function CoordinatePickerMap({
         aria-label="Pemilih Titik Koordinat Lokasi Kejadian"
       />
 
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 border-t border-[#E3E8E1] bg-[#FBFBFA] px-3 py-2 text-[11px] text-[#5F6F66]">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 border-t border-[#DCE0D5] bg-[#F7F8F2] px-3 py-2 text-[11px] text-[#6B7263]">
         <span>
           Klik di peta untuk menempatkan pin, atau seret pin oranye untuk
           menyesuaikan posisi.
@@ -243,7 +264,7 @@ export default function CoordinatePickerMap({
           </span>
         )}
         {gpsStatus && (
-          <span className="font-semibold text-[#155E42]">{gpsStatus}</span>
+          <span className="font-semibold text-[#557029]">{gpsStatus}</span>
         )}
       </div>
     </div>

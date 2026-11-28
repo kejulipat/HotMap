@@ -40,10 +40,10 @@ export default async function PetugasDashboardPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-[#12241B]">
+          <h1 className="text-2xl font-bold text-[#2C3325]">
             Portal Operasional Petugas
           </h1>
-          <p className="mt-1 text-sm text-[#606F67]">
+          <p className="mt-1 text-sm text-[#6B7263]">
             Selamat bertugas, {displayName}. Pantau tugas yang ditugaskan kepada
             Anda dan perbarui progres penanganan lapangan.
           </p>
@@ -51,7 +51,7 @@ export default async function PetugasDashboardPage() {
 
         <Link
           href="/petugas/peta"
-          className="self-start sm:self-auto inline-flex items-center justify-center rounded-lg bg-[#155E42] hover:bg-[#114B35] px-4 py-2.5 text-sm font-semibold text-white shadow-2xs transition-colors"
+          className="self-start sm:self-auto inline-flex items-center justify-center rounded-lg bg-[#557029] hover:bg-[#465D21] px-4 py-2.5 text-sm font-semibold text-white shadow-2xs transition-colors"
         >
           Buka Peta Operasional
         </Link>
@@ -63,7 +63,7 @@ export default async function PetugasDashboardPage() {
 
       {/* Ringkasan Tugas Milik Petugas */}
       <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="rounded-xl border border-[#155E42] bg-[#155E42] p-5 text-white shadow-2xs">
+        <div className="rounded-xl border border-[#557029] bg-[#557029] p-5 text-white shadow-2xs">
           <span className="text-xs font-semibold text-white/80">
             Total Tugas Saya
           </span>
@@ -77,10 +77,10 @@ export default async function PetugasDashboardPage() {
           <span className="text-xs font-semibold text-[#B83E1B]">
             Tugas Aktif (Perlu Ditangani)
           </span>
-          <p className="mt-1 text-3xl font-bold text-[#14231B]">
+          <p className="mt-1 text-3xl font-bold text-[#2C3325]">
             {myActiveCount}
           </p>
-          <span className="mt-1 inline-block text-xs text-[#6B7A71]">
+          <span className="mt-1 inline-block text-xs text-[#6B7263]">
             Status terverifikasi &amp; sedang ditangani
           </span>
         </div>
@@ -89,10 +89,10 @@ export default async function PetugasDashboardPage() {
           <span className="text-xs font-semibold text-[#1F6B41]">
             Tugas Selesai
           </span>
-          <p className="mt-1 text-3xl font-bold text-[#14231B]">
+          <p className="mt-1 text-3xl font-bold text-[#2C3325]">
             {myCompletedCount}
           </p>
-          <span className="mt-1 inline-block text-xs text-[#6B7A71]">
+          <span className="mt-1 inline-block text-xs text-[#6B7263]">
             Penanganan lapangan telah ditutup selesai
           </span>
         </div>
@@ -102,17 +102,17 @@ export default async function PetugasDashboardPage() {
       <section className="space-y-3">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-bold text-[#12241B]">
+            <h2 className="text-lg font-bold text-[#2C3325]">
               Tugas Penanganan Terbaru Saya
             </h2>
-            <p className="text-xs text-[#6B7A71]">
+            <p className="text-xs text-[#6B7263]">
               Klik detail untuk melihat koordinat lokasi dan memperbarui progres
               penanganan.
             </p>
           </div>
           <Link
             href="/petugas/laporan"
-            className="text-xs font-semibold text-[#155E42] hover:underline"
+            className="text-xs font-semibold text-[#557029] hover:underline"
           >
             Semua tugas &rarr;
           </Link>
@@ -130,7 +130,7 @@ export default async function PetugasDashboardPage() {
 
       {/* Ringkasan Situasi Global */}
       <section className="space-y-3 pt-2">
-        <h2 className="text-base font-bold text-[#12241B]">
+        <h2 className="text-base font-bold text-[#2C3325]">
           Ringkasan Situasi Seluruh Wilayah
         </h2>
         <SummaryCardsGrid counts={globalCounts} hrefBase="/petugas/laporan" />

@@ -42,10 +42,10 @@ export default async function PelaporDashboardPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-[#12241B]">
+          <h1 className="text-2xl font-bold text-[#2C3325]">
             Halo, {displayName}
           </h1>
-          <p className="mt-1 text-sm text-[#606F67]">
+          <p className="mt-1 text-sm text-[#6B7263]">
             Pantau status laporan kebakaran hutan dan lahan serta perkembangan
             tindak lanjut petugas.
           </p>
@@ -67,21 +67,21 @@ export default async function PelaporDashboardPage() {
 
       {/* Ringkasan Tindak Lanjut */}
       <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="rounded-xl border border-[#E3E8E1] bg-white p-5 space-y-2">
-          <span className="text-xs font-bold uppercase tracking-wider text-[#5B6B61]">
+        <div className="rounded-xl border border-[#DCE0D5] bg-white p-5 space-y-2">
+          <span className="text-xs font-bold uppercase tracking-wider text-[#6B7263]">
             Status Pemantauan Anda
           </span>
-          <p className="text-sm text-[#4E5E55]">
+          <p className="text-sm text-[#4A5243]">
             Anda memiliki{" "}
-            <strong className="text-[#14231B]">{activeReports.length}</strong>{" "}
+            <strong className="text-[#2C3325]">{activeReports.length}</strong>{" "}
             laporan yang masih dalam proses verifikasi atau penanganan, dan{" "}
             <strong className="text-[#1F6B41]">{counts.selesai ?? 0}</strong>{" "}
             laporan telah selesai ditangani.
           </p>
         </div>
 
-        <div className="rounded-xl border border-[#E3E8E1] bg-white p-5 space-y-2">
-          <span className="text-xs font-bold uppercase tracking-wider text-[#5B6B61]">
+        <div className="rounded-xl border border-[#DCE0D5] bg-white p-5 space-y-2">
+          <span className="text-xs font-bold uppercase tracking-wider text-[#6B7263]">
             Tindak Lanjut Terakhir
           </span>
           {latestWithFollowUp ? (
@@ -89,13 +89,13 @@ export default async function PelaporDashboardPage() {
               <div className="flex items-center justify-between gap-2">
                 <Link
                   href={`/pelapor/laporan/${latestWithFollowUp.id}`}
-                  className="font-bold text-[#14231B] hover:text-[#155E42] truncate"
+                  className="font-bold text-[#2C3325] hover:text-[#557029] truncate"
                 >
                   {latestWithFollowUp.judul}
                 </Link>
                 <StatusBadge statusKey={latestWithFollowUp.statusKey} />
               </div>
-              <p className="text-[#5F6F66]">
+              <p className="text-[#6B7263]">
                 Petugas: <strong>{latestWithFollowUp.petugas}</strong> &bull;{" "}
                 {formatDate(latestWithFollowUp.tanggal, "short")}
               </p>
@@ -106,7 +106,7 @@ export default async function PelaporDashboardPage() {
               )}
             </div>
           ) : (
-            <p className="text-xs text-[#6B7A71]">
+            <p className="text-xs text-[#6B7263]">
               Belum ada pembaruan verifikasi atau penugasan petugas pada laporan
               Anda.
             </p>
@@ -116,12 +116,12 @@ export default async function PelaporDashboardPage() {
 
       <section className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold text-[#12241B]">
+          <h2 className="text-lg font-bold text-[#2C3325]">
             Laporan Terbaru Saya
           </h2>
           <Link
             href="/pelapor/laporan"
-            className="text-xs font-semibold text-[#155E42] hover:underline"
+            className="text-xs font-semibold text-[#557029] hover:underline"
           >
             Lihat semua &rarr;
           </Link>

@@ -29,10 +29,10 @@ export default async function PetugasLaporanListPage({ searchParams }) {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-[#12241B]">
+          <h1 className="text-2xl font-bold text-[#2C3325]">
             Daftar Laporan Operasional
           </h1>
-          <p className="mt-1 text-sm text-[#606F67]">
+          <p className="mt-1 text-sm text-[#6B7263]">
             Saring tugas yang ditugaskan kepada Anda atau pantau laporan lintas
             wilayah.
           </p>
@@ -40,7 +40,7 @@ export default async function PetugasLaporanListPage({ searchParams }) {
 
         <Link
           href="/petugas/peta"
-          className="self-start sm:self-auto rounded-lg border border-[#DCE2DA] bg-white px-4 py-2 text-xs font-semibold text-[#155E42] hover:bg-[#EAF1EC] transition-colors"
+          className="self-start sm:self-auto rounded-lg border border-[#8A947D] bg-white px-4 py-2 text-xs font-semibold text-[#557029] hover:bg-[#EEF2E4] transition-colors"
         >
           Lihat di Peta &rarr;
         </Link>

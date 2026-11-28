@@ -191,10 +191,10 @@ export default function PetaLaporanExplorer({
               onClick={() => setStatusFilter(card.key)}
               className={`text-left rounded-xl p-3.5 transition-all border cursor-pointer ${
                 isPrimary
-                  ? "bg-[#155E42] text-white border-[#155E42] shadow-2xs"
+                  ? "bg-[#557029] text-white border-[#557029] shadow-2xs"
                   : isActive
-                  ? "bg-white text-[#14231B] border-[#155E42] ring-2 ring-[#155E42]/20"
-                  : "bg-white text-[#14231B] border-[#E3E8E1] hover:border-[#C5D1C8]"
+                  ? "bg-white text-[#2C3325] border-[#557029] ring-2 ring-[#557029]/20"
+                  : "bg-white text-[#2C3325] border-[#DCE0D5] hover:border-[#8A947D]"
               }`}
             >
               <div className="flex items-baseline gap-1.5">
@@ -203,7 +203,7 @@ export default function PetaLaporanExplorer({
                 </span>
                 <span
                   className={`text-xs ${
-                    isPrimary ? "text-white/80" : "text-[#6D7C73]"
+                    isPrimary ? "text-white/80" : "text-[#6B7263]"
                   }`}
                 >
                   laporan
@@ -221,22 +221,22 @@ export default function PetaLaporanExplorer({
       </section>
 
       {/* Filter Bar Multi-Dimensi */}
-      <section className="rounded-2xl border border-[#E3E8E1] bg-white p-4 sm:p-5 shadow-2xs space-y-4">
+      <section className="rounded-2xl border border-[#DCE0D5] bg-white p-4 sm:p-5 shadow-2xs space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <div>
-            <h2 className="text-base font-bold text-[#12241B]">{title}</h2>
-            <p className="text-xs text-[#6B7A71]">{subtitle}</p>
+            <h2 className="text-base font-bold text-[#2C3325]">{title}</h2>
+            <p className="text-xs text-[#6B7263]">{subtitle}</p>
           </div>
 
           {enablePetugasScope && currentUserId && (
-            <div className="inline-flex rounded-lg border border-[#DCE2DA] bg-[#F6F7F3] p-1 text-xs font-semibold">
+            <div className="inline-flex rounded-lg border border-[#8A947D] bg-[#F7F8F2] p-1 text-xs font-semibold">
               <button
                 type="button"
                 onClick={() => setPetugasScope("semua")}
                 className={`rounded-md px-3 py-1.5 transition-colors cursor-pointer ${
                   petugasScope === "semua"
-                    ? "bg-[#155E42] text-white"
-                    : "text-[#4E5E55] hover:text-[#14231B]"
+                    ? "bg-[#557029] text-white"
+                    : "text-[#4A5243] hover:text-[#2C3325]"
                 }`}
               >
                 Semua Laporan
@@ -246,8 +246,8 @@ export default function PetaLaporanExplorer({
                 onClick={() => setPetugasScope("tugas_saya")}
                 className={`rounded-md px-3 py-1.5 transition-colors cursor-pointer ${
                   petugasScope === "tugas_saya"
-                    ? "bg-[#155E42] text-white"
-                    : "text-[#4E5E55] hover:text-[#14231B]"
+                    ? "bg-[#557029] text-white"
+                    : "text-[#4A5243] hover:text-[#2C3325]"
                 }`}
               >
                 Ditugaskan ke Saya
@@ -260,7 +260,7 @@ export default function PetaLaporanExplorer({
           <div className="lg:col-span-3">
             <label
               htmlFor="peta-search"
-              className="block text-xs font-semibold text-[#4E5E55] mb-1"
+              className="block text-xs font-semibold text-[#4A5243] mb-1"
             >
               Pencarian Lokasi / Judul
             </label>
@@ -270,14 +270,14 @@ export default function PetaLaporanExplorer({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Cari judul, alamat, wilayah..."
-              className="w-full rounded-lg border border-[#DCE2DA] bg-[#FBFBFA] px-3 py-2 text-sm text-[#14231B] focus:border-[#155E42] focus:outline-none"
+              className="w-full rounded-lg border border-[#8A947D] bg-[#F7F8F2] px-3 py-2 text-sm text-[#2C3325] focus:border-[#557029] focus:outline-none"
             />
           </div>
 
           <div className="lg:col-span-2">
             <label
               htmlFor="peta-wilayah"
-              className="block text-xs font-semibold text-[#4E5E55] mb-1"
+              className="block text-xs font-semibold text-[#4A5243] mb-1"
             >
               Wilayah
             </label>
@@ -285,7 +285,7 @@ export default function PetaLaporanExplorer({
               id="peta-wilayah"
               value={wilayahFilter}
               onChange={(e) => handleWilayahChange(e.target.value)}
-              className="w-full rounded-lg border border-[#DCE2DA] bg-[#FBFBFA] px-3 py-2 text-sm text-[#14231B] focus:border-[#155E42] focus:outline-none"
+              className="w-full rounded-lg border border-[#8A947D] bg-[#F7F8F2] px-3 py-2 text-sm text-[#2C3325] focus:border-[#557029] focus:outline-none"
             >
               <option value="semua">Semua wilayah</option>
               {wilayahOptions.map((name) => (
@@ -299,7 +299,7 @@ export default function PetaLaporanExplorer({
           <div className="lg:col-span-2">
             <label
               htmlFor="peta-status"
-              className="block text-xs font-semibold text-[#4E5E55] mb-1"
+              className="block text-xs font-semibold text-[#4A5243] mb-1"
             >
               Status
             </label>
@@ -307,7 +307,7 @@ export default function PetaLaporanExplorer({
               id="peta-status"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full rounded-lg border border-[#DCE2DA] bg-[#FBFBFA] px-3 py-2 text-sm text-[#14231B] focus:border-[#155E42] focus:outline-none"
+              className="w-full rounded-lg border border-[#8A947D] bg-[#F7F8F2] px-3 py-2 text-sm text-[#2C3325] focus:border-[#557029] focus:outline-none"
             >
               <option value="semua">Semua status</option>
               {Object.entries(STATUS_META).map(([key, meta]) => (
@@ -321,7 +321,7 @@ export default function PetaLaporanExplorer({
           <div className="lg:col-span-2">
             <label
               htmlFor="peta-keparahan"
-              className="block text-xs font-semibold text-[#4E5E55] mb-1"
+              className="block text-xs font-semibold text-[#4A5243] mb-1"
             >
               Prioritas / Keparahan
             </label>
@@ -329,7 +329,7 @@ export default function PetaLaporanExplorer({
               id="peta-keparahan"
               value={keparahanFilter}
               onChange={(e) => setKeparahanFilter(e.target.value)}
-              className="w-full rounded-lg border border-[#DCE2DA] bg-[#FBFBFA] px-3 py-2 text-sm text-[#14231B] focus:border-[#155E42] focus:outline-none"
+              className="w-full rounded-lg border border-[#8A947D] bg-[#F7F8F2] px-3 py-2 text-sm text-[#2C3325] focus:border-[#557029] focus:outline-none"
             >
               <option value="semua">Semua prioritas</option>
               {TINGKAT_KEPARAHAN_OPTIONS.map((opt) => (
@@ -344,7 +344,7 @@ export default function PetaLaporanExplorer({
             <div>
               <label
                 htmlFor="peta-start"
-                className="block text-xs font-semibold text-[#4E5E55] mb-1"
+                className="block text-xs font-semibold text-[#4A5243] mb-1"
               >
                 Dari Tanggal
               </label>
@@ -353,13 +353,13 @@ export default function PetaLaporanExplorer({
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full rounded-lg border border-[#DCE2DA] bg-[#FBFBFA] px-2.5 py-2 text-xs text-[#14231B] focus:border-[#155E42] focus:outline-none"
+                className="w-full rounded-lg border border-[#8A947D] bg-[#F7F8F2] px-2.5 py-2 text-xs text-[#2C3325] focus:border-[#557029] focus:outline-none"
               />
             </div>
             <div>
               <label
                 htmlFor="peta-end"
-                className="block text-xs font-semibold text-[#4E5E55] mb-1"
+                className="block text-xs font-semibold text-[#4A5243] mb-1"
               >
                 Sampai
               </label>
@@ -368,13 +368,13 @@ export default function PetaLaporanExplorer({
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full rounded-lg border border-[#DCE2DA] bg-[#FBFBFA] px-2.5 py-2 text-xs text-[#14231B] focus:border-[#155E42] focus:outline-none"
+                className="w-full rounded-lg border border-[#8A947D] bg-[#F7F8F2] px-2.5 py-2 text-xs text-[#2C3325] focus:border-[#557029] focus:outline-none"
               />
             </div>
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-[#5F6F66] pt-1">
+        <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-[#6B7263] pt-1">
           <span>
             Menampilkan <strong>{filteredLaporan.length}</strong> dari{" "}
             {laporanList.length} laporan.
@@ -382,7 +382,7 @@ export default function PetaLaporanExplorer({
           <button
             type="button"
             onClick={handleResetFilters}
-            className="font-semibold text-[#155E42] hover:underline cursor-pointer"
+            className="font-semibold text-[#557029] hover:underline cursor-pointer"
           >
             Atur ulang semua filter
           </button>
@@ -401,9 +401,9 @@ export default function PetaLaporanExplorer({
             />
           </div>
 
-          <aside className="lg:col-span-4 rounded-xl border border-[#E3E8E1] bg-[#FBFBFA] p-4 sm:p-5 space-y-4">
+          <aside className="lg:col-span-4 rounded-xl border border-[#DCE0D5] bg-[#F7F8F2] p-4 sm:p-5 space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-[#5B6B61]">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-[#6B7263]">
                 Detail Titik Terpilih
               </span>
               {selectedKeparahan && (
@@ -416,41 +416,41 @@ export default function PetaLaporanExplorer({
             </div>
 
             {!selectedReport ? (
-              <p className="text-xs text-[#6B7A71] py-6 text-center">
+              <p className="text-xs text-[#6B7263] py-6 text-center">
                 Pilih titik marker pada peta atau baris pada daftar untuk
                 melihat informasi kejadian.
               </p>
             ) : (
               <>
                 <div className="space-y-2">
-                  <h3 className="text-base font-bold text-[#12241B] leading-snug">
+                  <h3 className="text-base font-bold text-[#2C3325] leading-snug">
                     {selectedReport.judul}
                   </h3>
                   <StatusBadge statusKey={selectedReport.statusKey} />
                 </div>
 
-                <dl className="divide-y divide-[#ECEFE9] text-xs">
+                <dl className="divide-y divide-[#DCE0D5] text-xs">
                   <div className="py-2 flex justify-between gap-3">
-                    <dt className="text-[#6B7A71]">Wilayah</dt>
-                    <dd className="font-semibold text-[#14231B] text-right">
+                    <dt className="text-[#6B7263]">Wilayah</dt>
+                    <dd className="font-semibold text-[#2C3325] text-right">
                       {selectedReport.wilayah}
                     </dd>
                   </div>
                   <div className="py-2 flex justify-between gap-3">
-                    <dt className="text-[#6B7A71]">Jenis Kejadian</dt>
-                    <dd className="font-semibold text-[#14231B] text-right">
+                    <dt className="text-[#6B7263]">Jenis Kejadian</dt>
+                    <dd className="font-semibold text-[#2C3325] text-right">
                       {getJenisKejadianLabel(selectedReport.jenisKejadian)}
                     </dd>
                   </div>
                   <div className="py-2 flex justify-between gap-3">
-                    <dt className="text-[#6B7A71]">Estimasi Luas</dt>
-                    <dd className="font-semibold text-[#14231B] text-right">
+                    <dt className="text-[#6B7263]">Estimasi Luas</dt>
+                    <dd className="font-semibold text-[#2C3325] text-right">
                       {selectedReport.estimasiLuas}
                     </dd>
                   </div>
                   <div className="py-2 flex justify-between gap-3">
-                    <dt className="text-[#6B7A71]">Koordinat</dt>
-                    <dd className="font-mono font-semibold text-[#14231B] text-right">
+                    <dt className="text-[#6B7263]">Koordinat</dt>
+                    <dd className="font-mono font-semibold text-[#2C3325] text-right">
                       {formatCoordinates(
                         selectedReport.latitude,
                         selectedReport.longitude,
@@ -459,14 +459,14 @@ export default function PetaLaporanExplorer({
                     </dd>
                   </div>
                   <div className="py-2 flex justify-between gap-3">
-                    <dt className="text-[#6B7A71]">Tanggal</dt>
-                    <dd className="font-semibold text-[#14231B] text-right">
+                    <dt className="text-[#6B7263]">Tanggal</dt>
+                    <dd className="font-semibold text-[#2C3325] text-right">
                       {formatDate(selectedReport.tanggal, "short")}
                     </dd>
                   </div>
                   <div className="py-2 flex justify-between gap-3">
-                    <dt className="text-[#6B7A71]">Petugas</dt>
-                    <dd className="font-semibold text-[#14231B] text-right">
+                    <dt className="text-[#6B7263]">Petugas</dt>
+                    <dd className="font-semibold text-[#2C3325] text-right">
                       {selectedReport.petugas}
                     </dd>
                   </div>
@@ -476,7 +476,7 @@ export default function PetaLaporanExplorer({
                   {detailHrefPrefix && (
                     <Link
                       href={`${detailHrefPrefix}/${selectedReport.id}`}
-                      className="flex-1 text-center rounded-lg bg-[#155E42] hover:bg-[#114B35] px-3 py-2 text-xs font-semibold text-white transition-colors"
+                      className="flex-1 text-center rounded-lg bg-[#557029] hover:bg-[#465D21] px-3 py-2 text-xs font-semibold text-white transition-colors"
                     >
                       Buka Detail &amp; Aksi &rarr;
                     </Link>
@@ -486,7 +486,7 @@ export default function PetaLaporanExplorer({
                       href={googleMapsUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="rounded-lg border border-[#DCE2DA] bg-white px-3 py-2 text-xs font-semibold text-[#14231B] hover:bg-[#EAF1EC]"
+                      className="rounded-lg border border-[#8A947D] bg-white px-3 py-2 text-xs font-semibold text-[#2C3325] hover:bg-[#EEF2E4]"
                     >
                       Google Maps
                     </a>
@@ -496,7 +496,7 @@ export default function PetaLaporanExplorer({
                       href={osmUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="rounded-lg border border-[#DCE2DA] bg-white px-3 py-2 text-xs font-semibold text-[#4E5E55] hover:bg-[#EAF1EC]"
+                      className="rounded-lg border border-[#8A947D] bg-white px-3 py-2 text-xs font-semibold text-[#4A5243] hover:bg-[#EEF2E4]"
                     >
                       OSM
                     </a>
@@ -511,10 +511,10 @@ export default function PetaLaporanExplorer({
       {/* Tabel Daftar Titik Tersinkronisasi */}
       <section className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-bold text-[#12241B]">
+          <h2 className="text-base font-bold text-[#2C3325]">
             Daftar Titik Laporan ({filteredLaporan.length})
           </h2>
-          <span className="text-xs text-[#6B7A71]">
+          <span className="text-xs text-[#6B7263]">
             Klik baris untuk mengarahkan peta ke lokasi
           </span>
         </div>
@@ -525,11 +525,11 @@ export default function PetaLaporanExplorer({
             description="Coba ubah rentang tanggal, wilayah, status, atau kata kunci pencarian Anda."
           />
         ) : (
-          <div className="rounded-xl bg-white border border-[#E3E8E1] overflow-hidden shadow-2xs">
+          <div className="rounded-xl bg-white border border-[#DCE0D5] overflow-hidden shadow-2xs">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="bg-[#EEF2EC] border-b border-[#E1E7DF] text-[11px] font-bold uppercase tracking-wider text-[#5B6B61]">
+                  <tr className="bg-[#EEF2E4] border-b border-[#DCE0D5] text-[11px] font-bold uppercase tracking-wider text-[#6B7263]">
                     <th className="py-3 px-4 sm:px-5">Kejadian</th>
                     <th className="py-3 px-4">Wilayah</th>
                     <th className="py-3 px-4">Koordinat</th>
@@ -540,7 +540,7 @@ export default function PetaLaporanExplorer({
                     )}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#ECEFE9] text-sm">
+                <tbody className="divide-y divide-[#DCE0D5] text-sm">
                   {filteredLaporan.map((item) => {
                     const isSelected = selectedReport?.id === item.id;
                     const kep = getKeparahanMeta(item.tingkatKeparahan);
@@ -549,11 +549,11 @@ export default function PetaLaporanExplorer({
                         key={item.id}
                         onClick={() => handleSelectFromList(item)}
                         className={`transition-colors cursor-pointer ${
-                          isSelected ? "bg-[#FDF2EA]" : "hover:bg-[#F9FAF8]"
+                          isSelected ? "bg-[#FDF2EA]" : "hover:bg-[#F7F8F2]"
                         }`}
                       >
                         <td className="py-3 px-4 sm:px-5">
-                          <p className="font-semibold text-[#14231B]">
+                          <p className="font-semibold text-[#2C3325]">
                             {item.judul}
                           </p>
                           {kep && (
@@ -564,13 +564,13 @@ export default function PetaLaporanExplorer({
                             </span>
                           )}
                         </td>
-                        <td className="py-3 px-4 text-xs sm:text-sm text-[#5F6F66]">
+                        <td className="py-3 px-4 text-xs sm:text-sm text-[#6B7263]">
                           {item.wilayah}
                         </td>
-                        <td className="py-3 px-4 font-mono text-xs text-[#5F6F66]">
+                        <td className="py-3 px-4 font-mono text-xs text-[#6B7263]">
                           {formatCoordinates(item.latitude, item.longitude, 4)}
                         </td>
-                        <td className="py-3 px-4 text-xs text-[#5F6F66]">
+                        <td className="py-3 px-4 text-xs text-[#6B7263]">
                           {formatDate(item.tanggal, "short")}
                         </td>
                         <td className="py-3 px-4">
@@ -583,7 +583,7 @@ export default function PetaLaporanExplorer({
                           >
                             <Link
                               href={`${detailHrefPrefix}/${item.id}`}
-                              className="inline-flex items-center gap-1 rounded-lg border border-[#DCE2DA] bg-white px-3 py-1.5 text-xs font-semibold text-[#155E42] hover:bg-[#EAF1EC]"
+                              className="inline-flex items-center gap-1 rounded-lg border border-[#8A947D] bg-white px-3 py-1.5 text-xs font-semibold text-[#557029] hover:bg-[#EEF2E4]"
                             >
                               Detail &rarr;
                             </Link>

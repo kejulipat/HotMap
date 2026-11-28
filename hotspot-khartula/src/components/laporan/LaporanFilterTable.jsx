@@ -107,13 +107,13 @@ export default function LaporanFilterTable({
 
   return (
     <div className="space-y-4">
-      <div className="rounded-xl border border-[#E3E8E1] bg-white p-4 shadow-2xs space-y-3">
+      <div className="rounded-xl border border-[#DCE0D5] bg-white p-4 shadow-2xs space-y-3">
         {enablePetugasScope && currentUserId && (
-          <div className="flex items-center justify-between flex-wrap gap-2 pb-2 border-b border-[#ECEFE9]">
-            <span className="text-xs font-semibold text-[#4E5E55]">
+          <div className="flex items-center justify-between flex-wrap gap-2 pb-2 border-b border-[#DCE0D5]">
+            <span className="text-xs font-semibold text-[#4A5243]">
               Cakupan Tampilan:
             </span>
-            <div className="inline-flex rounded-lg border border-[#DCE2DA] bg-[#F6F7F3] p-1 text-xs font-semibold">
+            <div className="inline-flex rounded-lg border border-[#8A947D] bg-[#F7F8F2] p-1 text-xs font-semibold">
               <button
                 type="button"
                 onClick={() => {
@@ -122,8 +122,8 @@ export default function LaporanFilterTable({
                 }}
                 className={`rounded-md px-3 py-1 transition-colors cursor-pointer ${
                   petugasScope === "tugas_saya"
-                    ? "bg-[#155E42] text-white"
-                    : "text-[#4E5E55]"
+                    ? "bg-[#557029] text-white"
+                    : "text-[#4A5243]"
                 }`}
               >
                 Tugas Saya
@@ -136,8 +136,8 @@ export default function LaporanFilterTable({
                 }}
                 className={`rounded-md px-3 py-1 transition-colors cursor-pointer ${
                   petugasScope === "semua"
-                    ? "bg-[#155E42] text-white"
-                    : "text-[#4E5E55]"
+                    ? "bg-[#557029] text-white"
+                    : "text-[#4A5243]"
                 }`}
               >
                 Semua Laporan
@@ -148,7 +148,7 @@ export default function LaporanFilterTable({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-end">
           <div className="lg:col-span-3">
-            <label className="block text-[11px] font-semibold text-[#5B6B61] mb-1">
+            <label className="block text-[11px] font-semibold text-[#6B7263] mb-1">
               Pencarian
             </label>
             <input
@@ -159,12 +159,12 @@ export default function LaporanFilterTable({
                 setPage(1);
               }}
               placeholder="Judul, lokasi, pelapor..."
-              className="w-full rounded-lg border border-[#DCE2DA] bg-[#FBFBFA] px-3 py-2 text-xs sm:text-sm text-[#14231B] focus:border-[#155E42] focus:outline-none"
+              className="w-full rounded-lg border border-[#8A947D] bg-[#F7F8F2] px-3 py-2 text-xs sm:text-sm text-[#2C3325] focus:border-[#557029] focus:outline-none"
             />
           </div>
 
           <div className="lg:col-span-2">
-            <label className="block text-[11px] font-semibold text-[#5B6B61] mb-1">
+            <label className="block text-[11px] font-semibold text-[#6B7263] mb-1">
               Wilayah
             </label>
             <select
@@ -173,7 +173,7 @@ export default function LaporanFilterTable({
                 setWilayahFilter(e.target.value);
                 setPage(1);
               }}
-              className="w-full rounded-lg border border-[#DCE2DA] bg-[#FBFBFA] px-3 py-2 text-xs sm:text-sm text-[#14231B] focus:border-[#155E42] focus:outline-none"
+              className="w-full rounded-lg border border-[#8A947D] bg-[#F7F8F2] px-3 py-2 text-xs sm:text-sm text-[#2C3325] focus:border-[#557029] focus:outline-none"
             >
               <option value="semua">Semua wilayah</option>
               {wilayahOptions.map((w) => (
@@ -185,7 +185,7 @@ export default function LaporanFilterTable({
           </div>
 
           <div className="lg:col-span-2">
-            <label className="block text-[11px] font-semibold text-[#5B6B61] mb-1">
+            <label className="block text-[11px] font-semibold text-[#6B7263] mb-1">
               Status
             </label>
             <select
@@ -194,7 +194,7 @@ export default function LaporanFilterTable({
                 setStatusFilter(e.target.value);
                 setPage(1);
               }}
-              className="w-full rounded-lg border border-[#DCE2DA] bg-[#FBFBFA] px-3 py-2 text-xs sm:text-sm text-[#14231B] focus:border-[#155E42] focus:outline-none"
+              className="w-full rounded-lg border border-[#8A947D] bg-[#F7F8F2] px-3 py-2 text-xs sm:text-sm text-[#2C3325] focus:border-[#557029] focus:outline-none"
             >
               <option value="semua">Semua status</option>
               {Object.entries(STATUS_META).map(([key, meta]) => (
@@ -206,7 +206,7 @@ export default function LaporanFilterTable({
           </div>
 
           <div className="lg:col-span-2">
-            <label className="block text-[11px] font-semibold text-[#5B6B61] mb-1">
+            <label className="block text-[11px] font-semibold text-[#6B7263] mb-1">
               Prioritas
             </label>
             <select
@@ -215,7 +215,7 @@ export default function LaporanFilterTable({
                 setPrioritasFilter(e.target.value);
                 setPage(1);
               }}
-              className="w-full rounded-lg border border-[#DCE2DA] bg-[#FBFBFA] px-3 py-2 text-xs sm:text-sm text-[#14231B] focus:border-[#155E42] focus:outline-none"
+              className="w-full rounded-lg border border-[#8A947D] bg-[#F7F8F2] px-3 py-2 text-xs sm:text-sm text-[#2C3325] focus:border-[#557029] focus:outline-none"
             >
               <option value="semua">Semua prioritas</option>
               {TINGKAT_KEPARAHAN_OPTIONS.map((opt) => (
@@ -228,7 +228,7 @@ export default function LaporanFilterTable({
 
           <div className="lg:col-span-3 grid grid-cols-2 gap-2">
             <div>
-              <label className="block text-[11px] font-semibold text-[#5B6B61] mb-1">
+              <label className="block text-[11px] font-semibold text-[#6B7263] mb-1">
                 Dari
               </label>
               <input
@@ -238,11 +238,11 @@ export default function LaporanFilterTable({
                   setStartDate(e.target.value);
                   setPage(1);
                 }}
-                className="w-full rounded-lg border border-[#DCE2DA] bg-[#FBFBFA] px-2 py-2 text-xs text-[#14231B]"
+                className="w-full rounded-lg border border-[#8A947D] bg-[#F7F8F2] px-2 py-2 text-xs text-[#2C3325]"
               />
             </div>
             <div>
-              <label className="block text-[11px] font-semibold text-[#5B6B61] mb-1">
+              <label className="block text-[11px] font-semibold text-[#6B7263] mb-1">
                 Sampai
               </label>
               <input
@@ -252,13 +252,13 @@ export default function LaporanFilterTable({
                   setEndDate(e.target.value);
                   setPage(1);
                 }}
-                className="w-full rounded-lg border border-[#DCE2DA] bg-[#FBFBFA] px-2 py-2 text-xs text-[#14231B]"
+                className="w-full rounded-lg border border-[#8A947D] bg-[#F7F8F2] px-2 py-2 text-xs text-[#2C3325]"
               />
             </div>
           </div>
         </div>
 
-        <div className="flex items-center justify-between text-xs text-[#5F6F66]">
+        <div className="flex items-center justify-between text-xs text-[#6B7263]">
           <span>
             Menampilkan <strong>{filtered.length}</strong> laporan (halaman{" "}
             {safePage} dari {totalPages})
@@ -266,7 +266,7 @@ export default function LaporanFilterTable({
           <button
             type="button"
             onClick={resetAll}
-            className="font-semibold text-[#155E42] hover:underline cursor-pointer"
+            className="font-semibold text-[#557029] hover:underline cursor-pointer"
           >
             Reset filter
           </button>
@@ -281,11 +281,11 @@ export default function LaporanFilterTable({
           actionHref={emptyActionHref}
         />
       ) : (
-        <div className="rounded-xl bg-white border border-[#E3E8E1] overflow-hidden shadow-2xs">
+        <div className="rounded-xl bg-white border border-[#DCE0D5] overflow-hidden shadow-2xs">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-[#EEF2EC] border-b border-[#E1E7DF] text-[11px] font-bold uppercase tracking-wider text-[#5B6B61]">
+                <tr className="bg-[#EEF2E4] border-b border-[#DCE0D5] text-[11px] font-bold uppercase tracking-wider text-[#6B7263]">
                   <th className="py-3.5 px-4 sm:px-6">Kejadian</th>
                   <th className="py-3.5 px-4">Wilayah</th>
                   <th className="py-3.5 px-4">Koordinat</th>
@@ -297,14 +297,14 @@ export default function LaporanFilterTable({
                   )}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#ECEFE9] text-sm">
+              <tbody className="divide-y divide-[#DCE0D5] text-sm">
                 {paginated.map((item) => {
                   const kep = getKeparahanMeta(item.tingkatKeparahan);
                   const isMine = currentUserId && item.petugasId === currentUserId;
                   return (
-                    <tr key={item.id} className="hover:bg-[#F9FAF8] transition-colors">
+                    <tr key={item.id} className="hover:bg-[#F7F8F2] transition-colors">
                       <td className="py-3.5 px-4 sm:px-6">
-                        <p className="font-semibold text-[#14231B]">
+                        <p className="font-semibold text-[#2C3325]">
                           {item.judul}
                         </p>
                         <div className="mt-1 flex flex-wrap items-center gap-1.5">
@@ -322,16 +322,16 @@ export default function LaporanFilterTable({
                           )}
                         </div>
                       </td>
-                      <td className="py-3.5 px-4 text-xs sm:text-sm text-[#5F6F66]">
+                      <td className="py-3.5 px-4 text-xs sm:text-sm text-[#6B7263]">
                         {item.wilayah}
                       </td>
-                      <td className="py-3.5 px-4 font-mono text-xs text-[#5F6F66]">
+                      <td className="py-3.5 px-4 font-mono text-xs text-[#6B7263]">
                         {formatCoordinates(item.latitude, item.longitude, 4)}
                       </td>
-                      <td className="py-3.5 px-4 text-xs text-[#5F6F66]">
+                      <td className="py-3.5 px-4 text-xs text-[#6B7263]">
                         {item.petugas}
                       </td>
-                      <td className="py-3.5 px-4 text-xs text-[#5F6F66]">
+                      <td className="py-3.5 px-4 text-xs text-[#6B7263]">
                         {formatDate(item.tanggal, "short")}
                       </td>
                       <td className="py-3.5 px-4">
@@ -341,7 +341,7 @@ export default function LaporanFilterTable({
                         <td className="py-3.5 px-4 sm:px-6 text-right">
                           <Link
                             href={`${detailHrefPrefix}/${item.id}`}
-                            className="inline-flex items-center gap-1 rounded-lg border border-[#DCE2DA] px-3 py-1.5 text-xs font-semibold text-[#155E42] hover:bg-[#EAF1EC]"
+                            className="inline-flex items-center gap-1 rounded-lg border border-[#8A947D] px-3 py-1.5 text-xs font-semibold text-[#557029] hover:bg-[#EEF2E4]"
                           >
                             Detail &rarr;
                           </Link>
@@ -355,23 +355,23 @@ export default function LaporanFilterTable({
           </div>
 
           {totalPages > 1 && (
-            <div className="flex items-center justify-between border-t border-[#ECEFE9] bg-[#FBFBFA] px-4 py-3 text-xs">
+            <div className="flex items-center justify-between border-t border-[#DCE0D5] bg-[#F7F8F2] px-4 py-3 text-xs">
               <button
                 type="button"
                 disabled={safePage <= 1}
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
-                className="rounded-lg border border-[#DCE2DA] bg-white px-3 py-1.5 font-semibold text-[#14231B] disabled:opacity-40 cursor-pointer"
+                className="rounded-lg border border-[#8A947D] bg-white px-3 py-1.5 font-semibold text-[#2C3325] disabled:opacity-40 cursor-pointer"
               >
                 &larr; Sebelumnya
               </button>
-              <span className="font-semibold text-[#5F6F66]">
+              <span className="font-semibold text-[#6B7263]">
                 Halaman {safePage} / {totalPages}
               </span>
               <button
                 type="button"
                 disabled={safePage >= totalPages}
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                className="rounded-lg border border-[#DCE2DA] bg-white px-3 py-1.5 font-semibold text-[#14231B] disabled:opacity-40 cursor-pointer"
+                className="rounded-lg border border-[#8A947D] bg-white px-3 py-1.5 font-semibold text-[#2C3325] disabled:opacity-40 cursor-pointer"
               >
                 Berikutnya &rarr;
               </button>

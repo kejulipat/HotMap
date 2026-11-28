@@ -42,16 +42,16 @@ export default function RegisterForm() {
 
   return (
     <div className="mx-auto w-full max-w-md">
-      <div className="rounded-2xl border border-[#E3E8E1] bg-white p-6 sm:p-8 shadow-2xs space-y-6">
+      <div className="rounded-2xl border border-[#DCE0D5] bg-white p-6 sm:p-8 shadow-2xs space-y-6">
         <div className="space-y-1.5">
-          <span className="inline-block text-[11px] font-bold uppercase tracking-widest text-[#155E42]">
+          <span className="inline-block text-[11px] font-bold uppercase tracking-widest text-[#557029]">
             Registrasi Pelapor
           </span>
-          <h1 className="text-2xl font-bold text-[#12241B]">
+          <h1 className="text-2xl font-bold text-[#2C3325]">
             Buat Akun HotMap
           </h1>
-          <p className="text-sm text-[#606F67]">
-            Pendaftaran publik otomatis terdaftar sebagai <strong className="text-[#14231B]">Pelapor</strong> untuk mengirim dan memantau laporan karhutla.
+          <p className="text-sm text-[#6B7263]">
+            Pendaftaran publik otomatis terdaftar sebagai <strong className="text-[#2C3325]">Pelapor</strong> untuk mengirim dan memantau laporan karhutla.
           </p>
         </div>
 
@@ -88,7 +88,7 @@ export default function RegisterForm() {
           <div>
             <label
               htmlFor="reg-fullname"
-              className="block text-xs font-semibold text-[#4E5E55] mb-1.5"
+              className="block text-xs font-semibold text-[#4A5243] mb-1.5"
             >
               Nama Lengkap
             </label>
@@ -100,14 +100,14 @@ export default function RegisterForm() {
               required
               disabled={isPending}
               placeholder="Contoh: Budi Santoso"
-              className="w-full rounded-lg border border-[#DCE2DA] bg-[#FBFBFA] px-3.5 py-2.5 text-sm text-[#14231B] focus:border-[#155E42] focus:outline-none disabled:opacity-60"
+              className="w-full rounded-lg border border-[#8A947D] bg-[#F7F8F2] px-3.5 py-2.5 text-sm text-[#2C3325] focus:border-[#557029] focus:outline-none disabled:opacity-60"
             />
           </div>
 
           <div>
             <label
               htmlFor="reg-email"
-              className="block text-xs font-semibold text-[#4E5E55] mb-1.5"
+              className="block text-xs font-semibold text-[#4A5243] mb-1.5"
             >
               Email
             </label>
@@ -119,14 +119,14 @@ export default function RegisterForm() {
               required
               disabled={isPending}
               placeholder="nama@contoh.id"
-              className="w-full rounded-lg border border-[#DCE2DA] bg-[#FBFBFA] px-3.5 py-2.5 text-sm text-[#14231B] focus:border-[#155E42] focus:outline-none disabled:opacity-60"
+              className="w-full rounded-lg border border-[#8A947D] bg-[#F7F8F2] px-3.5 py-2.5 text-sm text-[#2C3325] focus:border-[#557029] focus:outline-none disabled:opacity-60"
             />
           </div>
 
           <div>
             <label
               htmlFor="reg-password"
-              className="block text-xs font-semibold text-[#4E5E55] mb-1.5"
+              className="block text-xs font-semibold text-[#4A5243] mb-1.5"
             >
               Kata Sandi
             </label>
@@ -139,13 +139,13 @@ export default function RegisterForm() {
                 required
                 disabled={isPending}
                 placeholder="Minimal 6 karakter"
-                className="w-full rounded-lg border border-[#DCE2DA] bg-[#FBFBFA] px-3.5 py-2.5 pr-20 text-sm text-[#14231B] focus:border-[#155E42] focus:outline-none disabled:opacity-60"
+                className="w-full rounded-lg border border-[#8A947D] bg-[#F7F8F2] px-3.5 py-2.5 pr-20 text-sm text-[#2C3325] focus:border-[#557029] focus:outline-none disabled:opacity-60"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((prev) => !prev)}
                 disabled={isPending}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md px-2 py-1 text-xs font-semibold text-[#5F6F66] hover:bg-[#EAF1EC] hover:text-[#155E42] cursor-pointer"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md px-2 py-1 text-xs font-semibold text-[#6B7263] hover:bg-[#EEF2E4] hover:text-[#557029] cursor-pointer"
               >
                 {showPassword ? "Sembunyikan" : "Tampilkan"}
               </button>
@@ -155,7 +155,7 @@ export default function RegisterForm() {
           <div>
             <label
               htmlFor="reg-confirm-password"
-              className="block text-xs font-semibold text-[#4E5E55] mb-1.5"
+              className="block text-xs font-semibold text-[#4A5243] mb-1.5"
             >
               Konfirmasi Kata Sandi
             </label>
@@ -167,24 +167,24 @@ export default function RegisterForm() {
               required
               disabled={isPending}
               placeholder="Ulangi kata sandi"
-              className="w-full rounded-lg border border-[#DCE2DA] bg-[#FBFBFA] px-3.5 py-2.5 text-sm text-[#14231B] focus:border-[#155E42] focus:outline-none disabled:opacity-60"
+              className="w-full rounded-lg border border-[#8A947D] bg-[#F7F8F2] px-3.5 py-2.5 text-sm text-[#2C3325] focus:border-[#557029] focus:outline-none disabled:opacity-60"
             />
           </div>
 
           <button
             type="submit"
             disabled={isPending}
-            className="w-full rounded-lg bg-[#155E42] hover:bg-[#114B35] px-4 py-2.5 text-sm font-semibold text-white shadow-xs transition-colors disabled:opacity-60 cursor-pointer"
+            className="w-full rounded-lg bg-[#557029] hover:bg-[#465D21] px-4 py-2.5 text-sm font-semibold text-white shadow-xs transition-colors disabled:opacity-60 cursor-pointer"
           >
             {isPending ? "Mendaftarkan..." : "Daftar sebagai Pelapor"}
           </button>
         </form>
 
-        <p className="text-center text-xs text-[#606F67]">
+        <p className="text-center text-xs text-[#6B7263]">
           Sudah memiliki akun?{" "}
           <Link
             href="/login"
-            className="font-semibold text-[#155E42] hover:underline"
+            className="font-semibold text-[#557029] hover:underline"
           >
             Masuk di sini
           </Link>

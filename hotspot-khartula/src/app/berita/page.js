@@ -15,8 +15,14 @@ export const metadata = {
   description: "Daftar berita dan informasi terkini terkait kebakaran hutan dan lahan.",
 };
 
-export default async function BeritaPage() {
-  const { supabase, user, profile, role } = await getCurrentUserWithRole();
+export default async function BeritaPage({ searchParams }) {
+  const [{ supabase, user, profile, role }, resolvedParams] = await Promise.all([
+    getCurrentUserWithRole(),
+    searchParams,
+  ]);
+  const initialQuery =
+    typeof resolvedParams?.q === "string" ? resolvedParams.q.trim() : "";
+
   const { beritaList, tableReady, error } = await fetchBeritaList(supabase, 50);
 
   const currentUser = user
@@ -34,10 +40,10 @@ export default async function BeritaPage() {
         <Breadcrumb
           items={[{ label: "Beranda", href: "/" }, { label: "Berita" }]}
         />
-        <h1 className="text-2xl sm:text-3xl font-bold text-[#12241B]">
+        <h1 className="font-serif text-[30px] sm:text-[36px] font-bold text-[#2C3325] leading-tight">
           Berita &amp; Informasi Karhutla
         </h1>
-        <p className="text-sm text-[#606F67]">
+        <p className="text-[14px] text-[#6B7263]">
           Informasi resmi, peringatan dini, dan laporan penanganan kebakaran
           hutan dan lahan.
         </p>
@@ -55,7 +61,10 @@ export default async function BeritaPage() {
           actionHref="/"
         />
       ) : (
-        <PublicBeritaExplorer beritaList={beritaList} />
+        <PublicBeritaExplorer
+          beritaList={beritaList}
+          initialSearch={initialQuery}
+        />
       )}
     </PublicShell>
   );

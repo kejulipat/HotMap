@@ -31,10 +31,10 @@ export default async function PublicPetaPage() {
         <Breadcrumb
           items={[{ label: "Beranda", href: "/" }, { label: "Peta Karhutla" }]}
         />
-        <h1 className="text-2xl sm:text-3xl font-bold text-[#12241B]">
+        <h1 className="text-2xl sm:text-3xl font-bold text-[#2C3325]">
           Peta Sebaran Kejadian Karhutla
         </h1>
-        <p className="text-sm text-[#606F67]">
+        <p className="text-sm text-[#6B7263]">
           Peta GIS interaktif berbasis Leaflet yang menampilkan lokasi laporan
           masyarakat yang memiliki koordinat valid, dibedakan berdasarkan status
           penanganan.

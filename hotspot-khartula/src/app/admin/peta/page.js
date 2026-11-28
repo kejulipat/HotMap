@@ -18,10 +18,10 @@ export default async function AdminPetaPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-[#12241B]">
+        <h1 className="text-2xl font-bold text-[#2C3325]">
           Monitoring Peta Karhutla
         </h1>
-        <p className="mt-1 text-sm text-[#606F67]">
+        <p className="mt-1 text-sm text-[#6B7263]">
           Pemantauan menyeluruh koordinat laporan masyarakat di seluruh wilayah
           beserta akses langsung ke verifikasi dan penugasan petugas.
         </p>

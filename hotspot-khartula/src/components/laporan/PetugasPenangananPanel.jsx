@@ -50,7 +50,7 @@ export default function PetugasPenangananPanel({
     return (
       <div
         role="status"
-        className="rounded-xl border border-[#DCE2DA] bg-[#F6F7F3] p-4 text-xs sm:text-sm text-[#4E5E55]"
+        className="rounded-xl border border-[#8A947D] bg-[#F7F8F2] p-4 text-xs sm:text-sm text-[#4A5243]"
       >
         <strong>Akses Read-Only:</strong> Laporan ini tidak ditugaskan kepada
         akun Anda. Sesuai kebijakan keamanan least-privilege, petugas hanya
@@ -75,10 +75,10 @@ export default function PetugasPenangananPanel({
   return (
     <div className="rounded-xl border border-[#C5DCF8] bg-[#F4F8FE] p-4 sm:p-5 space-y-4">
       <div>
-        <h3 className="text-sm font-bold text-[#12241B]">
+        <h3 className="text-sm font-bold text-[#2C3325]">
           Pembaruan Progres Penanganan Lapangan
         </h3>
-        <p className="text-xs text-[#5F6F66]">
+        <p className="text-xs text-[#6B7263]">
           Catat perkembangan lapangan, unggah foto dokumentasi penanganan, atau
           tandai penanganan selesai.
         </p>
@@ -107,7 +107,7 @@ export default function PetugasPenangananPanel({
         <div>
           <label
             htmlFor="petugas-status-update"
-            className="block text-xs font-semibold text-[#4E5E55] mb-1"
+            className="block text-xs font-semibold text-[#4A5243] mb-1"
           >
             Status Progres <span className="text-[#C85A28]">*</span>
           </label>
@@ -116,7 +116,7 @@ export default function PetugasPenangananPanel({
             name="status_update"
             defaultValue={allowedNext[0]}
             disabled={isPending}
-            className="w-full rounded-lg border border-[#C5DCF8] bg-white px-3 py-2 text-sm text-[#14231B] focus:border-[#155E42] focus:outline-none"
+            className="w-full rounded-lg border border-[#C5DCF8] bg-white px-3 py-2 text-sm text-[#2C3325] focus:border-[#557029] focus:outline-none"
           >
             {allowedNext.map((st) => (
               <option key={st} value={st}>
@@ -131,7 +131,7 @@ export default function PetugasPenangananPanel({
         <div>
           <label
             htmlFor="petugas-catatan"
-            className="block text-xs font-semibold text-[#4E5E55] mb-1"
+            className="block text-xs font-semibold text-[#4A5243] mb-1"
           >
             Catatan Lapangan <span className="text-[#C85A28]">*</span>
           </label>
@@ -144,14 +144,14 @@ export default function PetugasPenangananPanel({
             maxLength={2000}
             disabled={isPending}
             placeholder="Laporkan tindakan pemadaman, kondisi api terkini, kendala akses, atau hasil pendinginan..."
-            className="w-full rounded-lg border border-[#C5DCF8] bg-white px-3 py-2 text-sm text-[#14231B] focus:border-[#155E42] focus:outline-none"
+            className="w-full rounded-lg border border-[#C5DCF8] bg-white px-3 py-2 text-sm text-[#2C3325] focus:border-[#557029] focus:outline-none"
           />
         </div>
 
         <div>
           <label
             htmlFor="petugas-foto"
-            className="block text-xs font-semibold text-[#4E5E55] mb-1"
+            className="block text-xs font-semibold text-[#4A5243] mb-1"
           >
             Foto Bukti Penanganan (opsional, maks. {MAX_FILES} foto JPEG/PNG/WebP
             &le; 5 MB)
@@ -165,10 +165,10 @@ export default function PetugasPenangananPanel({
             accept="image/jpeg,image/png,image/webp"
             disabled={isPending}
             onChange={handleFileChange}
-            className="block w-full text-xs text-[#5F6F66] file:mr-3 file:rounded-lg file:border file:border-[#C5DCF8] file:bg-white file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-[#14231B] hover:file:bg-[#EAF1EC]"
+            className="block w-full text-xs text-[#6B7263] file:mr-3 file:rounded-lg file:border file:border-[#C5DCF8] file:bg-white file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-[#2C3325] hover:file:bg-[#EEF2E4]"
           />
           {selectedCount > 0 && (
-            <p className="mt-1 text-[11px] font-semibold text-[#155E42]">
+            <p className="mt-1 text-[11px] font-semibold text-[#557029]">
               {selectedCount} foto dipilih untuk diunggah.
             </p>
           )}
@@ -178,7 +178,7 @@ export default function PetugasPenangananPanel({
           <button
             type="submit"
             disabled={!canUpdate || isPending || Boolean(fileError)}
-            className="rounded-lg bg-[#155E42] hover:bg-[#114B35] px-5 py-2 text-xs font-semibold text-white transition-colors disabled:opacity-50 cursor-pointer"
+            className="rounded-lg bg-[#557029] hover:bg-[#465D21] px-5 py-2 text-xs font-semibold text-white transition-colors disabled:opacity-50 cursor-pointer"
           >
             {isPending ? "Menyimpan Progres..." : "Simpan Progres Lapangan"}
           </button>

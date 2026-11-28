@@ -5,18 +5,19 @@ import Link from "next/link";
 import PublicNavbar from "@/components/layout/PublicNavbar";
 import PublicFooter from "@/components/layout/PublicFooter";
 import HotmapMap from "@/components/map/HotmapMap";
-import { StatusBadge } from "@/components/ui/SharedUI";
 import {
   formatCoordinates,
-  getGoogleMapsUrl,
   isValidCoordinatePair,
 } from "@/lib/gis";
-import {
-  STATUS_META,
-  SUMMARY_CARDS,
-  computeStatusCounts,
-  formatDate,
-} from "@/lib/normalizers";
+import { STATUS_META, formatDate } from "@/lib/normalizers";
+
+const ROLE_PORTAL_HREF = {
+  admin: "/admin",
+  petugas: "/petugas",
+  pelapor: "/pelapor",
+};
+
+const LANDING_BASEMAPS = ["osm", "satellite"];
 
 export default function LandingExplorer({
   initialLaporan = [],
@@ -37,12 +38,6 @@ export default function LandingExplorer({
     status: "semua",
   });
 
-  const defaultSelected =
-    initialLaporan.find((item) => item.statusKey === "ditangani") ??
-    initialLaporan[0] ??
-    null;
-  const [selectedId, setSelectedId] = useState(defaultSelected?.id ?? null);
-  const [isDetailOpen, setIsDetailOpen] = useState(true);
   const [focusTarget, setFocusTarget] = useState(null);
 
   const wilayahByName = useMemo(() => {
@@ -53,11 +48,25 @@ export default function LandingExplorer({
     return map;
   }, [wilayahList]);
 
-  const baseFilteredLaporan = useMemo(() => {
+  const wilayahOptions = useMemo(() => {
+    const set = new Set(wilayahList.map((w) => w.nama).filter(Boolean));
+    for (const item of initialLaporan) {
+      if (item.wilayah) set.add(item.wilayah);
+    }
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [wilayahList, initialLaporan]);
+
+  const filteredLaporan = useMemo(() => {
     return initialLaporan.filter((item) => {
       if (
         appliedFilters.wilayah !== "semua" &&
         item.wilayah !== appliedFilters.wilayah
+      ) {
+        return false;
+      }
+      if (
+        appliedFilters.status !== "semua" &&
+        item.statusKey !== appliedFilters.status
       ) {
         return false;
       }
@@ -77,40 +86,35 @@ export default function LandingExplorer({
       }
       return true;
     });
-  }, [
-    initialLaporan,
-    appliedFilters.wilayah,
-    appliedFilters.startDate,
-    appliedFilters.endDate,
-  ]);
+  }, [initialLaporan, appliedFilters]);
 
-  const counts = useMemo(
-    () => computeStatusCounts(baseFilteredLaporan),
-    [baseFilteredLaporan]
-  );
+  const showcaseItems = useMemo(() => {
+    const priority = {
+      ditangani: 0,
+      selesai: 1,
+      terverifikasi: 2,
+      menunggu_verifikasi: 3,
+      ditolak: 4,
+    };
+    return [...initialLaporan]
+      .sort(
+        (a, b) =>
+          (priority[a.statusKey] ?? 9) - (priority[b.statusKey] ?? 9)
+      )
+      .slice(0, 3);
+  }, [initialLaporan]);
 
-  const wilayahOptions = useMemo(() => {
-    const set = new Set(wilayahList.map((w) => w.nama).filter(Boolean));
-    for (const item of initialLaporan) {
-      if (item.wilayah) set.add(item.wilayah);
-    }
-    return Array.from(set).sort((a, b) => a.localeCompare(b));
-  }, [wilayahList, initialLaporan]);
+  const hasActiveFilter =
+    appliedFilters.wilayah !== "semua" ||
+    appliedFilters.status !== "semua" ||
+    Boolean(appliedFilters.startDate) ||
+    Boolean(appliedFilters.endDate);
 
-  const filteredLaporan = useMemo(() => {
-    if (appliedFilters.status === "semua") return baseFilteredLaporan;
-    return baseFilteredLaporan.filter(
-      (item) => item.statusKey === appliedFilters.status
-    );
-  }, [baseFilteredLaporan, appliedFilters.status]);
-
-  const selectedReport = useMemo(() => {
-    return (
-      filteredLaporan.find((item) => item.id === selectedId) ??
-      filteredLaporan[0] ??
-      null
-    );
-  }, [filteredLaporan, selectedId]);
+  function scrollToMapSection() {
+    if (typeof document === "undefined") return;
+    const el = document.getElementById("peta-sebaran");
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 
   function handleApplyFilter(e) {
     e.preventDefault();
@@ -131,6 +135,7 @@ export default function LandingExplorer({
         }));
       }
     }
+    scrollToMapSection();
   }
 
   function handleResetFilter() {
@@ -146,470 +151,503 @@ export default function LandingExplorer({
     });
   }
 
-  function handleQuickStatusCard(statusKey) {
-    setDraftStatus(statusKey);
-    setAppliedFilters((prev) => ({
-      ...prev,
-      status: statusKey,
-    }));
-  }
-
-  function handleSelectReport(id, shouldFly = false) {
-    setSelectedId(id);
-    setIsDetailOpen(true);
-    if (shouldFly) {
-      const found = filteredLaporan.find((r) => r.id === id);
-      if (found && isValidCoordinatePair(found.latitude, found.longitude)) {
-        setFocusTarget((prev) => ({
-          lat: found.latitude,
-          lng: found.longitude,
-          zoom: 12,
-          reportId: found.id,
-          seq: (prev?.seq ?? 0) + 1,
-        }));
-      }
+  function handleFocusReportOnMap(item) {
+    if (item && isValidCoordinatePair(item.latitude, item.longitude)) {
+      setFocusTarget((prev) => ({
+        lat: item.latitude,
+        lng: item.longitude,
+        zoom: 12,
+        reportId: item.id,
+        seq: (prev?.seq ?? 0) + 1,
+      }));
     }
+    scrollToMapSection();
   }
 
-  const googleMapsUrl = selectedReport
-    ? getGoogleMapsUrl(selectedReport.latitude, selectedReport.longitude)
-    : null;
+  const portalHref = currentUser?.role
+    ? ROLE_PORTAL_HREF[currentUser.role] ?? "/login"
+    : "/login";
+
+  const heroPrimaryHref =
+    currentUser?.role === "petugas" ? "/petugas/peta" : "/pelapor/laporan/buat";
+  const heroPrimaryLabel =
+    currentUser?.role === "petugas" ? "Buka Peta Tugas" : "Laporkan Kejadian";
+
+  const featureItems = [
+    {
+      title: "Peta GIS Interaktif",
+      description:
+        "Pantau sebaran titik laporan warga secara visual dengan klaster otomatis, legenda status, dan pilihan citra satelit.",
+      ctaLabel: "Buka Peta",
+      href: "/peta",
+      icon: (
+        <svg className="h-10 w-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M9 18l-6 3V6l6-3 6 3 6-3v15l-6 3-6-3z" />
+          <path d="M9 3v15" />
+          <path d="M15 6v15" />
+        </svg>
+      ),
+    },
+    {
+      title: "Pelaporan Warga",
+      description:
+        "Laporkan titik api atau asap pekat dilengkapi koordinat akurat pada peta serta unggahan foto bukti lapangan.",
+      ctaLabel: "Buat Laporan",
+      href: "/pelapor/laporan/buat",
+      icon: (
+        <svg className="h-10 w-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M12 21s-6-5.2-6-10a6 6 0 1 1 12 0c0 4.8-6 10-6 10z" />
+          <circle cx="12" cy="11" r="2.2" />
+        </svg>
+      ),
+    },
+    {
+      title: "Verifikasi & Penugasan",
+      description:
+        "Admin memverifikasi laporan dan menugaskan petugas lapangan, sementara progres pemadaman tercatat kronologis.",
+      ctaLabel: currentUser ? "Buka Portal" : "Masuk Sistem",
+      href: portalHref,
+      icon: (
+        <svg className="h-10 w-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M12 2l7 4v6c0 5-3.5 9-7 10-3.5-1-7-5-7-10V6l7-4z" />
+          <path d="M9 12l2 2 4-4" />
+        </svg>
+      ),
+    },
+    {
+      title: "Informasi & Edukasi",
+      description:
+        "Ikuti peringatan dini kekeringan lahan gambut, laporan pemadaman, dan panduan pencegahan karhutla terbaru.",
+      ctaLabel: "Baca Berita",
+      href: "/berita",
+      icon: (
+        <svg className="h-10 w-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M4 5h16v14H4z" />
+          <path d="M8 9h8M8 13h8M8 17h5" />
+        </svg>
+      ),
+    },
+  ];
 
   return (
-    <div className="min-h-screen bg-[#F6F7F3] text-[#14231B] flex flex-col font-sans">
+    <div className="min-h-screen bg-white text-[#2C3325] flex flex-col font-sans">
       <PublicNavbar currentUser={currentUser} />
 
-      <main className="flex-1 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-8 sm:py-10 space-y-7">
-        {hasQueryError && (
+      <main className="flex-1">
+        {/* 1. HERO SECTION (2 Kolom Asimetris + Placeholder Foto Alam Full-Bleed, Full Viewport) */}
+        <section className="relative w-full min-h-[calc(100dvh-110px)] flex items-center overflow-hidden bg-[#2C3B21]">
+          {/*
+            PLACEHOLDER FOTO HERO FULL-BLEED (siap diganti):
+            Simpan foto alam/hutan lanskap pada `public/images/hero-forest.jpg` lalu aktifkan blok img ini:
+            <img
+              src="/images/hero-forest.jpg"
+              alt=""
+              aria-hidden="true"
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+          */}
           <div
-            role="alert"
-            className="rounded-xl border border-[#E5B8A7] bg-[#FDF2EA] px-4 py-3 text-sm text-[#9B4017]"
-          >
-            Sebagian data gagal dimuat dari database. Silakan muat ulang halaman
-            beberapa saat lagi.
-          </div>
-        )}
+            aria-hidden="true"
+            className="absolute inset-0 bg-gradient-to-br from-[#1C2715]/92 via-[#2B3B1F]/80 to-[#394C27]/88"
+          />
 
-        {/* Hero Header */}
-        <section className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
-          <div className="max-w-3xl space-y-2.5">
-            <p className="text-xs font-bold uppercase tracking-widest text-[#1E6B4E]">
-              PEMANTAUAN KEBAKARAN HUTAN &amp; LAHAN
-            </p>
-            <h1 className="text-2xl sm:text-4xl font-bold tracking-tight text-[#12241B] leading-[1.2]">
-              Pantau titik karhutla di seluruh wilayah, dari laporan warga
-              sampai penanganan selesai.
-            </h1>
-            <p className="text-sm sm:text-base text-[#5E6D64]">
-              Data terkini kejadian kebakaran hutan dan lahan. Lihat lokasi,
-              status, dan tindak lanjut petugas.
-            </p>
-          </div>
+          <div className="relative w-full mx-auto max-w-[1200px] px-4 sm:px-6 py-12 lg:py-16">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center">
+              {/* Kolom Kiri: Headline Serif + Subjudul + CTA Pil */}
+              <div className="lg:col-span-7 space-y-5">
+                <p className="inline-flex items-center gap-2 text-[12px] font-semibold uppercase tracking-[0.16em] text-[#D7E3C3]">
+                  <span className="h-2 w-2 rounded-full bg-[#A8C66C]" />
+                  SIPKARHUTLA &bull; Cakupan Seluruh Indonesia
+                </p>
 
-          <div className="self-start rounded-xl bg-[#EAF1EC] border border-[#D5E2D8] px-4 py-3 min-w-[210px]">
-            <span className="block text-[10px] font-semibold uppercase tracking-wider text-[#5F7267]">
-              CAKUPAN PEMANTAUAN
-            </span>
-            <div className="mt-1 flex items-center gap-2 text-sm font-semibold text-[#155E42]">
-              <span className="h-2 w-2 rounded-full bg-[#155E42]" />
-              <span>Seluruh Indonesia</span>
-            </div>
-          </div>
-        </section>
+                <h1 className="font-serif text-[34px] sm:text-[44px] font-bold leading-[1.15] tracking-tight text-white">
+                  Pantau &amp; Tangani Karhutla di Seluruh Wilayah Indonesia.
+                </h1>
 
-        {/* 6 Status Summary Cards */}
-        <section className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
-          {SUMMARY_CARDS.map((card) => {
-            const isActive = appliedFilters.status === card.key;
-            const isPrimaryCard = card.key === "semua";
-            const count = counts[card.key] ?? 0;
+                <p className="max-w-xl text-[15px] leading-relaxed text-white/90">
+                  Data terkini kejadian kebakaran hutan dan lahan berbasis laporan warga.
+                  Lihat titik lokasi pada peta interaktif, status verifikasi, hingga tindak lanjut petugas.
+                </p>
 
-            return (
-              <button
-                key={card.key}
-                type="button"
-                onClick={() => handleQuickStatusCard(card.key)}
-                className={`text-left rounded-xl p-4 transition-all border cursor-pointer ${
-                  isPrimaryCard
-                    ? "bg-[#155E42] text-white border-[#155E42] shadow-sm"
-                    : isActive
-                    ? "bg-white text-[#14231B] border-[#155E42] ring-2 ring-[#155E42]/20"
-                    : "bg-white text-[#14231B] border-[#E3E8E1] hover:border-[#C5D1C8]"
-                }`}
-              >
-                <div className="flex items-baseline gap-1.5">
-                  <span className="text-2xl sm:text-3xl font-bold tracking-tight">
-                    {count}
-                  </span>
-                  <span
-                    className={`text-xs ${
-                      isPrimaryCard ? "text-white/80" : "text-[#6D7C73]"
-                    }`}
+                <div className="pt-2 flex flex-wrap items-center gap-3">
+                  <Link
+                    href={heroPrimaryHref}
+                    className="inline-flex items-center justify-center rounded-full bg-[#557029] hover:bg-[#465D21] border border-[#8CB04E]/45 px-7 py-3 text-[14px] font-semibold text-white transition-colors"
                   >
-                    laporan
-                  </span>
-                </div>
-                <div className="mt-2.5 flex items-center gap-2 text-xs font-medium">
-                  <span
-                    className={`h-2 w-2 rounded-full shrink-0 ${card.dotColor}`}
-                  />
-                  <span
-                    className={`truncate ${
-                      isPrimaryCard ? "text-white/95" : "text-[#4E5E55]"
-                    }`}
+                    {heroPrimaryLabel}
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={scrollToMapSection}
+                    className="inline-flex items-center justify-center rounded-full border border-white/65 bg-white/10 hover:bg-white hover:text-[#2C3325] px-6 py-3 text-[14px] font-semibold text-white transition-colors cursor-pointer"
                   >
-                    {card.label}
-                  </span>
+                    Lihat Peta Sebaran &darr;
+                  </button>
                 </div>
-              </button>
-            );
-          })}
+
+                <p className="pt-2 text-[11px] font-medium text-white/60">
+                  Slot foto latar hero siap diganti (<code>public/images/hero-forest.jpg</code>)
+                </p>
+              </div>
+
+              {/* Kolom Kanan: Kartu Form Melayang (Filter Pantauan Cepat Aktif) */}
+              <div className="lg:col-span-5">
+                <div className="rounded-[12px] bg-white p-6 hm-floating-card border border-[#DCE0D5]">
+                  <div className="mb-5 space-y-1">
+                    <h2 className="font-serif text-[22px] font-semibold text-[#2C3325] leading-snug">
+                      Filter Pantauan Cepat
+                    </h2>
+                    <p className="text-[13px] text-[#6B7263]">
+                      Saring titik laporan pada peta sebaran secara langsung.
+                    </p>
+                  </div>
+
+                  <form onSubmit={handleApplyFilter} className="space-y-4">
+                    <div>
+                      <label
+                        htmlFor="hero-filter-wilayah"
+                        className="block text-[12px] font-medium text-[#2C3325] mb-1.5"
+                      >
+                        Wilayah Pemantauan
+                      </label>
+                      <select
+                        id="hero-filter-wilayah"
+                        value={draftWilayah}
+                        onChange={(e) => setDraftWilayah(e.target.value)}
+                        className="w-full rounded-[4px] border border-[#8A947D] bg-white px-3 py-2.5 text-[14px] text-[#2C3325] focus:border-[#557029] focus:outline-none"
+                      >
+                        <option value="semua">Semua wilayah ({wilayahOptions.length})</option>
+                        {wilayahOptions.map((wilayah) => (
+                          <option key={wilayah} value={wilayah}>
+                            {wilayah}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label
+                        htmlFor="hero-filter-status"
+                        className="block text-[12px] font-medium text-[#2C3325] mb-1.5"
+                      >
+                        Status Penanganan
+                      </label>
+                      <select
+                        id="hero-filter-status"
+                        value={draftStatus}
+                        onChange={(e) => setDraftStatus(e.target.value)}
+                        className="w-full rounded-[4px] border border-[#8A947D] bg-white px-3 py-2.5 text-[14px] text-[#2C3325] focus:border-[#557029] focus:outline-none"
+                      >
+                        <option value="semua">Semua status</option>
+                        {Object.entries(STATUS_META).map(([key, meta]) => (
+                          <option key={key} value={key}>
+                            {meta.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label
+                          htmlFor="hero-filter-start"
+                          className="block text-[12px] font-medium text-[#2C3325] mb-1.5"
+                        >
+                          Dari Tanggal
+                        </label>
+                        <input
+                          id="hero-filter-start"
+                          type="date"
+                          value={draftStartDate}
+                          onChange={(e) => setDraftStartDate(e.target.value)}
+                          className="w-full rounded-[4px] border border-[#8A947D] bg-white px-3 py-2 text-[14px] text-[#2C3325] focus:border-[#557029] focus:outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label
+                          htmlFor="hero-filter-end"
+                          className="block text-[12px] font-medium text-[#2C3325] mb-1.5"
+                        >
+                          Sampai Tanggal
+                        </label>
+                        <input
+                          id="hero-filter-end"
+                          type="date"
+                          value={draftEndDate}
+                          onChange={(e) => setDraftEndDate(e.target.value)}
+                          className="w-full rounded-[4px] border border-[#8A947D] bg-white px-3 py-2 text-[14px] text-[#2C3325] focus:border-[#557029] focus:outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="pt-1 space-y-2">
+                      <button
+                        type="submit"
+                        className="w-full rounded-full bg-[#557029] hover:bg-[#465D21] px-5 py-2.5 text-[14px] font-semibold text-white transition-colors cursor-pointer"
+                      >
+                        Tampilkan di Peta
+                      </button>
+
+                      {hasActiveFilter && (
+                        <button
+                          type="button"
+                          onClick={handleResetFilter}
+                          className="w-full rounded-full border border-[#8A947D] bg-white hover:bg-[#F7F8F2] px-4 py-2 text-[12px] font-semibold text-[#2C3325] transition-colors cursor-pointer"
+                        >
+                          Atur Ulang Filter
+                        </button>
+                      )}
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
         </section>
 
-        {/* Filter Bar */}
-        <section className="rounded-xl bg-white border border-[#E3E8E1] p-4 sm:p-5 shadow-2xs">
-          <form
-            onSubmit={handleApplyFilter}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-4 items-end"
-          >
-            <div className="lg:col-span-2">
-              <label className="block text-xs font-medium text-[#5A6960] mb-1.5">
-                Dari tanggal
-              </label>
-              <input
-                type="date"
-                value={draftStartDate}
-                onChange={(e) => setDraftStartDate(e.target.value)}
-                className="w-full rounded-lg border border-[#DCE2DA] bg-[#FBFBFA] px-3 py-2 text-sm text-[#14231B] focus:border-[#155E42] focus:outline-none"
-              />
+        {/* 2. FEATURE STRIP (4 Kolom, Latar Krem Hangat #F7F8F2) */}
+        <section className="w-full bg-[#F7F8F2] border-b border-[#DCE0D5] py-16">
+          <div className="mx-auto max-w-[1200px] px-4 sm:px-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {featureItems.map((item) => (
+                <div
+                  key={item.title}
+                  className="flex flex-col items-center text-center px-3 py-2"
+                >
+                  <div className="mb-4 text-[#6F8E3D]">{item.icon}</div>
+                  <h2 className="font-serif text-[18px] font-semibold text-[#2C3325]">
+                    {item.title}
+                  </h2>
+                  <p className="mt-2.5 text-[14px] leading-relaxed text-[#6B7263] flex-1">
+                    {item.description}
+                  </p>
+                  <Link
+                    href={item.href}
+                    className="mt-5 inline-flex items-center justify-center rounded-full bg-[#557029] hover:bg-[#465D21] px-5 py-2 text-[13px] font-semibold text-white transition-colors"
+                  >
+                    {item.ctaLabel}
+                  </Link>
+                </div>
+              ))}
             </div>
-
-            <div className="lg:col-span-2">
-              <label className="block text-xs font-medium text-[#5A6960] mb-1.5">
-                Sampai tanggal
-              </label>
-              <input
-                type="date"
-                value={draftEndDate}
-                onChange={(e) => setDraftEndDate(e.target.value)}
-                className="w-full rounded-lg border border-[#DCE2DA] bg-[#FBFBFA] px-3 py-2 text-sm text-[#14231B] focus:border-[#155E42] focus:outline-none"
-              />
-            </div>
-
-            <div className="lg:col-span-3">
-              <label className="block text-xs font-medium text-[#5A6960] mb-1.5">
-                Wilayah
-              </label>
-              <select
-                value={draftWilayah}
-                onChange={(e) => setDraftWilayah(e.target.value)}
-                className="w-full rounded-lg border border-[#DCE2DA] bg-[#FBFBFA] px-3 py-2 text-sm text-[#14231B] focus:border-[#155E42] focus:outline-none"
-              >
-                <option value="semua">Semua wilayah</option>
-                {wilayahOptions.map((wilayah) => (
-                  <option key={wilayah} value={wilayah}>
-                    {wilayah}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="lg:col-span-2">
-              <label className="block text-xs font-medium text-[#5A6960] mb-1.5">
-                Status
-              </label>
-              <select
-                value={draftStatus}
-                onChange={(e) => setDraftStatus(e.target.value)}
-                className="w-full rounded-lg border border-[#DCE2DA] bg-[#FBFBFA] px-3 py-2 text-sm text-[#14231B] focus:border-[#155E42] focus:outline-none"
-              >
-                <option value="semua">Semua status</option>
-                {Object.entries(STATUS_META).map(([key, meta]) => (
-                  <option key={key} value={key}>
-                    {meta.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="lg:col-span-3 flex items-center gap-3">
-              <button
-                type="submit"
-                className="flex-1 rounded-lg bg-[#155E42] hover:bg-[#114B35] px-5 py-2.5 text-sm font-semibold text-white transition-colors cursor-pointer"
-              >
-                Tampilkan
-              </button>
-              <button
-                type="button"
-                onClick={handleResetFilter}
-                className="px-3 py-2.5 text-sm font-medium text-[#5A6960] hover:text-[#14231B] transition-colors cursor-pointer"
-              >
-                Atur ulang
-              </button>
-            </div>
-          </form>
+          </div>
         </section>
 
-        {/* Peta Sebaran Karhutla Interaktif (Leaflet) */}
-        <section className="rounded-2xl bg-white border border-[#E3E8E1] p-4 sm:p-6 shadow-2xs space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div>
-              <h2 className="text-lg font-bold text-[#12241B]">
-                Peta sebaran karhutla
+        {/* 3. PETA SEBARAN RINGKAS (Tanpa Panel Laporan Terpilih, Hanya Peta Jalan & Citra Satelit) */}
+        <section id="peta-sebaran" className="w-full bg-white py-16 scroll-mt-20">
+          <div className="mx-auto max-w-[1200px] px-4 sm:px-6 space-y-6">
+            {hasQueryError && (
+              <div
+                role="alert"
+                className="rounded-[8px] border border-[#E5B8A7] bg-[#FDF2EA] px-4 py-3 text-sm text-[#9B3417]"
+              >
+                Sebagian data gagal dimuat dari database. Silakan muat ulang halaman
+                beberapa saat lagi.
+              </div>
+            )}
+
+            <div className="text-center max-w-2xl mx-auto space-y-2">
+              <h2 className="font-serif text-[30px] font-bold text-[#2C3325] leading-tight">
+                Peta Sebaran Laporan Karhutla
               </h2>
-              <p className="text-xs text-[#6B7A71]">
-                {filteredLaporan.length} laporan warga &bull;{" "}
+              <p className="text-[14px] text-[#6B7263]">
+                Menampilkan <strong>{filteredLaporan.length}</strong> laporan warga &bull;{" "}
                 {appliedFilters.wilayah === "semua"
-                  ? "Seluruh wilayah"
+                  ? "Seluruh wilayah Indonesia"
                   : appliedFilters.wilayah}
               </p>
             </div>
-            <Link
-              href="/peta"
-              className="self-start sm:self-auto rounded-lg border border-[#DCE2DA] bg-[#FBFBFA] px-3.5 py-2 text-xs font-semibold text-[#155E42] hover:bg-[#EAF1EC] transition-colors"
-            >
-              Buka Peta Karhutla &rarr;
-            </Link>
-          </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
-            <div className={isDetailOpen && selectedReport ? "lg:col-span-8" : "lg:col-span-12"}>
-              <HotmapMap
-                laporan={filteredLaporan}
-                selectedId={selectedReport?.id ?? null}
-                onSelectReport={(id) => handleSelectReport(id, false)}
-                focusTarget={focusTarget}
-                heightClass="h-[380px] sm:h-[440px] lg:h-[480px]"
-              />
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2 text-[13px] text-[#6B7263]">
+                <span>Klik titik marker pada peta untuk melihat informasi ringkas kejadian.</span>
+                {hasActiveFilter && (
+                  <button
+                    type="button"
+                    onClick={handleResetFilter}
+                    className="font-semibold text-[#557029] hover:underline cursor-pointer"
+                  >
+                    (Reset filter)
+                  </button>
+                )}
+              </div>
+
+              <Link
+                href="/peta"
+                className="inline-flex items-center justify-center rounded-full border border-[#8A947D] bg-white px-4 py-1.5 text-[12px] font-semibold text-[#2C3325] hover:border-[#557029] hover:bg-[#F7F8F2] transition-colors"
+              >
+                Buka Peta Lengkap &rarr;
+              </Link>
             </div>
 
-            {isDetailOpen && selectedReport && (
-              <aside className="lg:col-span-4 rounded-xl border border-[#E2E8E0] bg-[#FBFBFA] p-5 shadow-2xs flex flex-col justify-between space-y-4">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-[#6B7A71]">
-                      LAPORAN TERPILIH
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setIsDetailOpen(false)}
-                      aria-label="Tutup panel laporan terpilih"
-                      className="text-[#6B7A71] hover:text-[#14231B] text-base leading-none cursor-pointer"
-                    >
-                      &#10005;
-                    </button>
-                  </div>
+            <HotmapMap
+              laporan={filteredLaporan}
+              focusTarget={focusTarget}
+              allowedBasemaps={LANDING_BASEMAPS}
+              showActionControls={false}
+              heightClass="h-[400px] sm:h-[460px] lg:h-[500px]"
+            />
+          </div>
+        </section>
 
-                  <div>
-                    <h3 className="text-lg font-bold text-[#14231B] leading-snug">
-                      {selectedReport.judul}
-                    </h3>
-                    <StatusBadge
-                      statusKey={selectedReport.statusKey}
-                      className="mt-2"
-                    />
-                  </div>
+        {/* 4. FEATURED ARTICLES / BERITA TERKINI (3 Kolom Tanpa Border Kartu Luar) */}
+        <section className="w-full bg-[#F7F8F2] border-y border-[#DCE0D5] py-16">
+          <div className="mx-auto max-w-[1200px] px-4 sm:px-6 space-y-10">
+            <div className="text-center max-w-2xl mx-auto space-y-2">
+              <h2 className="font-serif text-[30px] font-bold text-[#2C3325]">
+                Berita &amp; Informasi Terkini
+              </h2>
+              <p className="text-[14px] text-[#6B7263]">
+                Peringatan dini, dokumentasi penanganan, dan edukasi pencegahan kebakaran hutan dan lahan.
+              </p>
+            </div>
 
-                  <div className="rounded-lg bg-white p-3.5 border border-[#E7ECE5]">
-                    <span className="block text-xs text-[#6B7A71]">
-                      Estimasi luas
-                    </span>
-                    <span className="mt-0.5 block text-2xl font-bold text-[#14231B]">
-                      {selectedReport.estimasiLuas}
-                    </span>
-                  </div>
-
-                  <dl className="divide-y divide-[#ECEFE9] text-xs">
-                    <div className="py-2.5 flex items-center justify-between gap-4">
-                      <dt className="text-[#6B7A71]">Wilayah</dt>
-                      <dd className="font-semibold text-[#14231B] text-right">
-                        {selectedReport.wilayah}
-                      </dd>
-                    </div>
-                    <div className="py-2.5 flex items-center justify-between gap-4">
-                      <dt className="text-[#6B7A71]">Koordinat</dt>
-                      <dd className="font-mono font-semibold text-[#14231B] text-right">
-                        {formatCoordinates(
-                          selectedReport.latitude,
-                          selectedReport.longitude,
-                          5
+            {beritaList.length === 0 ? (
+              <p className="text-center text-[14px] text-[#6B7263]">
+                Belum ada berita yang dipublikasikan.
+              </p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {beritaList.map((berita) => (
+                  <article key={berita.id} className="group flex flex-col justify-between">
+                    <div>
+                      <Link
+                        href={`/berita/${berita.slug || berita.id}`}
+                        className="block aspect-[16/10] w-full rounded-[8px] overflow-hidden mb-4 bg-[#E6ECE0] border border-[#DCE0D5]"
+                      >
+                        {berita.gambarUrl ? (
+                          /* eslint-disable-next-line @next/next/no-img-element */
+                          <img
+                            src={berita.gambarUrl}
+                            alt={berita.judul}
+                            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          />
+                        ) : (
+                          /* Placeholder foto artikel siap diganti melalui modul berita admin */
+                          <div className="h-full w-full flex flex-col items-center justify-center gap-2 text-[#6F8E3D] px-4 text-center">
+                            <svg
+                              className="h-8 w-8 opacity-75"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="1.5"
+                              aria-hidden="true"
+                            >
+                              <rect x="3" y="5" width="18" height="14" rx="2" />
+                              <circle cx="8.5" cy="10" r="1.5" />
+                              <path d="M21 16l-5-5-4 4-2-2-5 5" />
+                            </svg>
+                            <span className="text-[11px] font-medium uppercase tracking-wider text-[#6B7263]">
+                              Placeholder Foto Berita
+                            </span>
+                          </div>
                         )}
-                      </dd>
-                    </div>
-                    <div className="py-2.5 flex items-center justify-between gap-4">
-                      <dt className="text-[#6B7A71]">Tanggal</dt>
-                      <dd className="font-semibold text-[#14231B] text-right">
-                        {selectedReport.tanggal}
-                      </dd>
-                    </div>
-                    <div className="py-2.5 flex items-center justify-between gap-4">
-                      <dt className="text-[#6B7A71]">Petugas</dt>
-                      <dd className="font-semibold text-[#14231B] text-right">
-                        {selectedReport.petugas}
-                      </dd>
-                    </div>
-                  </dl>
-                </div>
+                      </Link>
 
-                <div className="pt-3 border-t border-[#ECEFE9] flex items-center justify-between gap-2 text-[11px] text-[#7A8880]">
-                  <span>
-                    Laporan warga &bull; {formatDate(selectedReport.tanggal)}
-                  </span>
-                  {googleMapsUrl && (
-                    <a
-                      href={googleMapsUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="font-semibold text-[#155E42] hover:underline"
+                      <h3 className="font-serif text-[18px] font-semibold text-[#2C3325] group-hover:text-[#557029] transition-colors leading-snug">
+                        <Link href={`/berita/${berita.slug || berita.id}`}>
+                          {berita.judul}
+                        </Link>
+                      </h3>
+
+                      <p className="mt-2 text-[14px] text-[#6B7263] line-clamp-3 leading-relaxed">
+                        {berita.ringkasan ||
+                          `${formatDate(berita.tanggal, "long")} — Publikasi resmi ${berita.penulis}.`}
+                      </p>
+                    </div>
+
+                    <div className="mt-4 pt-1">
+                      <Link
+                        href={`/berita/${berita.slug || berita.id}`}
+                        className="inline-flex items-center justify-center rounded-full border border-[#8A947D] bg-white px-4 py-1.5 text-[12px] font-semibold text-[#2C3325] hover:border-[#557029] hover:bg-[#EEF2E4] transition-colors"
+                      >
+                        Baca Selengkapnya
+                      </Link>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
+
+            <div className="text-center pt-2">
+              <Link
+                href="/berita"
+                className="inline-flex items-center justify-center rounded-full border border-[#8A947D] bg-white px-6 py-2.5 text-[13px] font-semibold text-[#2C3325] hover:border-[#557029] hover:bg-[#EEF2E4] transition-colors"
+              >
+                Lihat Semua Berita &rarr;
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        {/* 5. SHOWCASE / SOROTAN PENANGANAN & WILAYAH (3 Kolom, Rasio 4:3, Sudut Tajam + Bilah Caption Solid) */}
+        <section className="w-full bg-white py-16">
+          <div className="mx-auto max-w-[1200px] px-4 sm:px-6 space-y-10">
+            <div className="text-center max-w-2xl mx-auto space-y-2">
+              <h2 className="font-serif text-[30px] font-bold text-[#2C3325]">
+                Sorotan Penanganan &amp; Wilayah
+              </h2>
+              <p className="text-[14px] text-[#6B7263]">
+                Ringkasan kejadian prioritas yang sedang ditangani maupun telah selesai dipadamkan di berbagai daerah.
+              </p>
+            </div>
+
+            {showcaseItems.length === 0 ? (
+              <p className="text-center text-[14px] text-[#6B7263]">
+                Belum ada sorotan laporan penanganan yang tercatat.
+              </p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {showcaseItems.map((item) => {
+                  const statusInfo =
+                    STATUS_META[item.statusKey] ?? STATUS_META.menunggu_verifikasi;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => handleFocusReportOnMap(item)}
+                      className="group text-left rounded-none overflow-hidden border border-[#DCE0D5] bg-white flex flex-col cursor-pointer"
                     >
-                      Google Maps &rarr;
-                    </a>
-                  )}
-                </div>
-              </aside>
+                      {/* Placeholder foto dokumentasi lapangan rasio 4:3, sudut tajam (siap diganti foto) */}
+                      <div className="relative aspect-[4/3] w-full bg-[#EEF2E4] flex flex-col items-center justify-center gap-2 px-6 text-center">
+                        <svg
+                          className="h-9 w-9 text-[#6F8E3D] opacity-80 group-hover:scale-105 transition-transform"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                          aria-hidden="true"
+                        >
+                          <path d="M12 21s-6-5.2-6-10a6 6 0 1 1 12 0c0 4.8-6 10-6 10z" />
+                          <circle cx="12" cy="11" r="2.2" />
+                        </svg>
+                        <span className="text-[11px] font-semibold uppercase tracking-wider text-[#6B7263]">
+                          Placeholder Foto Lapangan
+                        </span>
+                        <span className="font-mono text-[11px] text-[#2C3325]/80">
+                          {formatCoordinates(item.latitude, item.longitude, 4)}
+                        </span>
+                        <span className="absolute top-3 left-3 rounded-[4px] bg-white/95 border border-[#DCE0D5] px-2.5 py-1 text-[11px] font-semibold text-[#2C3325]">
+                          {statusInfo.label}
+                        </span>
+                      </div>
+
+                      {/* Bilah Caption Solid Menempel Langsung di Sisi Bawah */}
+                      <div className="w-full bg-[#557029] group-hover:bg-[#465D21] px-4 py-3.5 text-white transition-colors">
+                        <p className="font-serif text-[16px] font-semibold leading-snug line-clamp-1 text-white">
+                          {item.judul}
+                        </p>
+                        <p className="mt-0.5 text-[12px] text-white/85 truncate">
+                          {item.wilayah} &bull; {item.estimasiLuas}
+                        </p>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
             )}
           </div>
-        </section>
-
-        {/* Daftar Laporan Section */}
-        <section className="space-y-3.5 pt-2">
-          <div className="flex items-end justify-between gap-4">
-            <div>
-              <h2 className="text-xl font-bold text-[#12241B]">
-                Daftar laporan
-              </h2>
-              <p className="text-xs sm:text-sm text-[#606F67]">
-                Klik baris kejadian untuk mengarahkan peta ke koordinat titik
-                laporan.
-              </p>
-            </div>
-            <span className="text-xs font-medium text-[#606F67]">
-              {filteredLaporan.length} laporan
-            </span>
-          </div>
-
-          <div className="rounded-xl bg-white border border-[#E3E8E1] overflow-hidden shadow-2xs">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-[#EEF2EC] border-b border-[#E1E7DF] text-[11px] font-bold uppercase tracking-wider text-[#5B6B61]">
-                    <th className="py-3.5 px-4 sm:px-6">Kejadian</th>
-                    <th className="py-3.5 px-4">Wilayah &amp; Tanggal</th>
-                    <th className="py-3.5 px-4">Status</th>
-                    <th className="py-3.5 px-4 text-right w-12"></th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#ECEFE9] text-sm">
-                  {filteredLaporan.length === 0 ? (
-                    <tr>
-                      <td
-                        colSpan={4}
-                        className="py-10 text-center text-sm text-[#6B7A71]"
-                      >
-                        Tidak ada laporan yang sesuai dengan filter yang
-                        dipilih.
-                      </td>
-                    </tr>
-                  ) : (
-                    filteredLaporan.map((item, idx) => {
-                      const isSelected = selectedReport?.id === item.id;
-                      const rowNumber = String(idx + 1).padStart(2, "0");
-
-                      return (
-                        <tr
-                          key={item.id}
-                          onClick={() => handleSelectReport(item.id, true)}
-                          className={`transition-colors cursor-pointer ${
-                            isSelected
-                              ? "bg-[#FDF2EA]"
-                              : "hover:bg-[#F9FAF8]"
-                          }`}
-                        >
-                          <td className="py-4 px-4 sm:px-6">
-                            <div className="flex items-center gap-3.5">
-                              <span
-                                className={`inline-flex items-center justify-center w-7 h-7 rounded-md text-xs font-bold ${
-                                  isSelected
-                                    ? "bg-[#F7DFD0] text-[#B8451A]"
-                                    : "bg-[#F0F3EE] text-[#64736A]"
-                                }`}
-                              >
-                                {rowNumber}
-                              </span>
-                              <span className="font-semibold text-[#14231B]">
-                                {item.judul}
-                              </span>
-                            </div>
-                          </td>
-                          <td className="py-4 px-4 text-xs sm:text-sm text-[#5F6F66]">
-                            {item.wilayah}, {item.tanggal}
-                          </td>
-                          <td className="py-4 px-4">
-                            <StatusBadge statusKey={item.statusKey} />
-                          </td>
-                          <td className="py-4 px-4 sm:px-6 text-right text-[#6B7A71]">
-                            &rarr;
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </section>
-
-        {/* Berita Terbaru Section */}
-        <section className="space-y-4 pt-3">
-          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">
-            <div>
-              <h2 className="text-xl font-bold text-[#12241B]">Berita terbaru</h2>
-              <p className="text-xs sm:text-sm text-[#606F67]">
-                Informasi dan imbauan terbaru dari admin HotMap.
-              </p>
-            </div>
-            <Link
-              href="/berita"
-              className="text-xs font-semibold text-[#155E42] hover:underline"
-            >
-              Lihat semua berita &rarr;
-            </Link>
-          </div>
-
-          {beritaList.length === 0 ? (
-            <p className="text-sm text-[#6B7A71]">Belum ada berita terbaru.</p>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-              {beritaList.map((berita) => (
-                <Link
-                  key={berita.id}
-                  href={`/berita/${berita.slug || berita.id}`}
-                  className="group rounded-xl bg-white border border-[#E3E8E1] p-3.5 shadow-2xs hover:border-[#C5D1C8] hover:shadow-sm transition-all flex flex-col justify-between"
-                >
-                  <div>
-                    <div className="h-36 w-full rounded-lg overflow-hidden mb-3.5 bg-linear-to-b from-[#2E3834] via-[#7A5438] to-[#D47A42]">
-                      {berita.gambarUrl && (
-                        /* eslint-disable-next-line @next/next/no-img-element */
-                        <img
-                          src={berita.gambarUrl}
-                          alt={berita.judul}
-                          className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
-                        />
-                      )}
-                    </div>
-                    <h3 className="text-sm sm:text-base font-bold text-[#14231B] group-hover:text-[#155E42] transition-colors leading-snug">
-                      {berita.judul}
-                    </h3>
-                  </div>
-                  <p className="mt-3 text-xs text-[#6B7A71]">
-                    {formatDate(berita.tanggal, "short")} &bull;{" "}
-                    {berita.penulis}
-                  </p>
-                </Link>
-              ))}
-            </div>
-          )}
         </section>
       </main>
 

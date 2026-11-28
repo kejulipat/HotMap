@@ -13,9 +13,12 @@ const CATEGORIES = [
   { key: "edukasi", label: "Edukasi" },
 ];
 
-export default function PublicBeritaExplorer({ beritaList = [] }) {
+export default function PublicBeritaExplorer({
+  beritaList = [],
+  initialSearch = "",
+}) {
   const [kategori, setKategori] = useState("semua");
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(initialSearch);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -30,18 +33,18 @@ export default function PublicBeritaExplorer({ beritaList = [] }) {
   }, [beritaList, kategori, search]);
 
   return (
-    <div className="space-y-5">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <div className="space-y-8">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-[#DCE0D5]">
         <div className="flex flex-wrap gap-2">
           {CATEGORIES.map((cat) => (
             <button
               key={cat.key}
               type="button"
               onClick={() => setKategori(cat.key)}
-              className={`rounded-lg px-3 py-1.5 text-xs font-semibold border transition-colors cursor-pointer ${
+              className={`rounded-full px-4 py-1.5 text-[12px] font-semibold border transition-colors cursor-pointer ${
                 kategori === cat.key
-                  ? "bg-[#155E42] text-white border-[#155E42]"
-                  : "bg-white text-[#4E5E55] border-[#DCE2DA] hover:bg-[#EAF1EC]"
+                  ? "bg-[#557029] text-white border-[#557029]"
+                  : "bg-white text-[#2C3325] border-[#8A947D] hover:bg-[#F7F8F2]"
               }`}
             >
               {cat.label}
@@ -54,7 +57,7 @@ export default function PublicBeritaExplorer({ beritaList = [] }) {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Cari judul atau topik berita..."
-          className="w-full sm:w-64 rounded-lg border border-[#DCE2DA] bg-white px-3.5 py-2 text-sm text-[#14231B] focus:border-[#155E42] focus:outline-none"
+          className="w-full sm:w-64 rounded-[4px] border border-[#8A947D] bg-white px-3.5 py-2 text-[14px] text-[#2C3325] placeholder:text-[#6B7263] focus:border-[#557029] focus:outline-none"
         />
       </div>
 
@@ -66,42 +69,73 @@ export default function PublicBeritaExplorer({ beritaList = [] }) {
           actionHref={beritaList.length === 0 ? "/peta" : null}
         />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {filtered.map((berita) => (
-            <Link
-              key={berita.id}
-              href={`/berita/${berita.slug || berita.id}`}
-              className="group rounded-xl bg-white border border-[#E3E8E1] p-4 shadow-2xs hover:border-[#C5D1C8] hover:shadow-sm transition-all flex flex-col justify-between"
-            >
+            <article key={berita.id} className="group flex flex-col justify-between">
               <div>
-                <div className="h-40 w-full rounded-lg overflow-hidden mb-3.5 bg-linear-to-b from-[#2E3834] via-[#7A5438] to-[#D47A42]">
-                  {berita.gambarUrl && (
+                <Link
+                  href={`/berita/${berita.slug || berita.id}`}
+                  className="block aspect-[16/10] w-full rounded-[8px] overflow-hidden mb-4 bg-[#EEF2E4] border border-[#DCE0D5]"
+                >
+                  {berita.gambarUrl ? (
                     /* eslint-disable-next-line @next/next/no-img-element */
                     <img
                       src={berita.gambarUrl}
                       alt={berita.judul}
-                      className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
+                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                     />
+                  ) : (
+                    /* Placeholder foto artikel siap diganti melalui unggah gambar berita */
+                    <div className="h-full w-full flex flex-col items-center justify-center gap-2 text-[#6F8E3D] px-4 text-center">
+                      <svg
+                        className="h-8 w-8 opacity-75"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        aria-hidden="true"
+                      >
+                        <rect x="3" y="5" width="18" height="14" rx="2" />
+                        <circle cx="8.5" cy="10" r="1.5" />
+                        <path d="M21 16l-5-5-4 4-2-2-5 5" />
+                      </svg>
+                      <span className="text-[11px] font-medium text-[#6B7263] uppercase tracking-wider">
+                        Placeholder Foto Berita
+                      </span>
+                    </div>
                   )}
-                </div>
-                <div className="flex items-center justify-between gap-2 mb-2">
-                  <span className="inline-block rounded-md bg-[#EAF1EC] px-2 py-0.5 text-[11px] font-semibold capitalize text-[#155E42]">
+                </Link>
+
+                <div className="flex items-center gap-2 mb-2 text-[12px] font-medium text-[#6B7263]">
+                  <span className="rounded-[4px] bg-[#EEF2E4] px-2 py-0.5 font-semibold capitalize text-[#3F561E]">
                     {berita.kategori}
                   </span>
+                  <span>&bull;</span>
+                  <span>{formatDate(berita.tanggal, "short")}</span>
                 </div>
-                <h2 className="text-base font-bold text-[#14231B] group-hover:text-[#155E42] transition-colors leading-snug">
-                  {berita.judul}
+
+                <h2 className="font-serif text-[18px] font-semibold text-[#2C3325] group-hover:text-[#557029] transition-colors leading-snug">
+                  <Link href={`/berita/${berita.slug || berita.id}`}>
+                    {berita.judul}
+                  </Link>
                 </h2>
+
                 {berita.ringkasan && (
-                  <p className="mt-2 text-xs text-[#606F67] line-clamp-2">
+                  <p className="mt-2 text-[14px] text-[#6B7263] line-clamp-3 leading-relaxed">
                     {berita.ringkasan}
                   </p>
                 )}
               </div>
-              <p className="mt-4 pt-3 border-t border-[#ECEFE9] text-xs text-[#6B7A71]">
-                {formatDate(berita.tanggal, "long")} &bull; {berita.penulis}
-              </p>
-            </Link>
+
+              <div className="mt-4 pt-2">
+                <Link
+                  href={`/berita/${berita.slug || berita.id}`}
+                  className="inline-flex items-center justify-center rounded-full border border-[#8A947D] px-4 py-1.5 text-[12px] font-semibold text-[#2C3325] hover:border-[#557029] hover:bg-[#F7F8F2] transition-colors"
+                >
+                  Baca Selengkapnya
+                </Link>
+              </div>
+            </article>
           ))}
         </div>
       )}

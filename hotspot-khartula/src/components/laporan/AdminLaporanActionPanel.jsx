@@ -55,14 +55,14 @@ export default function AdminLaporanActionPanel({
   }
 
   return (
-    <div className="space-y-5 pt-2 border-t border-[#ECEFE9]">
+    <div className="space-y-5 pt-2 border-t border-[#DCE0D5]">
       {/* Panel 1: Verifikasi, Status & Prioritas */}
-      <div className="rounded-xl border border-[#DCE2DA] bg-[#FBFBFA] p-4 sm:p-5 space-y-4">
+      <div className="rounded-xl border border-[#8A947D] bg-[#F7F8F2] p-4 sm:p-5 space-y-4">
         <div>
-          <h3 className="text-sm font-bold text-[#12241B]">
+          <h3 className="text-sm font-bold text-[#2C3325]">
             Verifikasi, Status &amp; Prioritas Laporan
           </h3>
-          <p className="text-xs text-[#6B7A71]">
+          <p className="text-xs text-[#6B7263]">
             Setiap perubahan status tercatat permanen pada riwayat audit
             laporan.
           </p>
@@ -91,7 +91,7 @@ export default function AdminLaporanActionPanel({
           <div>
             <label
               htmlFor="admin-status"
-              className="block text-xs font-semibold text-[#4E5E55] mb-1"
+              className="block text-xs font-semibold text-[#4A5243] mb-1"
             >
               Status Laporan
             </label>
@@ -100,7 +100,7 @@ export default function AdminLaporanActionPanel({
               name="status"
               defaultValue={currentStatus}
               disabled={isBusy}
-              className="w-full rounded-lg border border-[#DCE2DA] bg-white px-3 py-2 text-sm text-[#14231B] focus:border-[#155E42] focus:outline-none"
+              className="w-full rounded-lg border border-[#8A947D] bg-white px-3 py-2 text-sm text-[#2C3325] focus:border-[#557029] focus:outline-none"
             >
               {nextOptions.map((st) => (
                 <option key={st} value={st}>
@@ -113,7 +113,7 @@ export default function AdminLaporanActionPanel({
           <div>
             <label
               htmlFor="admin-keparahan"
-              className="block text-xs font-semibold text-[#4E5E55] mb-1"
+              className="block text-xs font-semibold text-[#4A5243] mb-1"
             >
               Prioritas / Tingkat Keparahan
             </label>
@@ -122,7 +122,7 @@ export default function AdminLaporanActionPanel({
               name="tingkat_keparahan"
               defaultValue={laporan.tingkatKeparahan ?? "sedang"}
               disabled={isBusy}
-              className="w-full rounded-lg border border-[#DCE2DA] bg-white px-3 py-2 text-sm text-[#14231B] focus:border-[#155E42] focus:outline-none"
+              className="w-full rounded-lg border border-[#8A947D] bg-white px-3 py-2 text-sm text-[#2C3325] focus:border-[#557029] focus:outline-none"
             >
               {TINGKAT_KEPARAHAN_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -135,7 +135,7 @@ export default function AdminLaporanActionPanel({
           <div className="sm:col-span-2">
             <label
               htmlFor="admin-catatan"
-              className="block text-xs font-semibold text-[#4E5E55] mb-1"
+              className="block text-xs font-semibold text-[#4A5243] mb-1"
             >
               Catatan Verifikasi / Tindak Lanjut
             </label>
@@ -146,7 +146,7 @@ export default function AdminLaporanActionPanel({
               defaultValue={laporan.catatanVerifikasi ?? ""}
               disabled={isBusy}
               placeholder="Tuliskan catatan verifikasi, instruksi lapangan, atau alasan penolakan..."
-              className="w-full rounded-lg border border-[#DCE2DA] bg-white px-3 py-2 text-sm text-[#14231B] focus:border-[#155E42] focus:outline-none"
+              className="w-full rounded-lg border border-[#8A947D] bg-white px-3 py-2 text-sm text-[#2C3325] focus:border-[#557029] focus:outline-none"
             />
           </div>
 
@@ -154,7 +154,7 @@ export default function AdminLaporanActionPanel({
             <button
               type="submit"
               disabled={isBusy}
-              className="rounded-lg bg-[#155E42] hover:bg-[#114B35] px-4 py-2 text-xs font-semibold text-white transition-colors disabled:opacity-50 cursor-pointer"
+              className="rounded-lg bg-[#557029] hover:bg-[#465D21] px-4 py-2 text-xs font-semibold text-white transition-colors disabled:opacity-50 cursor-pointer"
             >
               {isVerifying ? "Menyimpan..." : "Simpan Status & Verifikasi"}
             </button>
@@ -166,12 +166,12 @@ export default function AdminLaporanActionPanel({
       <div className="rounded-xl border border-[#C5DCF8] bg-[#F4F8FE] p-4 sm:p-5 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <h3 className="text-sm font-bold text-[#12241B]">
+            <h3 className="text-sm font-bold text-[#2C3325]">
               Penugasan Petugas Lapangan
             </h3>
-            <p className="text-xs text-[#5F6F66]">
+            <p className="text-xs text-[#6B7263]">
               Petugas aktif saat ini:{" "}
-              <strong className="text-[#14231B]">{laporan.petugas}</strong>
+              <strong className="text-[#2C3325]">{laporan.petugas}</strong>
             </p>
           </div>
 
@@ -206,7 +206,7 @@ export default function AdminLaporanActionPanel({
         )}
 
         {["selesai", "ditolak"].includes(currentStatus) ? (
-          <p className="text-xs text-[#5F6F66]">
+          <p className="text-xs text-[#6B7263]">
             Penugasan baru dinonaktifkan karena laporan berstatus{" "}
             <strong>{STATUS_META[currentStatus]?.label}</strong>.
           </p>
@@ -222,7 +222,7 @@ export default function AdminLaporanActionPanel({
             <div>
               <label
                 htmlFor="assign-petugas"
-                className="block text-xs font-semibold text-[#4E5E55] mb-1"
+                className="block text-xs font-semibold text-[#4A5243] mb-1"
               >
                 Pilih Petugas
               </label>
@@ -231,7 +231,7 @@ export default function AdminLaporanActionPanel({
                 name="petugas_id"
                 defaultValue={laporan.petugasId ?? petugasList[0]?.id ?? ""}
                 disabled={isBusy}
-                className="w-full rounded-lg border border-[#C5DCF8] bg-white px-3 py-2 text-sm text-[#14231B] focus:border-[#155E42] focus:outline-none"
+                className="w-full rounded-lg border border-[#C5DCF8] bg-white px-3 py-2 text-sm text-[#2C3325] focus:border-[#557029] focus:outline-none"
               >
                 {petugasList.map((p) => (
                   <option key={p.id} value={p.id}>
@@ -245,7 +245,7 @@ export default function AdminLaporanActionPanel({
             <div>
               <label
                 htmlFor="assign-catatan"
-                className="block text-xs font-semibold text-[#4E5E55] mb-1"
+                className="block text-xs font-semibold text-[#4A5243] mb-1"
               >
                 Instruksi Penugasan (opsional)
               </label>
@@ -256,7 +256,7 @@ export default function AdminLaporanActionPanel({
                 maxLength={500}
                 disabled={isBusy}
                 placeholder="Contoh: Prioritas verifikasi lapangan & pemadaman awal"
-                className="w-full rounded-lg border border-[#C5DCF8] bg-white px-3 py-2 text-sm text-[#14231B] focus:border-[#155E42] focus:outline-none"
+                className="w-full rounded-lg border border-[#C5DCF8] bg-white px-3 py-2 text-sm text-[#2C3325] focus:border-[#557029] focus:outline-none"
               />
             </div>
 

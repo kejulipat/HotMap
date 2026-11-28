@@ -25,7 +25,7 @@ export default function FotoGalleryLightbox({ fotoList = [] }) {
 
   if (fotoList.length === 0) {
     return (
-      <p className="text-sm text-[#6B7A71]">
+      <p className="text-sm text-[#6B7263]">
         Belum ada foto bukti yang diunggah untuk laporan ini.
       </p>
     );
@@ -37,13 +37,13 @@ export default function FotoGalleryLightbox({ fotoList = [] }) {
         {fotoList.map((foto, idx) => (
           <div
             key={foto.id}
-            className="rounded-xl border border-[#E3E8E1] bg-[#FBFBFA] p-3 space-y-2"
+            className="rounded-xl border border-[#DCE0D5] bg-[#F7F8F2] p-3 space-y-2"
           >
             {foto.signedUrl ? (
               <button
                 type="button"
                 onClick={() => setActivePhoto(foto)}
-                className="group relative block h-44 w-full overflow-hidden rounded-lg border border-[#E3E8E1] bg-[#EEF2EC] cursor-pointer"
+                className="group relative block h-44 w-full overflow-hidden rounded-lg border border-[#DCE0D5] bg-[#EEF2E4] cursor-pointer"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
@@ -56,16 +56,16 @@ export default function FotoGalleryLightbox({ fotoList = [] }) {
                 </span>
               </button>
             ) : (
-              <div className="h-44 w-full rounded-lg bg-[#EEF2EC] flex items-center justify-center text-xs text-[#6B7A71]">
+              <div className="h-44 w-full rounded-lg bg-[#EEF2E4] flex items-center justify-center text-xs text-[#6B7263]">
                 Pratinjau tidak tersedia
               </div>
             )}
 
             <div className="flex items-center justify-between text-xs">
-              <span className="font-semibold capitalize text-[#14231B]">
+              <span className="font-semibold capitalize text-[#2C3325]">
                 {String(foto.jenisFoto ?? "bukti_awal").replace("_", " ")}
               </span>
-              <span className="text-[#6B7A71]">
+              <span className="text-[#6B7263]">
                 {formatBytes(foto.fileSize)}
                 {foto.fileSize ? " • " : ""}
                 {formatDate(normalizeDate(foto.createdAt), "short")}
@@ -89,21 +89,21 @@ export default function FotoGalleryLightbox({ fotoList = [] }) {
             className="relative max-w-4xl w-full rounded-2xl bg-white p-3 sm:p-4 shadow-2xl space-y-3"
           >
             <div className="flex items-center justify-between gap-2 px-1">
-              <div className="text-xs sm:text-sm font-semibold text-[#14231B] capitalize">
+              <div className="text-xs sm:text-sm font-semibold text-[#2C3325] capitalize">
                 Foto {String(activePhoto.jenisFoto ?? "bukti").replace("_", " ")}
-                <span className="ml-2 font-normal text-[#6B7A71]">
+                <span className="ml-2 font-normal text-[#6B7263]">
                   {formatBytes(activePhoto.fileSize)}
                 </span>
               </div>
               <button
                 type="button"
                 onClick={() => setActivePhoto(null)}
-                className="rounded-lg border border-[#DCE2DA] px-3 py-1 text-xs font-semibold text-[#4E5E55] hover:bg-[#F6F7F3] cursor-pointer"
+                className="rounded-lg border border-[#8A947D] px-3 py-1 text-xs font-semibold text-[#4A5243] hover:bg-[#F7F8F2] cursor-pointer"
               >
                 Tutup (Esc)
               </button>
             </div>
-            <div className="max-h-[75vh] overflow-hidden rounded-xl bg-[#14231B] flex items-center justify-center">
+            <div className="max-h-[75vh] overflow-hidden rounded-xl bg-[#2C3325] flex items-center justify-center">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={activePhoto.signedUrl}

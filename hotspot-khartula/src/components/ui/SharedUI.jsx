@@ -10,7 +10,7 @@ export function StatusBadge({ statusKey, className = "" }) {
   const meta = STATUS_META[statusKey] ?? STATUS_META.menunggu_verifikasi;
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold ${meta.badgeBg} ${meta.badgeText} ${className}`}
+      className={`inline-flex items-center gap-1.5 rounded-[4px] px-2.5 py-1 text-[12px] font-semibold ${meta.badgeBg} ${meta.badgeText} ${className}`}
     >
       <span className={`h-1.5 w-1.5 rounded-full ${meta.dotColor}`} />
       {meta.label}
@@ -20,41 +20,41 @@ export function StatusBadge({ statusKey, className = "" }) {
 
 export function SummaryCardsGrid({ counts = {}, activeStatus = "semua", hrefBase = null }) {
   return (
-    <section className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
+    <section className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
       {SUMMARY_CARDS.map((card) => {
         const isActive = activeStatus === card.key;
         const isPrimaryCard = card.key === "semua";
         const count = counts[card.key] ?? 0;
 
-        const cardClasses = `block text-left rounded-xl p-4 transition-all border ${
+        const cardClasses = `block text-left rounded-[8px] p-4 transition-colors border ${
           isPrimaryCard
-            ? "bg-[#155E42] text-white border-[#155E42] shadow-sm"
+            ? "bg-[#557029] text-white border-[#557029]"
             : isActive
-            ? "bg-white text-[#14231B] border-[#155E42] ring-2 ring-[#155E42]/20"
-            : "bg-white text-[#14231B] border-[#E3E8E1] hover:border-[#C5D1C8]"
+            ? "bg-[#F7F8F2] text-[#2C3325] border-[#557029] ring-1 ring-[#557029]"
+            : "bg-white text-[#2C3325] border-[#DCE0D5] hover:border-[#8A947D]"
         }`;
 
         const inner = (
           <>
             <div className="flex items-baseline gap-1.5">
-              <span className="text-2xl sm:text-3xl font-bold tracking-tight">
+              <span className="font-serif text-2xl sm:text-3xl font-bold tracking-tight">
                 {count}
               </span>
               <span
-                className={`text-xs ${
-                  isPrimaryCard ? "text-white/80" : "text-[#6D7C73]"
+                className={`text-[12px] font-medium ${
+                  isPrimaryCard ? "text-white/85" : "text-[#6B7263]"
                 }`}
               >
                 laporan
               </span>
             </div>
-            <div className="mt-2.5 flex items-center gap-2 text-xs font-medium">
+            <div className="mt-2.5 flex items-center gap-2 text-[12px] font-medium">
               <span
                 className={`h-2 w-2 rounded-full shrink-0 ${card.dotColor}`}
               />
               <span
                 className={`truncate ${
-                  isPrimaryCard ? "text-white/95" : "text-[#4E5E55]"
+                  isPrimaryCard ? "text-white" : "text-[#2C3325]"
                 }`}
               >
                 {card.label}
@@ -88,7 +88,7 @@ export function ErrorBanner({ message }) {
   return (
     <div
       role="alert"
-      className="rounded-xl border border-[#E5B8A7] bg-[#FDF2EA] px-4 py-3 text-sm text-[#9B4017]"
+      className="rounded-[8px] border border-[#E5B8A7] bg-[#FDF2EA] px-4 py-3 text-sm text-[#9B3417]"
     >
       {message}
     </div>
@@ -102,30 +102,31 @@ export function EmptyState({
   actionHref = null,
 }) {
   return (
-    <div className="rounded-2xl border border-dashed border-[#CBD6CE] bg-white px-6 py-12 text-center">
-      <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-[#EAF1EC] text-[#155E42]">
+    <div className="rounded-[8px] border border-dashed border-[#8A947D] bg-[#F7F8F2] px-6 py-12 text-center">
+      <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full border border-[#DCE0D5] bg-white text-[#6F8E3D]">
         <svg
           className="h-5 w-5"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
-          strokeWidth="2"
+          strokeWidth="1.8"
           strokeLinecap="round"
           strokeLinejoin="round"
+          aria-hidden="true"
         >
           <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
           <path d="M14 2v6h6" />
           <path d="M9 15h6" />
         </svg>
       </div>
-      <h3 className="text-base font-bold text-[#14231B]">{title}</h3>
-      <p className="mx-auto mt-1 max-w-md text-sm text-[#606F67]">
+      <h3 className="font-serif text-[18px] font-semibold text-[#2C3325]">{title}</h3>
+      <p className="mx-auto mt-1.5 max-w-md text-[14px] text-[#6B7263]">
         {description}
       </p>
       {actionLabel && actionHref && (
         <Link
           href={actionHref}
-          className="mt-5 inline-flex items-center justify-center rounded-lg bg-[#155E42] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#114B35] transition-colors"
+          className="mt-5 inline-flex items-center justify-center rounded-full bg-[#557029] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#465D21] transition-colors"
         >
           {actionLabel}
         </Link>
@@ -136,8 +137,8 @@ export function EmptyState({
 
 export function LoadingSpinner({ label = "Memuat data..." }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 py-16 text-[#5E6D64]">
-      <span className="h-8 w-8 animate-spin rounded-full border-3 border-[#D5E2D8] border-t-[#155E42]" />
+    <div className="flex flex-col items-center justify-center gap-3 py-16 text-[#6B7263]">
+      <span className="h-8 w-8 animate-spin rounded-full border-3 border-[#DCE0D5] border-t-[#557029]" />
       <span className="text-sm font-medium">{label}</span>
     </div>
   );
@@ -145,14 +146,14 @@ export function LoadingSpinner({ label = "Memuat data..." }) {
 
 /** Skeleton area konten dashboard; sidebar & header tetap tampil saat pindah halaman. */
 export function DashboardPageSkeleton() {
-  const block = "rounded-xl bg-[#E6ECE7] animate-pulse";
+  const block = "rounded-[8px] bg-[#E8ECE0] animate-pulse";
   return (
     <div className="space-y-6" aria-busy="true" aria-label="Memuat halaman">
       <div className="space-y-2">
         <div className={`${block} h-7 w-64 max-w-full`} />
         <div className={`${block} h-4 w-96 max-w-full`} />
       </div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
         {Array.from({ length: 6 }).map((_, i) => (
           <div key={i} className={`${block} h-20`} />
         ))}
@@ -165,18 +166,18 @@ export function DashboardPageSkeleton() {
 export function Breadcrumb({ items = [] }) {
   if (items.length === 0) return null;
   return (
-    <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-1.5 text-xs text-[#6B7A71]">
+    <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-1.5 text-[12px] font-medium text-[#6B7263]">
       {items.map((item, idx) => {
         const isLast = idx === items.length - 1;
         return (
           <span key={`${item.label}-${idx}`} className="inline-flex items-center gap-1.5">
             {idx > 0 && <span aria-hidden="true">/</span>}
             {isLast || !item.href ? (
-              <span className="font-semibold text-[#14231B]">{item.label}</span>
+              <span className="font-semibold text-[#2C3325]">{item.label}</span>
             ) : (
               <Link
                 href={item.href}
-                className="hover:text-[#155E42] transition-colors"
+                className="hover:text-[#557029] transition-colors"
               >
                 {item.label}
               </Link>
@@ -208,11 +209,11 @@ export function LaporanTable({
   }
 
   return (
-    <div className="rounded-xl bg-white border border-[#E3E8E1] overflow-hidden shadow-2xs">
+    <div className="rounded-[8px] bg-white border border-[#DCE0D5] overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="bg-[#EEF2EC] border-b border-[#E1E7DF] text-[11px] font-bold uppercase tracking-wider text-[#5B6B61]">
+            <tr className="bg-[#F7F8F2] border-b border-[#DCE0D5] text-[12px] font-semibold uppercase tracking-wider text-[#6B7263]">
               <th className="py-3.5 px-4 sm:px-6">Kejadian</th>
               <th className="py-3.5 px-4">Wilayah</th>
               <th className="py-3.5 px-4">Koordinat</th>
@@ -223,21 +224,21 @@ export function LaporanTable({
               )}
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#ECEFE9] text-sm">
+          <tbody className="divide-y divide-[#DCE0D5] text-[14px]">
             {laporan.map((item) => (
-              <tr key={item.id} className="hover:bg-[#F9FAF8] transition-colors">
-                <td className="py-3.5 px-4 sm:px-6 font-semibold text-[#14231B]">
+              <tr key={item.id} className="hover:bg-[#F7F8F2]/80 transition-colors">
+                <td className="py-3.5 px-4 sm:px-6 font-semibold text-[#2C3325]">
                   {item.judul}
                 </td>
-                <td className="py-3.5 px-4 text-xs sm:text-sm text-[#5F6F66]">
+                <td className="py-3.5 px-4 text-[13px] text-[#6B7263]">
                   {item.wilayah}
                 </td>
-                <td className="py-3.5 px-4 text-xs font-mono text-[#5F6F66]">
+                <td className="py-3.5 px-4 text-[12px] font-mono text-[#6B7263]">
                   {isValidLatLng(item.latitude, item.longitude)
                     ? `${item.latitude.toFixed(4)}, ${item.longitude.toFixed(4)}`
                     : "-"}
                 </td>
-                <td className="py-3.5 px-4 text-xs sm:text-sm text-[#5F6F66]">
+                <td className="py-3.5 px-4 text-[13px] text-[#6B7263]">
                   {formatDate(item.tanggal, "short")}
                 </td>
                 <td className="py-3.5 px-4">
@@ -247,7 +248,7 @@ export function LaporanTable({
                   <td className="py-3.5 px-4 sm:px-6 text-right">
                     <Link
                       href={`${detailHrefPrefix}/${item.id}`}
-                      className="inline-flex items-center gap-1 rounded-lg border border-[#DCE2DA] px-3 py-1.5 text-xs font-semibold text-[#155E42] hover:bg-[#EAF1EC] transition-colors"
+                      className="inline-flex items-center gap-1 rounded-full border border-[#8A947D] px-3.5 py-1 text-[12px] font-semibold text-[#2C3325] hover:border-[#557029] hover:bg-[#EEF2E4] transition-colors"
                     >
                       Detail &rarr;
                     </Link>
