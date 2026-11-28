@@ -138,7 +138,7 @@ export default function PublicNavbar({ currentUser = null }) {
             {currentUser?.role !== "petugas" && (
               <Link
                 href="/pelapor/laporan/buat"
-                className="ml-2 inline-flex items-center justify-center rounded-full bg-[#557029] hover:bg-[#465D21] px-5 py-2 text-[13px] font-semibold text-white transition-colors"
+                className="ml-2 inline-flex items-center justify-center rounded-full bg-[#557029] hover:bg-[#465D21] px-5 py-2 text-[13px] font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98]"
               >
                 Laporkan
               </Link>
@@ -167,7 +167,7 @@ export default function PublicNavbar({ currentUser = null }) {
 
         {/* Mobile Drawer Menu */}
         {mobileOpen && (
-          <div className="lg:hidden border-t border-[#DCE0D5] bg-white px-4 py-4 space-y-2">
+          <div className="hm-animate-fade-fast lg:hidden border-t border-[#DCE0D5] bg-white px-4 py-4 space-y-2">
             {navItems.map((item) => {
               const active = isActive(item.href);
               return (

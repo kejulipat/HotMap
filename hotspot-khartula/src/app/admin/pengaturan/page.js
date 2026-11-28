@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { requireRole } from "@/lib/auth";
+import { getFastLoginAvailability, requireRole } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -10,6 +10,7 @@ export const metadata = {
 
 export default async function AdminPengaturanPage() {
   const { user, profile } = await requireRole(["admin"]);
+  const fastLogin = getFastLoginAvailability();
 
   const supabaseHost = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "(belum diset)";
 
@@ -20,7 +21,7 @@ export default async function AdminPengaturanPage() {
           Pengaturan Aplikasi
         </h1>
         <p className="mt-1 text-sm text-[#6B7263]">
-          Informasi konfigurasi sistem dan utilitas diagnostik admin.
+          Informasi konfigurasi sistem, status Fast Login akun demo, dan utilitas diagnostik admin.
         </p>
       </div>
 
@@ -56,6 +57,61 @@ export default async function AdminPengaturanPage() {
               Buka Diagnostik Database (/test-db) &rarr;
             </Link>
           </div>
+        </section>
+
+        <section className="rounded-2xl border border-[#DCE0D5] bg-white p-6 shadow-2xs space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-base font-bold text-[#2C3325]">
+              Status Fast Login Demo
+            </h2>
+            <span
+              className={`rounded-md px-2 py-0.5 text-[11px] font-bold ${
+                fastLogin.enabled
+                  ? "bg-[#EEF2E4] text-[#3F561E]"
+                  : "bg-[#F7F8F2] text-[#6B7263]"
+              }`}
+            >
+              {fastLogin.enabled ? "Aktif" : "Nonaktif"}
+            </span>
+          </div>
+
+          <p className="text-xs text-[#6B7263]">
+            Kredensial akun demo dikelola melalui variabel environment server-only (tanpa prefix{" "}
+            <code className="font-mono bg-[#F7F8F2] px-1 rounded">NEXT_PUBLIC_</code>
+            ).
+          </p>
+
+          <dl className="divide-y divide-[#DCE0D5] text-xs">
+            {[
+              { key: "admin", label: "Akun Demo Admin", env: "DEMO_ADMIN_*" },
+              { key: "petugas", label: "Akun Demo Petugas", env: "DEMO_PETUGAS_*" },
+              { key: "pelapor", label: "Akun Demo Pelapor", env: "DEMO_PELAPOR_*" },
+            ].map((row) => {
+              const ready = Boolean(fastLogin.roles?.[row.key]);
+              return (
+                <div
+                  key={row.key}
+                  className="py-2.5 flex items-center justify-between gap-4"
+                >
+                  <div>
+                    <dt className="font-semibold text-[#2C3325]">{row.label}</dt>
+                    <dd className="text-[11px] font-mono text-[#6B7263]">
+                      {row.env}
+                    </dd>
+                  </div>
+                  <span
+                    className={`rounded px-2 py-0.5 text-[11px] font-bold ${
+                      ready
+                        ? "bg-[#EEF2E4] text-[#3F561E]"
+                        : "bg-[#FDF2EA] text-[#9B4017]"
+                    }`}
+                  >
+                    {ready ? "Terkonfigurasi" : "Belum diset"}
+                  </span>
+                </div>
+              );
+            })}
+          </dl>
         </section>
       </div>
     </div>

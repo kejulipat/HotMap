@@ -56,6 +56,110 @@
   box-shadow: 0 12px 28px rgba(44, 51, 37, 0.14);
 }
 
+/* Animasi editorial halus dan interaktif (GPU-composited transform & opacity) */
+@keyframes hmFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes hmScaleIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes hmFadeFast {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hm-animate-fade-up {
+  animation: hmFadeUp 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.hm-animate-scale-in {
+  animation: hmScaleIn 600ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.hm-animate-fade-fast {
+  animation: hmFadeFast 200ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.hm-delay-1 {
+  animation-delay: 70ms;
+}
+
+.hm-delay-2 {
+  animation-delay: 140ms;
+}
+
+.hm-delay-3 {
+  animation-delay: 210ms;
+}
+
+.hm-delay-4 {
+  animation-delay: 280ms;
+}
+
+.hm-reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 520ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+
+.hm-reveal-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.hm-interactive-card {
+  transition: transform 240ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 240ms ease,
+    border-color 200ms ease;
+}
+
+.hm-interactive-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 24px rgba(44, 51, 37, 0.09);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hm-animate-fade-up,
+  .hm-animate-scale-in,
+  .hm-animate-fade-fast {
+    animation: none !important;
+  }
+
+  .hm-reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+
+  .hm-interactive-card:hover {
+    transform: none !important;
+  }
+}
+
 /* Custom Leaflet & MarkerCluster overrides agar selaras dengan identitas organik-editorial HotMap */
 .leaflet-container {
   font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
@@ -67,6 +171,7 @@
   box-shadow: 0 10px 25px -5px rgba(44, 51, 37, 0.16);
   border: 1px solid #dce0d5;
   padding: 0;
+  animation: hmFadeFast 180ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .leaflet-popup-content {
@@ -77,6 +182,10 @@
 .hotmap-marker-icon {
   background: transparent;
   border: 0;
+}
+
+.hotmap-marker-icon > div:hover {
+  transform: scale(1.14);
 }
 
 .hotmap-cluster-icon {
@@ -96,6 +205,13 @@
   color: #ffffff;
   border: 3px solid rgba(255, 255, 255, 0.92);
   box-shadow: 0 4px 12px rgba(44, 51, 37, 0.25);
+  transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 200ms ease;
+}
+
+.hotmap-cluster-badge:hover {
+  transform: scale(1.08);
+  box-shadow: 0 6px 16px rgba(44, 51, 37, 0.32);
 }
 
 .hotmap-cluster-sm {

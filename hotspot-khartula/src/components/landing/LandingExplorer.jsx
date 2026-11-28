@@ -6,6 +6,7 @@ import Link from "next/link";
 import PublicNavbar from "@/components/layout/PublicNavbar";
 import PublicFooter from "@/components/layout/PublicFooter";
 import HotmapMap from "@/components/map/HotmapMap";
+import RevealOnScroll from "@/components/ui/RevealOnScroll";
 import {
   CLIENT_CACHE_PREFIX,
   PUBLIC_SNAPSHOT_TTL_MS,
@@ -353,31 +354,31 @@ export default function LandingExplorer({
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center">
               {/* Kolom Kiri: Headline Serif + Subjudul + CTA Pil */}
               <div className="lg:col-span-7 space-y-5">
-                <p className="inline-flex items-center gap-2 text-[12px] font-semibold uppercase tracking-[0.16em] text-[#D7E3C3]">
+                <p className="hm-animate-fade-up inline-flex items-center gap-2 text-[12px] font-semibold uppercase tracking-[0.16em] text-[#D7E3C3]">
                   <span className="h-2 w-2 rounded-full bg-[#A8C66C]" />
                   SIPKARHUTLA &bull; Cakupan Seluruh Indonesia
                 </p>
 
-                <h1 className="font-serif text-[34px] sm:text-[44px] font-bold leading-[1.15] tracking-tight text-white">
+                <h1 className="hm-animate-fade-up hm-delay-1 font-serif text-[34px] sm:text-[44px] font-bold leading-[1.15] tracking-tight text-white">
                   Pantau &amp; Tangani Karhutla di Seluruh Wilayah Indonesia.
                 </h1>
 
-                <p className="max-w-xl text-[15px] leading-relaxed text-white/90">
+                <p className="hm-animate-fade-up hm-delay-2 max-w-xl text-[15px] leading-relaxed text-white/90">
                   Data terkini kejadian kebakaran hutan dan lahan berbasis laporan warga.
                   Lihat titik lokasi pada peta interaktif, status verifikasi, hingga tindak lanjut petugas.
                 </p>
 
-                <div className="pt-2 flex flex-wrap items-center gap-3">
+                <div className="hm-animate-fade-up hm-delay-3 pt-2 flex flex-wrap items-center gap-3">
                   <Link
                     href={heroPrimaryHref}
-                    className="inline-flex items-center justify-center rounded-full bg-[#557029] hover:bg-[#465D21] border border-[#8CB04E]/45 px-7 py-3 text-[14px] font-semibold text-white transition-colors"
+                    className="inline-flex items-center justify-center rounded-full bg-[#557029] hover:bg-[#465D21] border border-[#8CB04E]/45 px-7 py-3 text-[14px] font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98]"
                   >
                     {heroPrimaryLabel}
                   </Link>
                   <button
                     type="button"
                     onClick={scrollToMapSection}
-                    className="inline-flex items-center justify-center rounded-full border border-white/65 bg-white/10 hover:bg-white hover:text-[#2C3325] px-6 py-3 text-[14px] font-semibold text-white transition-colors cursor-pointer"
+                    className="inline-flex items-center justify-center rounded-full border border-white/65 bg-white/10 hover:bg-white hover:text-[#2C3325] px-6 py-3 text-[14px] font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer"
                   >
                     Lihat Peta Sebaran &darr;
                   </button>
@@ -386,7 +387,7 @@ export default function LandingExplorer({
 
               {/* Kolom Kanan: Kartu Form Melayang (Filter Pantauan Cepat Aktif) */}
               <div className="lg:col-span-5">
-                <div className="rounded-xl bg-white p-6 hm-floating-card border border-[#DCE0D5]">
+                <div className="hm-animate-scale-in hm-delay-2 rounded-xl bg-white p-6 hm-floating-card border border-[#DCE0D5]">
                   <div className="mb-5 space-y-1">
                     <h2 className="font-serif text-[22px] font-semibold text-[#2C3325] leading-snug">
                       Filter Pantauan Cepat
@@ -478,7 +479,7 @@ export default function LandingExplorer({
                     <div className="pt-1 space-y-2">
                       <button
                         type="submit"
-                        className="w-full rounded-full bg-[#557029] hover:bg-[#465D21] px-5 py-2.5 text-[14px] font-semibold text-white transition-colors cursor-pointer"
+                        className="w-full rounded-full bg-[#557029] hover:bg-[#465D21] px-5 py-2.5 text-[14px] font-semibold text-white transition-all duration-200 active:scale-[0.98] cursor-pointer"
                       >
                         Tampilkan di Peta
                       </button>
@@ -504,31 +505,32 @@ export default function LandingExplorer({
         <section className="w-full bg-[#F7F8F2] border-b border-[#DCE0D5] py-16">
           <div className="mx-auto max-w-300 px-4 sm:px-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {featureItems.map((item) => (
-                <div
-                  key={item.title}
-                  className="flex flex-col items-center text-center px-3 py-2"
-                >
-                  <div className="mb-4 text-[#6F8E3D]">{item.icon}</div>
-                  <h2 className="font-serif text-[18px] font-semibold text-[#2C3325]">
-                    {item.title}
-                  </h2>
-                  <p className="mt-2.5 text-[14px] leading-relaxed text-[#6B7263] flex-1">
-                    {item.description}
-                  </p>
-                  <Link
-                    href={item.href}
-                    className="mt-5 inline-flex items-center justify-center rounded-full bg-[#557029] hover:bg-[#465D21] px-5 py-2 text-[13px] font-semibold text-white transition-colors"
-                  >
-                    {item.ctaLabel}
-                  </Link>
-                </div>
+              {featureItems.map((item, idx) => (
+                <RevealOnScroll key={item.title} delay={idx * 70} className="h-full">
+                  <div className="group h-full flex flex-col items-center text-center rounded-xl px-4 py-4 transition-colors duration-200 hover:bg-white/75">
+                    <div className="mb-4 text-[#6F8E3D] transition-transform duration-300 ease-out group-hover:-translate-y-1">
+                      {item.icon}
+                    </div>
+                    <h2 className="font-serif text-[18px] font-semibold text-[#2C3325]">
+                      {item.title}
+                    </h2>
+                    <p className="mt-2.5 text-[14px] leading-relaxed text-[#6B7263] flex-1">
+                      {item.description}
+                    </p>
+                    <Link
+                      href={item.href}
+                      className="mt-5 inline-flex items-center justify-center rounded-full bg-[#557029] hover:bg-[#465D21] px-5 py-2 text-[13px] font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98]"
+                    >
+                      {item.ctaLabel}
+                    </Link>
+                  </div>
+                </RevealOnScroll>
               ))}
             </div>
           </div>
         </section>
 
-        {/* 3. PETA SEBARAN RINGKAS (Tanpa Panel Laporan Terpilih, Hanya Peta Jalan & Citra Satelit) */}
+        {/* 3. PETA SEBARAN RINGKAS (Switch Basemap + Reset Peta Indonesia di Pojok Kanan) */}
         <section
           id="peta-sebaran"
           ref={mapSectionRef}
@@ -546,39 +548,44 @@ export default function LandingExplorer({
               </div>
             )}
 
-            <div className="text-center max-w-2xl mx-auto space-y-2">
-              <h2 className="font-serif text-[30px] font-bold text-[#2C3325] leading-tight">
-                Peta Sebaran Laporan Karhutla
-              </h2>
-              <p className="text-[14px] text-[#6B7263]">
-                Menampilkan <strong>{filteredLaporan.length}</strong> laporan warga &bull;{" "}
-                {appliedFilters.wilayah === "semua"
-                  ? "Seluruh wilayah Indonesia"
-                  : appliedFilters.wilayah}
-              </p>
-            </div>
-
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-2 text-[13px] text-[#6B7263]">
-                <span>Klik titik marker pada peta untuk melihat informasi ringkas kejadian.</span>
-                {hasActiveFilter && (
-                  <button
-                    type="button"
-                    onClick={handleResetFilter}
-                    className="font-semibold text-[#557029] hover:underline cursor-pointer"
-                  >
-                    (Reset filter)
-                  </button>
-                )}
+            <RevealOnScroll className="space-y-6">
+              <div className="text-center max-w-2xl mx-auto space-y-2">
+                <h2 className="font-serif text-[30px] font-bold text-[#2C3325] leading-tight">
+                  Peta Sebaran Laporan Karhutla
+                </h2>
+                <p className="text-[14px] text-[#6B7263]">
+                  Menampilkan <strong>{filteredLaporan.length}</strong> laporan warga &bull;{" "}
+                  {appliedFilters.wilayah === "semua"
+                    ? "Seluruh wilayah Indonesia"
+                    : appliedFilters.wilayah}
+                </p>
               </div>
 
-              <Link
-                href="/peta"
-                className="inline-flex items-center justify-center rounded-full border border-[#8A947D] bg-white px-4 py-1.5 text-[12px] font-semibold text-[#2C3325] hover:border-[#557029] hover:bg-[#F7F8F2] transition-colors"
-              >
-                Buka Peta Lengkap &rarr;
-              </Link>
-            </div>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-2 text-[13px] text-[#6B7263]">
+                  <span>Klik titik marker pada peta untuk melihat informasi ringkas kejadian.</span>
+                  {hasActiveFilter && (
+                    <button
+                      type="button"
+                      onClick={handleResetFilter}
+                      className="font-semibold text-[#557029] hover:underline cursor-pointer"
+                    >
+                      (Reset filter)
+                    </button>
+                  )}
+                </div>
+
+                <Link
+                  href="/peta"
+                  className="group inline-flex items-center justify-center rounded-full border border-[#8A947D] bg-white px-4 py-1.5 text-[12px] font-semibold text-[#2C3325] hover:border-[#557029] hover:bg-[#F7F8F2] transition-all duration-200 active:scale-[0.98]"
+                >
+                  <span>Buka Peta Lengkap</span>
+                  <span className="ml-1 inline-block transition-transform duration-200 group-hover:translate-x-0.5">
+                    &rarr;
+                  </span>
+                </Link>
+              </div>
+            </RevealOnScroll>
 
             {shouldMountMap ? (
               <HotmapMap
@@ -599,14 +606,14 @@ export default function LandingExplorer({
         {/* 4. FEATURED ARTICLES / BERITA TERKINI (3 Kolom Tanpa Border Kartu Luar) */}
         <section className="w-full bg-[#F7F8F2] border-y border-[#DCE0D5] py-16">
           <div className="mx-auto max-w-300 px-4 sm:px-6 space-y-10">
-            <div className="text-center max-w-2xl mx-auto space-y-2">
+            <RevealOnScroll className="text-center max-w-2xl mx-auto space-y-2">
               <h2 className="font-serif text-[30px] font-bold text-[#2C3325]">
                 Berita &amp; Informasi Terkini
               </h2>
               <p className="text-[14px] text-[#6B7263]">
                 Peringatan dini, dokumentasi penanganan, dan edukasi pencegahan kebakaran hutan dan lahan.
               </p>
-            </div>
+            </RevealOnScroll>
 
             {effectiveBerita.length === 0 ? (
               <p className="text-center text-[14px] text-[#6B7263]">
@@ -614,63 +621,65 @@ export default function LandingExplorer({
               </p>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {effectiveBerita.map((berita) => (
-                  <article key={berita.id} className="group flex flex-col justify-between">
-                    <div>
-                      <Link
-                        href={`/berita/${berita.slug || berita.id}`}
-                        className="block aspect-16/10 w-full rounded-lg overflow-hidden mb-4 bg-[#E6ECE0] border border-[#DCE0D5]"
-                      >
-                        {berita.gambarUrl ? (
-                          /* eslint-disable-next-line @next/next/no-img-element */
-                          <img
-                            src={berita.gambarUrl}
-                            alt={berita.judul}
-                            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                          />
-                        ) : (
-                          /* Placeholder foto artikel siap diganti melalui modul berita admin */
-                          <div className="h-full w-full flex flex-col items-center justify-center gap-2 text-[#6F8E3D] px-4 text-center">
-                            <svg
-                              className="h-8 w-8 opacity-75"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="1.5"
-                              aria-hidden="true"
-                            >
-                              <rect x="3" y="5" width="18" height="14" rx="2" />
-                              <circle cx="8.5" cy="10" r="1.5" />
-                              <path d="M21 16l-5-5-4 4-2-2-5 5" />
-                            </svg>
-                            <span className="text-[11px] font-medium uppercase tracking-wider text-[#6B7263]">
-                              Placeholder Foto Berita
-                            </span>
-                          </div>
-                        )}
-                      </Link>
-
-                      <h3 className="font-serif text-[18px] font-semibold text-[#2C3325] group-hover:text-[#557029] transition-colors leading-snug">
-                        <Link href={`/berita/${berita.slug || berita.id}`}>
-                          {berita.judul}
+                {effectiveBerita.map((berita, idx) => (
+                  <RevealOnScroll key={berita.id} delay={idx * 80} className="h-full">
+                    <article className="group h-full flex flex-col justify-between">
+                      <div>
+                        <Link
+                          href={`/berita/${berita.slug || berita.id}`}
+                          className="block aspect-16/10 w-full rounded-lg overflow-hidden mb-4 bg-[#E6ECE0] border border-[#DCE0D5]"
+                        >
+                          {berita.gambarUrl ? (
+                            /* eslint-disable-next-line @next/next/no-img-element */
+                            <img
+                              src={berita.gambarUrl}
+                              alt={berita.judul}
+                              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                            />
+                          ) : (
+                            /* Placeholder foto artikel siap diganti melalui modul berita admin */
+                            <div className="h-full w-full flex flex-col items-center justify-center gap-2 text-[#6F8E3D] px-4 text-center">
+                              <svg
+                                className="h-8 w-8 opacity-75 transition-transform duration-300 group-hover:scale-105"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="1.5"
+                                aria-hidden="true"
+                              >
+                                <rect x="3" y="5" width="18" height="14" rx="2" />
+                                <circle cx="8.5" cy="10" r="1.5" />
+                                <path d="M21 16l-5-5-4 4-2-2-5 5" />
+                              </svg>
+                              <span className="text-[11px] font-medium uppercase tracking-wider text-[#6B7263]">
+                                Placeholder Foto Berita
+                              </span>
+                            </div>
+                          )}
                         </Link>
-                      </h3>
 
-                      <p className="mt-2 text-[14px] text-[#6B7263] line-clamp-3 leading-relaxed">
-                        {berita.ringkasan ||
-                          `${formatDate(berita.tanggal, "long")} — Publikasi resmi ${berita.penulis}.`}
-                      </p>
-                    </div>
+                        <h3 className="font-serif text-[18px] font-semibold text-[#2C3325] group-hover:text-[#557029] transition-colors leading-snug">
+                          <Link href={`/berita/${berita.slug || berita.id}`}>
+                            {berita.judul}
+                          </Link>
+                        </h3>
 
-                    <div className="mt-4 pt-1">
-                      <Link
-                        href={`/berita/${berita.slug || berita.id}`}
-                        className="inline-flex items-center justify-center rounded-full border border-[#8A947D] bg-white px-4 py-1.5 text-[12px] font-semibold text-[#2C3325] hover:border-[#557029] hover:bg-[#EEF2E4] transition-colors"
-                      >
-                        Baca Selengkapnya
-                      </Link>
-                    </div>
-                  </article>
+                        <p className="mt-2 text-[14px] text-[#6B7263] line-clamp-3 leading-relaxed">
+                          {berita.ringkasan ||
+                            `${formatDate(berita.tanggal, "long")} — Publikasi resmi ${berita.penulis}.`}
+                        </p>
+                      </div>
+
+                      <div className="mt-4 pt-1">
+                        <Link
+                          href={`/berita/${berita.slug || berita.id}`}
+                          className="inline-flex items-center justify-center rounded-full border border-[#8A947D] bg-white px-4 py-1.5 text-[12px] font-semibold text-[#2C3325] hover:border-[#557029] hover:bg-[#EEF2E4] transition-all duration-200 active:scale-[0.98]"
+                        >
+                          Baca Selengkapnya
+                        </Link>
+                      </div>
+                    </article>
+                  </RevealOnScroll>
                 ))}
               </div>
             )}
@@ -678,9 +687,12 @@ export default function LandingExplorer({
             <div className="text-center pt-2">
               <Link
                 href="/berita"
-                className="inline-flex items-center justify-center rounded-full border border-[#8A947D] bg-white px-6 py-2.5 text-[13px] font-semibold text-[#2C3325] hover:border-[#557029] hover:bg-[#EEF2E4] transition-colors"
+                className="group inline-flex items-center justify-center rounded-full border border-[#8A947D] bg-white px-6 py-2.5 text-[13px] font-semibold text-[#2C3325] hover:border-[#557029] hover:bg-[#EEF2E4] transition-all duration-200 active:scale-[0.98]"
               >
-                Lihat Semua Berita &rarr;
+                <span>Lihat Semua Berita</span>
+                <span className="ml-1 inline-block transition-transform duration-200 group-hover:translate-x-0.5">
+                  &rarr;
+                </span>
               </Link>
             </div>
           </div>
@@ -689,14 +701,14 @@ export default function LandingExplorer({
         {/* 5. SHOWCASE / SOROTAN PENANGANAN & WILAYAH (3 Kolom, Rasio 4:3, Sudut Tajam + Bilah Caption Solid) */}
         <section className="w-full bg-white py-16">
           <div className="mx-auto max-w-300 px-4 sm:px-6 space-y-10">
-            <div className="text-center max-w-2xl mx-auto space-y-2">
+            <RevealOnScroll className="text-center max-w-2xl mx-auto space-y-2">
               <h2 className="font-serif text-[30px] font-bold text-[#2C3325]">
                 Sorotan Penanganan &amp; Wilayah
               </h2>
               <p className="text-[14px] text-[#6B7263]">
                 Ringkasan kejadian prioritas yang sedang ditangani maupun telah selesai dipadamkan di berbagai daerah.
               </p>
-            </div>
+            </RevealOnScroll>
 
             {showcaseItems.length === 0 ? (
               <p className="text-center text-[14px] text-[#6B7263]">
@@ -704,50 +716,51 @@ export default function LandingExplorer({
               </p>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {showcaseItems.map((item) => {
+                {showcaseItems.map((item, idx) => {
                   const statusInfo =
                     STATUS_META[item.statusKey] ?? STATUS_META.menunggu_verifikasi;
                   return (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => handleFocusReportOnMap(item)}
-                      className="group text-left rounded-none overflow-hidden border border-[#DCE0D5] bg-white flex flex-col cursor-pointer"
-                    >
-                      {/* Placeholder foto dokumentasi lapangan rasio 4:3, sudut tajam (siap diganti foto) */}
-                      <div className="relative aspect-4/3 w-full bg-[#EEF2E4] flex flex-col items-center justify-center gap-2 px-6 text-center">
-                        <svg
-                          className="h-9 w-9 text-[#6F8E3D] opacity-80 group-hover:scale-105 transition-transform"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          aria-hidden="true"
-                        >
-                          <path d="M12 21s-6-5.2-6-10a6 6 0 1 1 12 0c0 4.8-6 10-6 10z" />
-                          <circle cx="12" cy="11" r="2.2" />
-                        </svg>
-                        <span className="text-[11px] font-semibold uppercase tracking-wider text-[#6B7263]">
-                          Placeholder Foto Lapangan
-                        </span>
-                        <span className="font-mono text-[11px] text-[#2C3325]/80">
-                          {formatCoordinates(item.latitude, item.longitude, 4)}
-                        </span>
-                        <span className="absolute top-3 left-3 rounded-sm bg-white/95 border border-[#DCE0D5] px-2.5 py-1 text-[11px] font-semibold text-[#2C3325]">
-                          {statusInfo.label}
-                        </span>
-                      </div>
+                    <RevealOnScroll key={item.id} delay={idx * 80} className="h-full">
+                      <button
+                        type="button"
+                        onClick={() => handleFocusReportOnMap(item)}
+                        className="hm-interactive-card group h-full w-full text-left rounded-none overflow-hidden border border-[#DCE0D5] bg-white flex flex-col cursor-pointer"
+                      >
+                        {/* Placeholder foto dokumentasi lapangan rasio 4:3, sudut tajam (siap diganti foto) */}
+                        <div className="relative aspect-4/3 w-full bg-[#EEF2E4] flex flex-col items-center justify-center gap-2 px-6 text-center">
+                          <svg
+                            className="h-9 w-9 text-[#6F8E3D] opacity-80 group-hover:scale-105 transition-transform duration-300"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.5"
+                            aria-hidden="true"
+                          >
+                            <path d="M12 21s-6-5.2-6-10a6 6 0 1 1 12 0c0 4.8-6 10-6 10z" />
+                            <circle cx="12" cy="11" r="2.2" />
+                          </svg>
+                          <span className="text-[11px] font-semibold uppercase tracking-wider text-[#6B7263]">
+                            Placeholder Foto Lapangan
+                          </span>
+                          <span className="font-mono text-[11px] text-[#2C3325]/80">
+                            {formatCoordinates(item.latitude, item.longitude, 4)}
+                          </span>
+                          <span className="absolute top-3 left-3 rounded-sm bg-white/95 border border-[#DCE0D5] px-2.5 py-1 text-[11px] font-semibold text-[#2C3325]">
+                            {statusInfo.label}
+                          </span>
+                        </div>
 
-                      {/* Bilah Caption Solid Menempel Langsung di Sisi Bawah */}
-                      <div className="w-full bg-[#557029] group-hover:bg-[#465D21] px-4 py-3.5 text-white transition-colors">
-                        <p className="font-serif text-[16px] font-semibold leading-snug line-clamp-1 text-white">
-                          {item.judul}
-                        </p>
-                        <p className="mt-0.5 text-[12px] text-white/85 truncate">
-                          {item.wilayah} &bull; {item.estimasiLuas}
-                        </p>
-                      </div>
-                    </button>
+                        {/* Bilah Caption Solid Menempel Langsung di Sisi Bawah */}
+                        <div className="w-full bg-[#557029] group-hover:bg-[#465D21] px-4 py-3.5 text-white transition-colors duration-200">
+                          <p className="font-serif text-[16px] font-semibold leading-snug line-clamp-1 text-white">
+                            {item.judul}
+                          </p>
+                          <p className="mt-0.5 text-[12px] text-white/85 truncate">
+                            {item.wilayah} &bull; {item.estimasiLuas}
+                          </p>
+                        </div>
+                      </button>
+                    </RevealOnScroll>
                   );
                 })}
               </div>

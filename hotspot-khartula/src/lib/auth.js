@@ -104,3 +104,41 @@ export async function requireRole(allowedRoles = []) {
 
   return session;
 }
+
+/**
+ * Sementara mengizinkan Fast Login di semua environment (termasuk production/Vercel)
+ * kecuali dinonaktifkan secara eksplisit dengan `ENABLE_FAST_LOGIN=false`.
+ */
+export function isFastLoginEnabled() {
+  return process.env.ENABLE_FAST_LOGIN !== "false";
+}
+
+const DEMO_ENV_MAP = {
+  admin: ["DEMO_ADMIN_EMAIL", "DEMO_ADMIN_PASSWORD"],
+  petugas: ["DEMO_PETUGAS_EMAIL", "DEMO_PETUGAS_PASSWORD"],
+  pelapor: ["DEMO_PELAPOR_EMAIL", "DEMO_PELAPOR_PASSWORD"],
+};
+
+export function getDemoCredentialsForRole(targetRole) {
+  const pair = DEMO_ENV_MAP[targetRole];
+  if (!pair) return null;
+  const email = process.env[pair[0]]?.trim() ?? "";
+  const password = process.env[pair[1]]?.trim() ?? "";
+  if (!email || !password) return null;
+  return { email, password };
+}
+
+/**
+ * Mengembalikan hanya status ketersediaan (boolean) ke UI tanpa pernah mengekspos kredensial.
+ */
+export function getFastLoginAvailability() {
+  const enabled = isFastLoginEnabled();
+  return {
+    enabled,
+    roles: {
+      admin: Boolean(getDemoCredentialsForRole("admin")),
+      petugas: Boolean(getDemoCredentialsForRole("petugas")),
+      pelapor: Boolean(getDemoCredentialsForRole("pelapor")),
+    },
+  };
+}

@@ -4,6 +4,7 @@ import LoginForm from "@/components/auth/LoginForm";
 import {
   ROLE_HOME,
   getCurrentUserWithRole,
+  getFastLoginAvailability,
 } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
@@ -25,9 +26,11 @@ export default async function LoginPage({ searchParams }) {
       ? resolvedParams.redirectTo
       : "";
 
+  const fastLogin = getFastLoginAvailability();
+
   return (
     <PublicShell mainClassName="flex-1 flex items-center justify-center px-4 sm:px-6 py-10 sm:py-14">
-      <LoginForm redirectTo={redirectTo} />
+      <LoginForm redirectTo={redirectTo} fastLogin={fastLogin} />
     </PublicShell>
   );
 }

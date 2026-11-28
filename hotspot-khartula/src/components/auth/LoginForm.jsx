@@ -1,20 +1,73 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useState, useTransition } from "react";
 import Link from "next/link";
-import { loginAction } from "@/lib/actions/auth";
+import { loginAction, fastLoginAction } from "@/lib/actions/auth";
 
-export default function LoginForm({ redirectTo = "" }) {
+const FAST_ROLES = [
+  {
+    key: "admin",
+    label: "Login sebagai Admin",
+    desc: "Kelola laporan, wilayah, berita & pengguna",
+    badge: "Admin",
+    accent: "border-[#F3C8B8] bg-[#FDF2EA] hover:border-[#C85A28] text-[#9B4017]",
+    iconBg: "bg-[#C85A28] text-white",
+    icon: (
+      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M12 2l7 4v6c0 5-3.5 9-7 10-3.5-1-7-5-7-10V6l7-4z" />
+      </svg>
+    ),
+  },
+  {
+    key: "petugas",
+    label: "Login sebagai Petugas",
+    desc: "Pantau peta operasional & tindak lanjut laporan",
+    badge: "Petugas",
+    accent: "border-[#C5DCF8] bg-[#EBF4FF] hover:border-[#2B7FD9] text-[#1E62B5]",
+    iconBg: "bg-[#2B7FD9] text-white",
+    icon: (
+      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+        <path d="M9 12l2 2 4-4" />
+      </svg>
+    ),
+  },
+  {
+    key: "pelapor",
+    label: "Login sebagai Pelapor",
+    desc: "Buat laporan kejadian & pantau progres",
+    badge: "Pelapor",
+    accent: "border-[#C9D6B5] bg-[#EEF2E4] hover:border-[#557029] text-[#3F561E]",
+    iconBg: "bg-[#557029] text-white",
+    icon: (
+      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+        <circle cx="12" cy="7" r="4" />
+      </svg>
+    ),
+  },
+];
+
+export default function LoginForm({
+  redirectTo = "",
+  fastLogin = { enabled: false, roles: { admin: false, petugas: false, pelapor: false } },
+}) {
   const [showPassword, setShowPassword] = useState(false);
   const [clientError, setClientError] = useState("");
+  const [activeFastRole, setActiveFastRole] = useState(null);
 
   const [loginState, loginDispatch, isLoginPending] = useActionState(
     loginAction,
     null
   );
+  const [fastState, fastDispatch, isFastActionPending] = useActionState(
+    fastLoginAction,
+    null
+  );
+  const [isTransitionPending, startTransition] = useTransition();
 
-  const isBusy = isLoginPending;
-  const activeError = clientError || loginState?.error;
+  const isBusy = isLoginPending || isFastActionPending || isTransitionPending;
+  const activeError = clientError || fastState?.error || loginState?.error;
 
   function handleRegularSubmit(e) {
     setClientError("");
@@ -31,6 +84,17 @@ export default function LoginForm({ redirectTo = "" }) {
       e.preventDefault();
       setClientError("Kata sandi wajib diisi.");
     }
+  }
+
+  function handleFastLogin(roleKey) {
+    if (isBusy) return;
+    setClientError("");
+    setActiveFastRole(roleKey);
+    const fd = new FormData();
+    fd.set("targetRole", roleKey);
+    startTransition(() => {
+      fastDispatch(fd);
+    });
   }
 
   return (
@@ -131,6 +195,59 @@ export default function LoginForm({ redirectTo = "" }) {
             Daftar sekarang
           </Link>
         </p>
+
+        {/* Fast Login Section */}
+        {fastLogin.enabled && (
+          <div className="pt-5 border-t border-[#DCE0D5] space-y-3.5">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-[#4A5243]">
+                Fast Login (Pengujian Role)
+              </span>
+              <span className="rounded bg-[#F7F8F2] border border-[#DCE0D5] px-2 py-0.5 text-[10px] font-semibold text-[#6B7263]">
+                Demo Cepat
+              </span>
+            </div>
+
+            <div className="space-y-2.5">
+              {FAST_ROLES.map((item) => {
+                const isConfigured = Boolean(fastLogin.roles?.[item.key]);
+                const isThisLoading = isBusy && activeFastRole === item.key;
+
+                return (
+                  <button
+                    key={item.key}
+                    type="button"
+                    disabled={isBusy || !isConfigured}
+                    onClick={() => handleFastLogin(item.key)}
+                    className={`w-full flex items-center justify-between gap-3 rounded-xl border p-3 text-left transition-all duration-200 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer ${item.accent}`}
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <span
+                        className={`w-9 h-9 rounded-lg shrink-0 flex items-center justify-center ${item.iconBg}`}
+                      >
+                        {item.icon}
+                      </span>
+                      <div className="min-w-0">
+                        <span className="block text-sm font-bold leading-tight">
+                          {isThisLoading ? `Masuk sebagai ${item.badge}...` : item.label}
+                        </span>
+                        <span className="block text-[11px] opacity-80 truncate">
+                          {isConfigured
+                            ? item.desc
+                            : `Belum dikonfigurasi pada environment server (DEMO_${item.key.toUpperCase()}_*)`}
+                        </span>
+                      </div>
+                    </div>
+
+                    <span className="shrink-0 rounded-md bg-white/80 px-2 py-0.5 text-[10px] font-bold">
+                      {isConfigured ? "Siap" : "Kosong"}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

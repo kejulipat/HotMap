@@ -27,6 +27,8 @@ export function SummaryCardsGrid({ counts = {}, activeStatus = "semua", hrefBase
         const count = counts[card.key] ?? 0;
 
         const cardClasses = `block text-left rounded-[8px] p-4 transition-colors border ${
+          hrefBase ? "hm-interactive-card" : ""
+        } ${
           isPrimaryCard
             ? "bg-[#557029] text-white border-[#557029]"
             : isActive
