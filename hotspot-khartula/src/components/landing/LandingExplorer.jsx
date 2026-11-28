@@ -72,8 +72,11 @@ export default function LandingExplorer({
   const [shouldMountMap, setShouldMountMap] = useState(false);
   const mapSectionRef = useRef(null);
   const scrollContainerRef = useRef(null);
-  const wheelLockRef = useRef(false);
-  const wheelTimerRef = useRef(null);
+  const activeSectionIdxRef = useRef(0);
+  const isAnimatingScrollRef = useRef(false);
+  const scrollAnimFrameRef = useRef(0);
+  const wheelCooldownTimerRef = useRef(null);
+  const scrollSyncTimerRef = useRef(null);
 
   const rawCachedSnapshot = useSyncExternalStore(
     EMPTY_SUBSCRIBE,
@@ -126,14 +129,137 @@ export default function LandingExplorer({
     return () => observer.disconnect();
   }, [shouldMountMap]);
 
-  // Pada Desktop (>=1024px), satu guliran roda mouse langsung berpindah halus ke section berikutnya/sebelumnya
+  // Helper animasi scroll section-ke-section tanpa konflik CSS scroll-snap saat bolak-balik
+  function jumpToDesktopSection(targetIdx) {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    const sections = Array.from(
+      container.querySelectorAll("[data-snap-section]")
+    );
+    if (sections.length === 0) return;
+
+    const lastIdx = sections.length - 1;
+    const clampedIdx = Math.max(0, Math.min(lastIdx, targetIdx));
+    const navOffset = 72;
+    const containerRect = container.getBoundingClientRect();
+    const maxScroll = Math.max(0, container.scrollHeight - container.clientHeight);
+    const targetSec = sections[clampedIdx];
+    const secTop =
+      targetSec.getBoundingClientRect().top -
+      containerRect.top +
+      container.scrollTop;
+
+    const targetTop =
+      clampedIdx === 0
+        ? 0
+        : clampedIdx === lastIdx
+        ? maxScroll
+        : Math.max(0, Math.min(maxScroll, secTop - navOffset));
+
+    activeSectionIdxRef.current = clampedIdx;
+    if (clampedIdx >= 2) {
+      setShouldMountMap(true);
+    }
+
+    if (scrollAnimFrameRef.current) {
+      window.cancelAnimationFrame(scrollAnimFrameRef.current);
+      scrollAnimFrameRef.current = 0;
+    }
+    if (wheelCooldownTimerRef.current) {
+      window.clearTimeout(wheelCooldownTimerRef.current);
+      wheelCooldownTimerRef.current = null;
+    }
+
+    const prefersReduced =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    if (prefersReduced) {
+      container.scrollTop = targetTop;
+      isAnimatingScrollRef.current = false;
+      return;
+    }
+
+    const startTop = container.scrollTop;
+    const delta = targetTop - startTop;
+    if (Math.abs(delta) < 2) {
+      isAnimatingScrollRef.current = false;
+      return;
+    }
+
+    isAnimatingScrollRef.current = true;
+    const duration = 520;
+    const startTime = performance.now();
+
+    const step = (now) => {
+      const elapsed = now - startTime;
+      const t = Math.min(1, elapsed / duration);
+      // Cubic ease-out halus
+      const eased = 1 - Math.pow(1 - t, 3);
+      container.scrollTop = startTop + delta * eased;
+
+      if (t < 1) {
+        scrollAnimFrameRef.current = window.requestAnimationFrame(step);
+      } else {
+        scrollAnimFrameRef.current = 0;
+        container.scrollTop = targetTop;
+        wheelCooldownTimerRef.current = window.setTimeout(() => {
+          isAnimatingScrollRef.current = false;
+        }, 160);
+      }
+    };
+
+    scrollAnimFrameRef.current = window.requestAnimationFrame(step);
+  }
+
+  // Pada Desktop (>=1024px), satu guliran roda mouse langsung berpindah deterministik ke section berikutnya/sebelumnya
   useEffect(() => {
     const container = scrollContainerRef.current;
     if (!container) return;
 
+    const syncIndexFromScroll = () => {
+      if (isAnimatingScrollRef.current || window.innerWidth < 1024) return;
+      const sections = Array.from(
+        container.querySelectorAll("[data-snap-section]")
+      );
+      if (sections.length === 0) return;
+
+      const maxScroll = Math.max(0, container.scrollHeight - container.clientHeight);
+      if (maxScroll > 0 && container.scrollTop >= maxScroll - 24) {
+        activeSectionIdxRef.current = sections.length - 1;
+        return;
+      }
+
+      const navOffset = 72;
+      const containerRect = container.getBoundingClientRect();
+      const currentScroll = container.scrollTop + navOffset;
+      let nearestIdx = 0;
+      let minDist = Infinity;
+
+      sections.forEach((sec, idx) => {
+        const secTop =
+          sec.getBoundingClientRect().top - containerRect.top + container.scrollTop;
+        const dist = Math.abs(secTop - currentScroll);
+        if (dist < minDist) {
+          minDist = dist;
+          nearestIdx = idx;
+        }
+      });
+
+      activeSectionIdxRef.current = nearestIdx;
+    };
+
+    const handleScroll = () => {
+      if (isAnimatingScrollRef.current) return;
+      if (scrollSyncTimerRef.current) {
+        window.clearTimeout(scrollSyncTimerRef.current);
+      }
+      scrollSyncTimerRef.current = window.setTimeout(syncIndexFromScroll, 120);
+    };
+
     const handleWheel = (e) => {
       if (window.innerWidth < 1024) return;
-      if (e.ctrlKey || Math.abs(e.deltaY) < 16) return;
+      if (e.ctrlKey) return;
 
       const targetEl = e.target;
       if (
@@ -148,81 +274,58 @@ export default function LandingExplorer({
       );
       if (sections.length === 0) return;
 
+      // Selalu cegah scroll liar saat sedang transisi agar tidak memantul balik
+      if (isAnimatingScrollRef.current) {
+        e.preventDefault();
+        return;
+      }
+
+      if (Math.abs(e.deltaY) < 12) return;
+
       const navOffset = 72;
       const containerRect = container.getBoundingClientRect();
-      const maxScroll = Math.max(0, container.scrollHeight - container.clientHeight);
-      const direction = e.deltaY > 0 ? 1 : -1;
       const lastIdx = sections.length - 1;
-      const isAtBottom = maxScroll > 0 && container.scrollTop >= maxScroll - 24;
+      const direction = e.deltaY > 0 ? 1 : -1;
+      const currentIdx = Math.max(0, Math.min(lastIdx, activeSectionIdxRef.current));
 
-      const getSectionTop = (sec) =>
-        sec.getBoundingClientRect().top - containerRect.top + container.scrollTop;
-
-      let nextIdx;
-      if (isAtBottom && direction < 0) {
-        nextIdx = lastIdx - 1;
-      } else {
-        const currentScroll = container.scrollTop + navOffset;
-        let activeIdx = 0;
-        let minDist = Infinity;
-        sections.forEach((sec, idx) => {
-          const dist = Math.abs(getSectionTop(sec) - currentScroll);
-          if (dist < minDist) {
-            minDist = dist;
-            activeIdx = idx;
-          }
-        });
-
-        const activeSection = sections[activeIdx];
-        const activeTop = getSectionTop(activeSection);
+      const activeSection = sections[currentIdx];
+      if (activeSection && currentIdx < lastIdx) {
+        const activeTop =
+          activeSection.getBoundingClientRect().top -
+          containerRect.top +
+          container.scrollTop;
         const viewBottom = container.scrollTop + container.clientHeight;
         const sectionBottom = activeTop + activeSection.offsetHeight;
 
-        // Jika section sedikit lebih tinggi dari layar, biarkan scroll internal mencapai tepi dulu
-        if (direction > 0 && sectionBottom - viewBottom > 24) {
+        // Jika section sedikit lebih tinggi dari layar pendek, biarkan scroll internal mencapai tepi dulu
+        if (direction > 0 && sectionBottom - viewBottom > 28) {
           return;
         }
-        if (direction < 0 && container.scrollTop + navOffset - activeTop > 24) {
+        if (direction < 0 && container.scrollTop + navOffset - activeTop > 28) {
           return;
         }
-
-        nextIdx = activeIdx + direction;
       }
 
+      const nextIdx = currentIdx + direction;
       if (nextIdx < 0 || nextIdx > lastIdx) return;
 
       e.preventDefault();
-      if (wheelLockRef.current) return;
-
-      wheelLockRef.current = true;
-      if (nextIdx >= 2) {
-        setShouldMountMap(true);
-      }
-
-      const targetSection = sections[nextIdx];
-      const targetTop =
-        nextIdx === lastIdx
-          ? maxScroll
-          : Math.max(0, getSectionTop(targetSection) - navOffset);
-
-      container.scrollTo({
-        top: targetTop,
-        behavior: "smooth",
-      });
-
-      if (wheelTimerRef.current) {
-        window.clearTimeout(wheelTimerRef.current);
-      }
-      wheelTimerRef.current = window.setTimeout(() => {
-        wheelLockRef.current = false;
-      }, 620);
+      jumpToDesktopSection(nextIdx);
     };
 
     container.addEventListener("wheel", handleWheel, { passive: false });
+    container.addEventListener("scroll", handleScroll, { passive: true });
     return () => {
       container.removeEventListener("wheel", handleWheel);
-      if (wheelTimerRef.current) {
-        window.clearTimeout(wheelTimerRef.current);
+      container.removeEventListener("scroll", handleScroll);
+      if (scrollAnimFrameRef.current) {
+        window.cancelAnimationFrame(scrollAnimFrameRef.current);
+      }
+      if (wheelCooldownTimerRef.current) {
+        window.clearTimeout(wheelCooldownTimerRef.current);
+      }
+      if (scrollSyncTimerRef.current) {
+        window.clearTimeout(scrollSyncTimerRef.current);
       }
     };
   }, []);
@@ -312,6 +415,10 @@ export default function LandingExplorer({
 
   function scrollToMapSection() {
     setShouldMountMap(true);
+    if (typeof window !== "undefined" && window.innerWidth >= 1024) {
+      jumpToDesktopSection(2);
+      return;
+    }
     if (typeof document === "undefined") return;
     const el = document.getElementById("peta-sebaran");
     if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -376,13 +483,15 @@ export default function LandingExplorer({
 
   const featureItems = [
     {
+      number: "01",
       title: "Peta GIS Interaktif",
       description:
         "Pantau sebaran titik laporan warga secara visual dengan klaster otomatis, legenda status, dan pilihan citra satelit.",
       ctaLabel: "Buka Peta",
       href: "/peta",
+      bgImage: "/images/feature-1.webp",
       icon: (
-        <svg className="h-10 w-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <svg className="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M9 18l-6 3V6l6-3 6 3 6-3v15l-6 3-6-3z" />
           <path d="M9 3v15" />
           <path d="M15 6v15" />
@@ -390,39 +499,45 @@ export default function LandingExplorer({
       ),
     },
     {
+      number: "02",
       title: "Pelaporan Warga",
       description:
         "Laporkan titik api atau asap pekat dilengkapi koordinat akurat pada peta serta unggahan foto bukti lapangan.",
       ctaLabel: "Buat Laporan",
       href: "/pelapor/laporan/buat",
+      bgImage: "/images/feature-2.webp",
       icon: (
-        <svg className="h-10 w-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <svg className="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M12 21s-6-5.2-6-10a6 6 0 1 1 12 0c0 4.8-6 10-6 10z" />
           <circle cx="12" cy="11" r="2.2" />
         </svg>
       ),
     },
     {
+      number: "03",
       title: "Verifikasi & Penugasan",
       description:
         "Admin memverifikasi laporan dan menugaskan petugas lapangan, sementara progres pemadaman tercatat kronologis.",
       ctaLabel: currentUser ? "Buka Portal" : "Masuk Sistem",
       href: portalHref,
+      bgImage: "/images/feature-3.webp",
       icon: (
-        <svg className="h-10 w-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <svg className="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M12 2l7 4v6c0 5-3.5 9-7 10-3.5-1-7-5-7-10V6l7-4z" />
           <path d="M9 12l2 2 4-4" />
         </svg>
       ),
     },
     {
+      number: "04",
       title: "Informasi & Edukasi",
       description:
         "Ikuti peringatan dini kekeringan lahan gambut, laporan pemadaman, dan panduan pencegahan karhutla terbaru.",
       ctaLabel: "Baca Berita",
       href: "/berita",
+      bgImage: "/images/feature-4.webp",
       icon: (
-        <svg className="h-10 w-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <svg className="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M4 5h16v14H4z" />
           <path d="M8 9h8M8 13h8M8 17h5" />
         </svg>
@@ -433,7 +548,7 @@ export default function LandingExplorer({
   return (
     <div
       ref={scrollContainerRef}
-      className="min-h-screen lg:h-dvh lg:overflow-y-auto lg:snap-y lg:snap-mandatory lg:scroll-pt-18 scroll-smooth bg-white text-[#2C3325] flex flex-col font-sans"
+      className="min-h-screen lg:h-dvh lg:overflow-y-auto lg:scroll-pt-18 bg-white text-[#2C3325] flex flex-col font-sans"
     >
       <PublicNavbar currentUser={currentUser} />
 
@@ -441,7 +556,7 @@ export default function LandingExplorer({
         {/* 1. HERO SECTION (2 Kolom Asimetris + Foto Latar Full-Bleed WebP, Full Viewport) */}
         <section
           data-snap-section
-          className="relative w-full min-h-[calc(100dvh-72px)] lg:snap-start lg:snap-always flex items-center overflow-hidden bg-[#2C3B21]"
+          className="relative w-full min-h-[calc(100dvh-72px)] flex items-center overflow-hidden bg-[#2C3B21]"
         >
           <Image
             src="/images/hero-forest.webp"
@@ -611,44 +726,77 @@ export default function LandingExplorer({
           </div>
         </section>
 
-        {/* 2. FEATURE STRIP (4 Kolom, Latar Krem Hangat #F7F8F2) */}
+        {/* 2. FEATURE STRIP (4 Sekat Full-Bleed Sama Lebar dengan Foto Latar Hover Pop-Up & Cerah) */}
         <section
           data-snap-section
-          className="w-full bg-[#F7F8F2] border-b border-[#DCE0D5] py-16 lg:py-10 lg:min-h-[calc(100dvh-72px)] lg:snap-start lg:snap-always flex items-center"
+          className="w-full overflow-hidden bg-[#16200E] border-b border-[#DCE0D5] lg:h-[calc(100dvh-72px)]"
         >
-          <div className="w-full mx-auto max-w-300 px-4 sm:px-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {featureItems.map((item, idx) => (
-                <RevealOnScroll key={item.title} delay={idx * 70} className="h-full">
-                  <div className="group h-full flex flex-col items-center text-center rounded-xl px-4 py-4 transition-colors duration-200 hover:bg-white/75">
-                    <div className="mb-4 text-[#6F8E3D] transition-transform duration-300 ease-out group-hover:-translate-y-1">
+          <div className="grid h-full w-full grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 lg:divide-x divide-white/20">
+            {featureItems.map((item, idx) => (
+              <article
+                key={item.title}
+                className="group relative flex min-h-85 sm:min-h-100 lg:min-h-0 h-full w-full flex-col items-center justify-center overflow-hidden px-7 py-12 text-center ring-1 ring-inset ring-white/10 transition-all duration-500 ease-out hover:z-20 lg:hover:scale-[1.02] hover:ring-white/40 hover:shadow-[0_24px_56px_rgba(10,16,7,0.55)] motion-reduce:transition-none motion-reduce:transform-none"
+              >
+                {/* Foto Latar Sekat (siap diganti di public/images/feature-1..4.webp) */}
+                <Image
+                  src={item.bgImage}
+                  alt=""
+                  fill
+                  sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
+                  className="object-cover object-center brightness-65 scale-100 transition-all duration-500 ease-out group-hover:scale-108 group-hover:brightness-105 motion-reduce:transition-none motion-reduce:transform-none"
+                />
+
+                {/* Overlay Gelap yang Mencerah Halus saat Hover */}
+                <div
+                  aria-hidden="true"
+                  className="absolute inset-0 bg-[#131C0C]/62 transition-colors duration-500 ease-out group-hover:bg-[#131C0C]/26"
+                />
+                <div
+                  aria-hidden="true"
+                  className="absolute inset-0 bg-linear-to-t from-[#0E1509]/80 via-[#0E1509]/28 to-[#0E1509]/45"
+                />
+
+                {/* Konten Fitur yang Terangkat Halus saat Hover */}
+                <RevealOnScroll
+                  delay={idx * 70}
+                  className="relative z-10 w-full max-w-xs"
+                >
+                  <div className="flex flex-col items-center transition-transform duration-300 ease-out group-hover:-translate-y-2 motion-reduce:transition-none motion-reduce:transform-none">
+                    <span className="mb-4 font-mono text-[11px] font-semibold tracking-[0.22em] text-[#D7E3C3]/80">
+                      {item.number}
+                    </span>
+
+                    <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-full border border-white/25 bg-white/10 backdrop-blur-xs text-[#D7E3C3] transition-all duration-300 group-hover:scale-110 group-hover:border-white/55 group-hover:bg-white/20 group-hover:text-white">
                       {item.icon}
                     </div>
-                    <h2 className="font-serif text-[18px] font-semibold text-[#2C3325]">
+
+                    <h2 className="font-serif text-[22px] font-bold text-white leading-snug">
                       {item.title}
                     </h2>
-                    <p className="mt-2.5 text-[14px] leading-relaxed text-[#6B7263] flex-1">
+
+                    <p className="mt-3 text-[14px] leading-relaxed text-white/85 transition-colors duration-300 group-hover:text-white">
                       {item.description}
                     </p>
+
                     <Link
                       href={item.href}
-                      className="mt-5 inline-flex items-center justify-center rounded-full bg-[#557029] hover:bg-[#465D21] px-5 py-2 text-[13px] font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98]"
+                      className="mt-7 inline-flex items-center justify-center rounded-full border border-white/40 bg-[#557029]/90 px-6 py-2.5 text-[13px] font-semibold text-white shadow-xs transition-all duration-300 group-hover:border-white group-hover:bg-white group-hover:text-[#243314] group-hover:shadow-md active:scale-[0.98]"
                     >
                       {item.ctaLabel}
                     </Link>
                   </div>
                 </RevealOnScroll>
-              ))}
-            </div>
+              </article>
+            ))}
           </div>
         </section>
 
-        {/* 3. PETA SEBARAN RINGKAS (Switch Basemap + Reset Peta Indonesia di Pojok Kanan) */}
+        {/* 3. PETA SEBARAN RINGKAS (Switch Basemap + Reset Peta Indonesia di Pojok Kanan, Panduan & Tombol di Bawah Peta) */}
         <section
           id="peta-sebaran"
           data-snap-section
           ref={mapSectionRef}
-          className="w-full bg-white py-16 lg:py-8 lg:min-h-[calc(100dvh-72px)] lg:snap-start lg:snap-always flex items-center scroll-mt-18"
+          className="w-full bg-white py-16 lg:py-8 lg:min-h-[calc(100dvh-72px)] flex items-center scroll-mt-18"
         >
           <div className="w-full mx-auto max-w-300 px-4 sm:px-6 space-y-5">
             {hasQueryError && (
@@ -662,7 +810,7 @@ export default function LandingExplorer({
               </div>
             )}
 
-            <RevealOnScroll className="space-y-6">
+            <RevealOnScroll>
               <div className="text-center max-w-2xl mx-auto space-y-2">
                 <h2 className="font-serif text-[30px] font-bold text-[#2C3325] leading-tight">
                   Peta Sebaran Laporan Karhutla
@@ -673,31 +821,6 @@ export default function LandingExplorer({
                     ? "Seluruh wilayah Indonesia"
                     : appliedFilters.wilayah}
                 </p>
-              </div>
-
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="flex items-center gap-2 text-[13px] text-[#6B7263]">
-                  <span>Klik titik marker pada peta untuk melihat informasi ringkas kejadian.</span>
-                  {hasActiveFilter && (
-                    <button
-                      type="button"
-                      onClick={handleResetFilter}
-                      className="font-semibold text-[#557029] hover:underline cursor-pointer"
-                    >
-                      (Reset filter)
-                    </button>
-                  )}
-                </div>
-
-                <Link
-                  href="/peta"
-                  className="group inline-flex items-center justify-center rounded-full border border-[#8A947D] bg-white px-4 py-1.5 text-[12px] font-semibold text-[#2C3325] hover:border-[#557029] hover:bg-[#F7F8F2] transition-all duration-200 active:scale-[0.98]"
-                >
-                  <span>Buka Peta Lengkap</span>
-                  <span className="ml-1 inline-block transition-transform duration-200 group-hover:translate-x-0.5">
-                    &rarr;
-                  </span>
-                </Link>
               </div>
             </RevealOnScroll>
 
@@ -715,13 +838,39 @@ export default function LandingExplorer({
                 <span>Peta interaktif akan dimuat otomatis saat area ini terlihat...</span>
               </div>
             )}
+
+            {/* Panduan Klik Marker & Tombol Buka Peta Lengkap di Bawah Peta */}
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+              <div className="flex flex-wrap items-center gap-2 text-[13px] text-[#6B7263]">
+                <span>Klik titik marker pada peta untuk melihat informasi ringkas kejadian.</span>
+                {hasActiveFilter && (
+                  <button
+                    type="button"
+                    onClick={handleResetFilter}
+                    className="font-semibold text-[#557029] hover:underline cursor-pointer"
+                  >
+                    (Reset filter)
+                  </button>
+                )}
+              </div>
+
+              <Link
+                href="/peta"
+                className="group inline-flex items-center justify-center rounded-full border border-[#8A947D] bg-white px-5 py-2 text-[12px] font-semibold text-[#2C3325] hover:border-[#557029] hover:bg-[#F7F8F2] transition-all duration-200 active:scale-[0.98]"
+              >
+                <span>Buka Peta Lengkap</span>
+                <span className="ml-1 inline-block transition-transform duration-200 group-hover:translate-x-0.5">
+                  &rarr;
+                </span>
+              </Link>
+            </div>
           </div>
         </section>
 
         {/* 4. FEATURED ARTICLES / BERITA TERKINI (3 Kolom Tanpa Border Kartu Luar) */}
         <section
           data-snap-section
-          className="w-full bg-[#F7F8F2] border-y border-[#DCE0D5] py-16 lg:py-10 lg:min-h-[calc(100dvh-72px)] lg:snap-start lg:snap-always flex items-center"
+          className="w-full bg-[#F7F8F2] border-y border-[#DCE0D5] py-16 lg:py-10 lg:min-h-[calc(100dvh-72px)] flex items-center"
         >
           <div className="w-full mx-auto max-w-300 px-4 sm:px-6 space-y-8">
             <RevealOnScroll className="text-center max-w-2xl mx-auto space-y-2">
@@ -816,18 +965,26 @@ export default function LandingExplorer({
           </div>
         </section>
 
-        {/* 5. SHOWCASE / SOROTAN PENANGANAN & WILAYAH (3 Kolom, Rasio 4:3, Sudut Tajam + Bilah Caption Solid) */}
+        {/* 5. SHOWCASE / SOROTAN PENANGANAN & WILAYAH (Editorial Terpusat + Placeholder feature-1..4.webp) */}
         <section
           data-snap-section
-          className="w-full bg-white py-16 lg:py-10 lg:min-h-[calc(100dvh-72px)] lg:snap-start lg:snap-always flex items-center"
+          className="w-full bg-linear-to-b from-white via-[#FAFBF6] to-[#F1F4E8] py-16 lg:py-12 lg:min-h-[calc(100dvh-72px)] flex items-center"
         >
-          <div className="w-full mx-auto max-w-300 px-4 sm:px-6 space-y-8">
-            <RevealOnScroll className="text-center max-w-2xl mx-auto space-y-2">
-              <h2 className="font-serif text-[30px] font-bold text-[#2C3325]">
+          <div className="w-full mx-auto max-w-300 px-4 sm:px-6 space-y-10">
+            <RevealOnScroll className="w-full text-center flex flex-col items-center space-y-3">
+              <span className="inline-flex items-center gap-2 rounded-full border border-[#C9D6B5] bg-[#EEF2E4] px-3.5 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#465D21]">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#6F8E3D]" />
+                Sorotan Operasional
+              </span>
+              <h2 className="w-full text-center font-serif text-[30px] sm:text-[34px] font-bold text-[#2C3325] leading-tight">
                 Sorotan Penanganan &amp; Wilayah
               </h2>
-              <p className="text-[14px] text-[#6B7263]">
-                Ringkasan kejadian prioritas yang sedang ditangani maupun telah selesai dipadamkan di berbagai daerah.
+              <div
+                aria-hidden="true"
+                className="h-0.5 w-14 rounded-full bg-[#6F8E3D]/70"
+              />
+              <p className="mx-auto max-w-xl text-center text-[14px] leading-relaxed text-[#6B7263]">
+                Ringkasan kejadian prioritas yang sedang ditangani maupun telah selesai dipadamkan di berbagai daerah. Pilih kartu untuk langsung fokus ke lokasinya di peta.
               </p>
             </RevealOnScroll>
 
@@ -840,45 +997,80 @@ export default function LandingExplorer({
                 {showcaseItems.map((item, idx) => {
                   const statusInfo =
                     STATUS_META[item.statusKey] ?? STATUS_META.menunggu_verifikasi;
+                  const placeholderImg = `/images/feature-${(idx % 4) + 1}.webp`;
                   return (
                     <RevealOnScroll key={item.id} delay={idx * 80} className="h-full">
                       <button
                         type="button"
                         onClick={() => handleFocusReportOnMap(item)}
-                        className="hm-interactive-card group h-full w-full text-left rounded-none overflow-hidden border border-[#DCE0D5] bg-white flex flex-col cursor-pointer"
+                        className="hm-interactive-card group h-full w-full text-left rounded-xl overflow-hidden border border-[#DCE0D5] hover:border-[#6F8E3D]/70 bg-white shadow-xs flex flex-col cursor-pointer"
                       >
-                        {/* Placeholder foto dokumentasi lapangan rasio 4:3, sudut tajam (siap diganti foto) */}
-                        <div className="relative aspect-4/3 w-full bg-[#EEF2E4] flex flex-col items-center justify-center gap-2 px-6 text-center">
-                          <svg
-                            className="h-9 w-9 text-[#6F8E3D] opacity-80 group-hover:scale-105 transition-transform duration-300"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="1.5"
+                        {/* Area Visual 4:3 menggunakan placeholder feature-1..4.webp */}
+                        <div className="relative aspect-4/3 w-full overflow-hidden bg-[#1D2814]">
+                          <Image
+                            src={placeholderImg}
+                            alt=""
+                            fill
+                            sizes="(min-width: 768px) 33vw, 100vw"
+                            className="object-cover object-center brightness-80 scale-100 transition-all duration-500 ease-out group-hover:scale-108 group-hover:brightness-105"
+                          />
+                          <div
                             aria-hidden="true"
-                          >
-                            <path d="M12 21s-6-5.2-6-10a6 6 0 1 1 12 0c0 4.8-6 10-6 10z" />
-                            <circle cx="12" cy="11" r="2.2" />
-                          </svg>
-                          <span className="text-[11px] font-semibold uppercase tracking-wider text-[#6B7263]">
-                            Placeholder Foto Lapangan
-                          </span>
-                          <span className="font-mono text-[11px] text-[#2C3325]/80">
-                            {formatCoordinates(item.latitude, item.longitude, 4)}
-                          </span>
-                          <span className="absolute top-3 left-3 rounded-sm bg-white/95 border border-[#DCE0D5] px-2.5 py-1 text-[11px] font-semibold text-[#2C3325]">
+                            className="absolute inset-0 bg-linear-to-t from-[#11190B]/85 via-[#11190B]/25 to-[#11190B]/35 transition-opacity duration-300 group-hover:opacity-80"
+                          />
+
+                          {/* Badge Status (Kiri Atas) */}
+                          <span className="absolute top-3.5 left-3.5 inline-flex items-center gap-1.5 rounded-full bg-white/95 backdrop-blur-xs border border-[#DCE0D5] px-3 py-1 text-[11px] font-semibold text-[#2C3325] shadow-xs">
+                            <span
+                              className={`h-2 w-2 rounded-full ${statusInfo.dotColor}`}
+                            />
                             {statusInfo.label}
                           </span>
+
+                          {/* Koordinat (Kanan Atas) */}
+                          <span className="absolute top-3.5 right-3.5 rounded-full bg-black/45 backdrop-blur-xs border border-white/15 px-2.5 py-1 font-mono text-[10px] font-medium text-white/95">
+                            {formatCoordinates(item.latitude, item.longitude, 3)}
+                          </span>
+
+                          {/* Info Lokasi & Aksi Fokus di Bagian Bawah Visual */}
+                          <div className="absolute inset-x-3.5 bottom-3 flex items-center justify-between gap-2 text-white">
+                            <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-white/90 truncate">
+                              <svg
+                                className="h-3.5 w-3.5 shrink-0 text-[#C5DF8F]"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                aria-hidden="true"
+                              >
+                                <path d="M12 21s-6-5.2-6-10a6 6 0 1 1 12 0c0 4.8-6 10-6 10z" />
+                                <circle cx="12" cy="11" r="2.2" />
+                              </svg>
+                              <span className="truncate">{item.wilayah}</span>
+                            </span>
+
+                            <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-white/15 backdrop-blur-xs border border-white/25 px-2.5 py-0.5 text-[10px] font-semibold text-white transition-all duration-300 group-hover:bg-white group-hover:text-[#243314]">
+                              <span>Lihat di Peta</span>
+                              <span className="transition-transform duration-200 group-hover:translate-x-0.5">
+                                &rarr;
+                              </span>
+                            </span>
+                          </div>
                         </div>
 
                         {/* Bilah Caption Solid Menempel Langsung di Sisi Bawah */}
-                        <div className="w-full bg-[#557029] group-hover:bg-[#465D21] px-4 py-3.5 text-white transition-colors duration-200">
+                        <div className="w-full flex-1 bg-[#465D21] group-hover:bg-[#384B1A] px-4 py-3.5 text-white transition-colors duration-200">
                           <p className="font-serif text-[16px] font-semibold leading-snug line-clamp-1 text-white">
                             {item.judul}
                           </p>
-                          <p className="mt-0.5 text-[12px] text-white/85 truncate">
-                            {item.wilayah} &bull; {item.estimasiLuas}
-                          </p>
+                          <div className="mt-1.5 flex items-center justify-between gap-2 text-[12px] text-white/85">
+                            <span className="truncate">
+                              Luas: {item.estimasiLuas}
+                            </span>
+                            <span className="shrink-0 text-[11px] text-white/75">
+                              {formatDate(item.tanggal, "short")}
+                            </span>
+                          </div>
                         </div>
                       </button>
                     </RevealOnScroll>
@@ -890,7 +1082,7 @@ export default function LandingExplorer({
         </section>
       </main>
 
-      <div data-snap-section className="lg:snap-end">
+      <div data-snap-section>
         <PublicFooter />
       </div>
     </div>
