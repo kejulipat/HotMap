@@ -15,9 +15,9 @@ function DataTable({ title, result }) {
   const columns = rows.length > 0 ? Object.keys(rows[0]) : [];
 
   return (
-    <section className="mb-10 rounded-xl border border-[#E3E8E1] bg-white p-5">
+    <section className="mb-10 rounded-xl border border-[#DCE0D5] bg-white p-5">
       <div className="mb-3 flex items-center gap-3">
-        <h2 className="text-lg font-semibold text-[#14231B]">{title}</h2>
+        <h2 className="text-lg font-semibold text-[#2C3325]">{title}</h2>
         {error ? (
           <span className="rounded bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700">
             Gagal
@@ -36,15 +36,15 @@ function DataTable({ title, result }) {
       )}
 
       {!error && rows.length === 0 && (
-        <p className="text-sm text-[#606F67]">
+        <p className="text-sm text-[#6B7263]">
           Tabel kosong, atau data tidak terlihat karena kebijakan RLS.
         </p>
       )}
 
       {rows.length > 0 && (
-        <div className="overflow-x-auto rounded border border-[#E3E8E1]">
+        <div className="overflow-x-auto rounded border border-[#DCE0D5]">
           <table className="min-w-full text-left text-xs sm:text-sm">
-            <thead className="bg-[#EEF2EC] text-[#4E5E55]">
+            <thead className="bg-[#EEF2E4] text-[#4A5243]">
               <tr>
                 {columns.map((col) => (
                   <th key={col} className="px-3 py-2 font-semibold">
@@ -55,9 +55,9 @@ function DataTable({ title, result }) {
             </thead>
             <tbody>
               {rows.map((row, i) => (
-                <tr key={row.id ?? i} className="border-t border-[#ECEFE9]">
+                <tr key={row.id ?? i} className="border-t border-[#DCE0D5]">
                   {columns.map((col) => (
-                    <td key={col} className="px-3 py-2 align-top text-[#14231B]">
+                    <td key={col} className="px-3 py-2 align-top text-[#2C3325]">
                       {formatCell(row[col])}
                     </td>
                   ))}
@@ -127,17 +127,17 @@ export default async function TestDbPage() {
   ]);
 
   return (
-    <main className="min-h-screen bg-[#F6F7F3] text-[#14231B] px-4 sm:px-6 py-8">
+    <main className="min-h-screen bg-[#F7F8F2] text-[#2C3325] px-4 sm:px-6 py-8">
       <div className="mx-auto max-w-6xl space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
             <span className="inline-block rounded bg-[#FDF2EA] px-2.5 py-0.5 text-[11px] font-bold text-[#9B4017]">
               Khusus Admin
             </span>
-            <h1 className="mt-1 text-2xl font-bold text-[#12241B]">
+            <h1 className="mt-1 text-2xl font-bold text-[#2C3325]">
               Diagnostik Koneksi Database
             </h1>
-            <p className="text-xs text-[#606F67]">
+            <p className="text-xs text-[#6B7263]">
               Supabase URL:{" "}
               {process.env.NEXT_PUBLIC_SUPABASE_URL ?? "(belum diset)"}
             </p>
@@ -146,13 +146,13 @@ export default async function TestDbPage() {
           <div className="flex gap-2">
             <Link
               href="/admin/pengaturan"
-              className="rounded-lg border border-[#DCE2DA] bg-white px-4 py-2 text-xs font-semibold text-[#155E42] hover:bg-[#EAF1EC]"
+              className="rounded-lg border border-[#8A947D] bg-white px-4 py-2 text-xs font-semibold text-[#557029] hover:bg-[#EEF2E4]"
             >
               &larr; Pengaturan Admin
             </Link>
             <Link
               href="/admin"
-              className="rounded-lg bg-[#155E42] px-4 py-2 text-xs font-semibold text-white hover:bg-[#114B35]"
+              className="rounded-lg bg-[#557029] px-4 py-2 text-xs font-semibold text-white hover:bg-[#465D21]"
             >
               Dashboard Admin
             </Link>

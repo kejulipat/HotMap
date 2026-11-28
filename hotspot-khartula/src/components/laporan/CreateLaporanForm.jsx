@@ -138,12 +138,12 @@ export default function CreateLaporanForm({ wilayahList = [] }) {
       )}
 
       {/* Bagian 1: Informasi Kejadian */}
-      <section className="rounded-2xl border border-[#E3E8E1] bg-white p-5 sm:p-6 shadow-2xs space-y-4">
+      <section className="rounded-2xl border border-[#DCE0D5] bg-white p-5 sm:p-6 shadow-2xs space-y-4">
         <div>
-          <h2 className="text-base font-bold text-[#12241B]">
+          <h2 className="text-base font-bold text-[#2C3325]">
             1. Informasi Kejadian
           </h2>
-          <p className="text-xs text-[#6B7A71]">
+          <p className="text-xs text-[#6B7263]">
             Isi keterangan kejadian karhutla selengkap mungkin untuk mempercepat
             verifikasi tim operasional.
           </p>
@@ -153,7 +153,7 @@ export default function CreateLaporanForm({ wilayahList = [] }) {
           <div className="sm:col-span-2">
             <label
               htmlFor="judul"
-              className="block text-xs font-semibold text-[#4E5E55] mb-1.5"
+              className="block text-xs font-semibold text-[#4A5243] mb-1.5"
             >
               Judul Kejadian <span className="text-[#C85A28]">*</span>
             </label>
@@ -166,14 +166,14 @@ export default function CreateLaporanForm({ wilayahList = [] }) {
               maxLength={160}
               disabled={isPending || noWilayah}
               placeholder="Contoh: Kebakaran lahan gambut dekat akses Desa Pelalawan"
-              className="w-full rounded-lg border border-[#DCE2DA] bg-[#FBFBFA] px-3.5 py-2.5 text-sm text-[#14231B] focus:border-[#155E42] focus:outline-none disabled:opacity-60"
+              className="w-full rounded-lg border border-[#8A947D] bg-[#F7F8F2] px-3.5 py-2.5 text-sm text-[#2C3325] focus:border-[#557029] focus:outline-none disabled:opacity-60"
             />
           </div>
 
           <div>
             <label
               htmlFor="wilayah_id"
-              className="block text-xs font-semibold text-[#4E5E55] mb-1.5"
+              className="block text-xs font-semibold text-[#4A5243] mb-1.5"
             >
               Wilayah Pemantauan <span className="text-[#C85A28]">*</span>
             </label>
@@ -184,7 +184,7 @@ export default function CreateLaporanForm({ wilayahList = [] }) {
               disabled={isPending || noWilayah}
               value={selectedWilayahId}
               onChange={(e) => handleWilayahChange(e.target.value)}
-              className="w-full rounded-lg border border-[#DCE2DA] bg-[#FBFBFA] px-3.5 py-2.5 text-sm text-[#14231B] focus:border-[#155E42] focus:outline-none disabled:opacity-60"
+              className="w-full rounded-lg border border-[#8A947D] bg-[#F7F8F2] px-3.5 py-2.5 text-sm text-[#2C3325] focus:border-[#557029] focus:outline-none disabled:opacity-60"
             >
               {noWilayah ? (
                 <option value="">Belum ada wilayah tersedia</option>
@@ -202,7 +202,7 @@ export default function CreateLaporanForm({ wilayahList = [] }) {
           <div>
             <label
               htmlFor="jenis_kejadian"
-              className="block text-xs font-semibold text-[#4E5E55] mb-1.5"
+              className="block text-xs font-semibold text-[#4A5243] mb-1.5"
             >
               Jenis Kejadian <span className="text-[#C85A28]">*</span>
             </label>
@@ -211,7 +211,7 @@ export default function CreateLaporanForm({ wilayahList = [] }) {
               name="jenis_kejadian"
               defaultValue="kebakaran_lahan"
               disabled={isPending || noWilayah}
-              className="w-full rounded-lg border border-[#DCE2DA] bg-[#FBFBFA] px-3.5 py-2.5 text-sm text-[#14231B] focus:border-[#155E42] focus:outline-none disabled:opacity-60"
+              className="w-full rounded-lg border border-[#8A947D] bg-[#F7F8F2] px-3.5 py-2.5 text-sm text-[#2C3325] focus:border-[#557029] focus:outline-none disabled:opacity-60"
             >
               {JENIS_KEJADIAN_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -224,7 +224,7 @@ export default function CreateLaporanForm({ wilayahList = [] }) {
           <div>
             <label
               htmlFor="tingkat_keparahan"
-              className="block text-xs font-semibold text-[#4E5E55] mb-1.5"
+              className="block text-xs font-semibold text-[#4A5243] mb-1.5"
             >
               Perkiraan Keparahan
             </label>
@@ -233,7 +233,7 @@ export default function CreateLaporanForm({ wilayahList = [] }) {
               name="tingkat_keparahan"
               defaultValue="sedang"
               disabled={isPending || noWilayah}
-              className="w-full rounded-lg border border-[#DCE2DA] bg-[#FBFBFA] px-3.5 py-2.5 text-sm text-[#14231B] focus:border-[#155E42] focus:outline-none disabled:opacity-60"
+              className="w-full rounded-lg border border-[#8A947D] bg-[#F7F8F2] px-3.5 py-2.5 text-sm text-[#2C3325] focus:border-[#557029] focus:outline-none disabled:opacity-60"
             >
               {TINGKAT_KEPARAHAN_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -246,7 +246,7 @@ export default function CreateLaporanForm({ wilayahList = [] }) {
           <div>
             <label
               htmlFor="estimasi_luas"
-              className="block text-xs font-semibold text-[#4E5E55] mb-1.5"
+              className="block text-xs font-semibold text-[#4A5243] mb-1.5"
             >
               Estimasi Luas Terdampak (hektar)
             </label>
@@ -258,14 +258,14 @@ export default function CreateLaporanForm({ wilayahList = [] }) {
               min="0"
               disabled={isPending || noWilayah}
               placeholder="Contoh: 2.5"
-              className="w-full rounded-lg border border-[#DCE2DA] bg-[#FBFBFA] px-3.5 py-2.5 text-sm text-[#14231B] focus:border-[#155E42] focus:outline-none disabled:opacity-60"
+              className="w-full rounded-lg border border-[#8A947D] bg-[#F7F8F2] px-3.5 py-2.5 text-sm text-[#2C3325] focus:border-[#557029] focus:outline-none disabled:opacity-60"
             />
           </div>
 
           <div>
             <label
               htmlFor="waktu_kejadian"
-              className="block text-xs font-semibold text-[#4E5E55] mb-1.5"
+              className="block text-xs font-semibold text-[#4A5243] mb-1.5"
             >
               Waktu Kejadian
             </label>
@@ -274,14 +274,14 @@ export default function CreateLaporanForm({ wilayahList = [] }) {
               name="waktu_kejadian"
               type="datetime-local"
               disabled={isPending || noWilayah}
-              className="w-full rounded-lg border border-[#DCE2DA] bg-[#FBFBFA] px-3.5 py-2.5 text-sm text-[#14231B] focus:border-[#155E42] focus:outline-none disabled:opacity-60"
+              className="w-full rounded-lg border border-[#8A947D] bg-[#F7F8F2] px-3.5 py-2.5 text-sm text-[#2C3325] focus:border-[#557029] focus:outline-none disabled:opacity-60"
             />
           </div>
 
           <div>
             <label
               htmlFor="alamat_lokasi"
-              className="block text-xs font-semibold text-[#4E5E55] mb-1.5"
+              className="block text-xs font-semibold text-[#4A5243] mb-1.5"
             >
               Alamat / Patokan Lokasi
             </label>
@@ -292,14 +292,14 @@ export default function CreateLaporanForm({ wilayahList = [] }) {
               maxLength={300}
               disabled={isPending || noWilayah}
               placeholder="Nama desa, dusun, atau patokan akses jalan"
-              className="w-full rounded-lg border border-[#DCE2DA] bg-[#FBFBFA] px-3.5 py-2.5 text-sm text-[#14231B] focus:border-[#155E42] focus:outline-none disabled:opacity-60"
+              className="w-full rounded-lg border border-[#8A947D] bg-[#F7F8F2] px-3.5 py-2.5 text-sm text-[#2C3325] focus:border-[#557029] focus:outline-none disabled:opacity-60"
             />
           </div>
 
           <div className="sm:col-span-2">
             <label
               htmlFor="deskripsi"
-              className="block text-xs font-semibold text-[#4E5E55] mb-1.5"
+              className="block text-xs font-semibold text-[#4A5243] mb-1.5"
             >
               Deskripsi Kondisi Lapangan <span className="text-[#C85A28]">*</span>
             </label>
@@ -312,19 +312,19 @@ export default function CreateLaporanForm({ wilayahList = [] }) {
               maxLength={3000}
               disabled={isPending || noWilayah}
               placeholder="Jelaskan kondisi api/asap, arah angin, kedekatan dengan pemukiman, dan akses kendaraan pemadam..."
-              className="w-full rounded-lg border border-[#DCE2DA] bg-[#FBFBFA] px-3.5 py-2.5 text-sm text-[#14231B] focus:border-[#155E42] focus:outline-none disabled:opacity-60"
+              className="w-full rounded-lg border border-[#8A947D] bg-[#F7F8F2] px-3.5 py-2.5 text-sm text-[#2C3325] focus:border-[#557029] focus:outline-none disabled:opacity-60"
             />
           </div>
         </div>
       </section>
 
       {/* Bagian 2: Lokasi & Peta Interaktif */}
-      <section className="rounded-2xl border border-[#E3E8E1] bg-white p-5 sm:p-6 shadow-2xs space-y-4">
+      <section className="rounded-2xl border border-[#DCE0D5] bg-white p-5 sm:p-6 shadow-2xs space-y-4">
         <div>
-          <h2 className="text-base font-bold text-[#12241B]">
+          <h2 className="text-base font-bold text-[#2C3325]">
             2. Titik Koordinat Lokasi Kejadian
           </h2>
-          <p className="text-xs text-[#6B7A71]">
+          <p className="text-xs text-[#6B7263]">
             Pilih titik langsung pada peta, gunakan GPS perangkat, atau masukkan
             koordinat latitude/longitude yang akurat.
           </p>
@@ -341,7 +341,7 @@ export default function CreateLaporanForm({ wilayahList = [] }) {
           <div>
             <label
               htmlFor="latitude"
-              className="block text-xs font-semibold text-[#4E5E55] mb-1.5"
+              className="block text-xs font-semibold text-[#4A5243] mb-1.5"
             >
               Latitude <span className="text-[#C85A28]">*</span>
             </label>
@@ -355,13 +355,13 @@ export default function CreateLaporanForm({ wilayahList = [] }) {
               onChange={(e) => setLatInput(e.target.value)}
               disabled={isPending || noWilayah}
               placeholder="-2.213600"
-              className="w-full rounded-lg border border-[#DCE2DA] bg-[#FBFBFA] px-3.5 py-2.5 font-mono text-sm text-[#14231B] focus:border-[#155E42] focus:outline-none disabled:opacity-60"
+              className="w-full rounded-lg border border-[#8A947D] bg-[#F7F8F2] px-3.5 py-2.5 font-mono text-sm text-[#2C3325] focus:border-[#557029] focus:outline-none disabled:opacity-60"
             />
           </div>
           <div>
             <label
               htmlFor="longitude"
-              className="block text-xs font-semibold text-[#4E5E55] mb-1.5"
+              className="block text-xs font-semibold text-[#4A5243] mb-1.5"
             >
               Longitude <span className="text-[#C85A28]">*</span>
             </label>
@@ -375,7 +375,7 @@ export default function CreateLaporanForm({ wilayahList = [] }) {
               onChange={(e) => setLngInput(e.target.value)}
               disabled={isPending || noWilayah}
               placeholder="113.910800"
-              className="w-full rounded-lg border border-[#DCE2DA] bg-[#FBFBFA] px-3.5 py-2.5 font-mono text-sm text-[#14231B] focus:border-[#155E42] focus:outline-none disabled:opacity-60"
+              className="w-full rounded-lg border border-[#8A947D] bg-[#F7F8F2] px-3.5 py-2.5 font-mono text-sm text-[#2C3325] focus:border-[#557029] focus:outline-none disabled:opacity-60"
             />
           </div>
         </div>
@@ -389,13 +389,13 @@ export default function CreateLaporanForm({ wilayahList = [] }) {
       </section>
 
       {/* Bagian 3: Foto Bukti Lapangan */}
-      <section className="rounded-2xl border border-[#E3E8E1] bg-white p-5 sm:p-6 shadow-2xs space-y-4">
+      <section className="rounded-2xl border border-[#DCE0D5] bg-white p-5 sm:p-6 shadow-2xs space-y-4">
         <div className="flex items-center justify-between gap-2">
           <div>
-            <h2 className="text-base font-bold text-[#12241B]">
+            <h2 className="text-base font-bold text-[#2C3325]">
               3. Foto Bukti Kejadian (Opsional, maks. {MAX_FILES} foto)
             </h2>
-            <p className="text-xs text-[#6B7A71]">
+            <p className="text-xs text-[#6B7263]">
               Format JPEG, PNG, atau WebP, maksimal 5 MB per foto. Disimpan aman
               pada bucket privat{" "}
               <code className="font-mono">laporan-bukti</code>.
@@ -421,7 +421,7 @@ export default function CreateLaporanForm({ wilayahList = [] }) {
           accept="image/jpeg,image/png,image/webp"
           disabled={isPending || noWilayah}
           onChange={handleFileChange}
-          className="block w-full text-xs text-[#5F6F66] file:mr-3 file:rounded-lg file:border file:border-[#DCE2DA] file:bg-[#F6F7F3] file:px-3.5 py-2 file:py-2 file:text-xs file:font-semibold file:text-[#14231B] hover:file:bg-[#EAF1EC] disabled:opacity-60"
+          className="block w-full text-xs text-[#6B7263] file:mr-3 file:rounded-lg file:border file:border-[#8A947D] file:bg-[#F7F8F2] file:px-3.5 py-2 file:py-2 file:text-xs file:font-semibold file:text-[#2C3325] hover:file:bg-[#EEF2E4] disabled:opacity-60"
         />
 
         {selectedFiles.length > 0 && (
@@ -429,7 +429,7 @@ export default function CreateLaporanForm({ wilayahList = [] }) {
             {selectedFiles.map((file, idx) => (
               <div
                 key={`${file.name}-${idx}`}
-                className="rounded-xl border border-[#E3E8E1] bg-[#FBFBFA] p-2 space-y-1.5"
+                className="rounded-xl border border-[#DCE0D5] bg-[#F7F8F2] p-2 space-y-1.5"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
@@ -437,7 +437,7 @@ export default function CreateLaporanForm({ wilayahList = [] }) {
                   alt={file.name}
                   className="h-28 w-full rounded-lg object-cover"
                 />
-                <p className="truncate text-[11px] font-medium text-[#14231B]">
+                <p className="truncate text-[11px] font-medium text-[#2C3325]">
                   {file.name}
                 </p>
               </div>
@@ -450,7 +450,7 @@ export default function CreateLaporanForm({ wilayahList = [] }) {
       <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
         <Link
           href="/pelapor/laporan"
-          className="rounded-lg border border-[#DCE2DA] bg-white px-4 py-2.5 text-xs font-semibold text-[#4E5E55] hover:bg-[#F6F7F3]"
+          className="rounded-lg border border-[#8A947D] bg-white px-4 py-2.5 text-xs font-semibold text-[#4A5243] hover:bg-[#F7F8F2]"
         >
           Batal
         </Link>

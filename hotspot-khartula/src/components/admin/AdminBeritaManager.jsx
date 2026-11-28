@@ -115,13 +115,13 @@ export default function AdminBeritaManager({
       )}
 
       {/* Form Tambah / Edit Berita */}
-      <section className="rounded-2xl border border-[#E3E8E1] bg-white p-6 shadow-2xs space-y-4">
+      <section className="rounded-2xl border border-[#DCE0D5] bg-white p-6 shadow-2xs space-y-4">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <h2 className="text-lg font-bold text-[#12241B]">
+            <h2 className="text-lg font-bold text-[#2C3325]">
               {editingItem ? `Edit Berita: ${editingItem.judul}` : "Tulis Berita Baru"}
             </h2>
-            <p className="text-xs text-[#6B7A71]">
+            <p className="text-xs text-[#6B7263]">
               Berita berstatus <em>Published</em> akan langsung tampil di halaman publik{" "}
               <code className="font-mono">/berita</code> dan beranda.
             </p>
@@ -133,7 +133,7 @@ export default function AdminBeritaManager({
                 setEditingItem(null);
                 setFileError("");
               }}
-              className="rounded-lg border border-[#DCE2DA] px-3 py-1.5 text-xs font-semibold text-[#4E5E55] hover:bg-[#F6F7F3] cursor-pointer"
+              className="rounded-lg border border-[#8A947D] px-3 py-1.5 text-xs font-semibold text-[#4A5243] hover:bg-[#F7F8F2] cursor-pointer"
             >
               Batal Edit
             </button>
@@ -152,7 +152,7 @@ export default function AdminBeritaManager({
           <div>
             <label
               htmlFor="berita-judul"
-              className="block text-xs font-semibold text-[#4E5E55] mb-1.5"
+              className="block text-xs font-semibold text-[#4A5243] mb-1.5"
             >
               Judul Berita
             </label>
@@ -164,14 +164,14 @@ export default function AdminBeritaManager({
               disabled={!tableReady || isBusy}
               defaultValue={editingItem?.judul ?? ""}
               placeholder="Contoh: Peringatan Dini Kekeringan Lahan Gambut"
-              className="w-full rounded-lg border border-[#DCE2DA] bg-[#FBFBFA] px-3.5 py-2 text-sm text-[#14231B] focus:border-[#155E42] focus:outline-none disabled:opacity-60"
+              className="w-full rounded-lg border border-[#8A947D] bg-[#F7F8F2] px-3.5 py-2 text-sm text-[#2C3325] focus:border-[#557029] focus:outline-none disabled:opacity-60"
             />
           </div>
 
           <div>
             <label
               htmlFor="berita-slug"
-              className="block text-xs font-semibold text-[#4E5E55] mb-1.5"
+              className="block text-xs font-semibold text-[#4A5243] mb-1.5"
             >
               Slug URL (opsional)
             </label>
@@ -182,14 +182,14 @@ export default function AdminBeritaManager({
               disabled={!tableReady || isBusy}
               defaultValue={editingItem?.slug ?? ""}
               placeholder="otomatis-dari-judul-jika-kosong"
-              className="w-full rounded-lg border border-[#DCE2DA] bg-[#FBFBFA] px-3.5 py-2 text-sm text-[#14231B] focus:border-[#155E42] focus:outline-none disabled:opacity-60"
+              className="w-full rounded-lg border border-[#8A947D] bg-[#F7F8F2] px-3.5 py-2 text-sm text-[#2C3325] focus:border-[#557029] focus:outline-none disabled:opacity-60"
             />
           </div>
 
           <div>
             <label
               htmlFor="berita-kategori"
-              className="block text-xs font-semibold text-[#4E5E55] mb-1.5"
+              className="block text-xs font-semibold text-[#4A5243] mb-1.5"
             >
               Kategori
             </label>
@@ -198,7 +198,7 @@ export default function AdminBeritaManager({
               name="kategori"
               disabled={!tableReady || isBusy}
               defaultValue={editingItem?.kategori ?? "informasi"}
-              className="w-full rounded-lg border border-[#DCE2DA] bg-[#FBFBFA] px-3.5 py-2 text-sm text-[#14231B] focus:border-[#155E42] focus:outline-none disabled:opacity-60"
+              className="w-full rounded-lg border border-[#8A947D] bg-[#F7F8F2] px-3.5 py-2 text-sm text-[#2C3325] focus:border-[#557029] focus:outline-none disabled:opacity-60"
             >
               <option value="informasi">Informasi</option>
               <option value="peringatan">Peringatan Dini</option>
@@ -210,7 +210,7 @@ export default function AdminBeritaManager({
           <div>
             <label
               htmlFor="berita-status"
-              className="block text-xs font-semibold text-[#4E5E55] mb-1.5"
+              className="block text-xs font-semibold text-[#4A5243] mb-1.5"
             >
               Status Publikasi
             </label>
@@ -219,7 +219,7 @@ export default function AdminBeritaManager({
               name="status"
               disabled={!tableReady || isBusy}
               defaultValue={editingItem?.status ?? "draft"}
-              className="w-full rounded-lg border border-[#DCE2DA] bg-[#FBFBFA] px-3.5 py-2 text-sm text-[#14231B] focus:border-[#155E42] focus:outline-none disabled:opacity-60"
+              className="w-full rounded-lg border border-[#8A947D] bg-[#F7F8F2] px-3.5 py-2 text-sm text-[#2C3325] focus:border-[#557029] focus:outline-none disabled:opacity-60"
             >
               <option value="draft">Draft (Internal)</option>
               <option value="published">Published (Publik)</option>
@@ -230,7 +230,7 @@ export default function AdminBeritaManager({
           <div className="md:col-span-2">
             <label
               htmlFor="berita-ringkasan"
-              className="block text-xs font-semibold text-[#4E5E55] mb-1.5"
+              className="block text-xs font-semibold text-[#4A5243] mb-1.5"
             >
               Ringkasan Singkat
             </label>
@@ -241,14 +241,14 @@ export default function AdminBeritaManager({
               disabled={!tableReady || isBusy}
               defaultValue={editingItem?.ringkasan ?? ""}
               placeholder="Ringkasan 1-2 kalimat untuk pratinjau kartu berita"
-              className="w-full rounded-lg border border-[#DCE2DA] bg-[#FBFBFA] px-3.5 py-2 text-sm text-[#14231B] focus:border-[#155E42] focus:outline-none disabled:opacity-60"
+              className="w-full rounded-lg border border-[#8A947D] bg-[#F7F8F2] px-3.5 py-2 text-sm text-[#2C3325] focus:border-[#557029] focus:outline-none disabled:opacity-60"
             />
           </div>
 
           <div className="md:col-span-2">
             <label
               htmlFor="berita-isi"
-              className="block text-xs font-semibold text-[#4E5E55] mb-1.5"
+              className="block text-xs font-semibold text-[#4A5243] mb-1.5"
             >
               Isi Berita Lengkap
             </label>
@@ -260,14 +260,14 @@ export default function AdminBeritaManager({
               disabled={!tableReady || isBusy}
               defaultValue={editingItem?.isi ?? ""}
               placeholder="Tulis isi informasi atau imbauan lengkap di sini..."
-              className="w-full rounded-lg border border-[#DCE2DA] bg-[#FBFBFA] px-3.5 py-2 text-sm text-[#14231B] focus:border-[#155E42] focus:outline-none disabled:opacity-60"
+              className="w-full rounded-lg border border-[#8A947D] bg-[#F7F8F2] px-3.5 py-2 text-sm text-[#2C3325] focus:border-[#557029] focus:outline-none disabled:opacity-60"
             />
           </div>
 
           <div className="md:col-span-2">
             <label
               htmlFor="berita-gambar"
-              className="block text-xs font-semibold text-[#4E5E55] mb-1.5"
+              className="block text-xs font-semibold text-[#4A5243] mb-1.5"
             >
               Gambar Sampul (JPEG/PNG/WebP, maks. 5 MB — bucket{" "}
               <code className="font-mono">berita-images</code>)
@@ -279,7 +279,7 @@ export default function AdminBeritaManager({
               accept="image/jpeg,image/png,image/webp"
               disabled={!tableReady || isBusy}
               onChange={handleFileChange}
-              className="block w-full text-xs text-[#5F6F66] file:mr-3 file:rounded-lg file:border file:border-[#DCE2DA] file:bg-[#F6F7F3] file:px-3 file:py-2 file:text-xs file:font-semibold file:text-[#14231B] hover:file:bg-[#EAF1EC] disabled:opacity-60"
+              className="block w-full text-xs text-[#6B7263] file:mr-3 file:rounded-lg file:border file:border-[#8A947D] file:bg-[#F7F8F2] file:px-3 file:py-2 file:text-xs file:font-semibold file:text-[#2C3325] hover:file:bg-[#EEF2E4] disabled:opacity-60"
             />
           </div>
 
@@ -287,7 +287,7 @@ export default function AdminBeritaManager({
             <button
               type="submit"
               disabled={!tableReady || isBusy || Boolean(fileError)}
-              className="rounded-lg bg-[#155E42] hover:bg-[#114B35] px-5 py-2.5 text-sm font-semibold text-white transition-colors disabled:opacity-50 cursor-pointer"
+              className="rounded-lg bg-[#557029] hover:bg-[#465D21] px-5 py-2.5 text-sm font-semibold text-white transition-colors disabled:opacity-50 cursor-pointer"
             >
               {isBusy
                 ? "Menyimpan..."
@@ -302,7 +302,7 @@ export default function AdminBeritaManager({
       {/* Daftar Berita Admin */}
       <section className="space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <h2 className="text-lg font-bold text-[#12241B]">
+          <h2 className="text-lg font-bold text-[#2C3325]">
             Daftar Artikel ({visibleBerita.length})
           </h2>
 
@@ -314,8 +314,8 @@ export default function AdminBeritaManager({
                 onClick={() => setStatusFilter(st)}
                 className={`rounded-lg px-3 py-1.5 text-xs font-semibold border transition-colors cursor-pointer ${
                   statusFilter === st
-                    ? "bg-[#155E42] text-white border-[#155E42]"
-                    : "bg-white text-[#4E5E55] border-[#DCE2DA] hover:bg-[#EAF1EC]"
+                    ? "bg-[#557029] text-white border-[#557029]"
+                    : "bg-white text-[#4A5243] border-[#8A947D] hover:bg-[#EEF2E4]"
                 }`}
               >
                 {st === "semua" ? "Semua" : st}
@@ -325,17 +325,17 @@ export default function AdminBeritaManager({
         </div>
 
         {visibleBerita.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-[#CBD6CE] bg-white p-8 text-center text-sm text-[#606F67]">
+          <div className="rounded-2xl border border-dashed border-[#8A947D] bg-white p-8 text-center text-sm text-[#6B7263]">
             {tableReady
               ? "Belum ada artikel berita pada filter status ini."
               : "Daftar artikel akan tampil setelah tabel public.berita diaktifkan."}
           </div>
         ) : (
-          <div className="rounded-xl bg-white border border-[#E3E8E1] overflow-hidden shadow-2xs">
+          <div className="rounded-xl bg-white border border-[#DCE0D5] overflow-hidden shadow-2xs">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="bg-[#EEF2EC] border-b border-[#E1E7DF] text-[11px] font-bold uppercase tracking-wider text-[#5B6B61]">
+                  <tr className="bg-[#EEF2E4] border-b border-[#DCE0D5] text-[11px] font-bold uppercase tracking-wider text-[#6B7263]">
                     <th className="py-3.5 px-4 sm:px-6">Judul</th>
                     <th className="py-3.5 px-4">Kategori</th>
                     <th className="py-3.5 px-4">Status</th>
@@ -343,13 +343,13 @@ export default function AdminBeritaManager({
                     <th className="py-3.5 px-4 sm:px-6 text-right">Aksi</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#ECEFE9] text-sm">
+                <tbody className="divide-y divide-[#DCE0D5] text-sm">
                   {visibleBerita.map((b) => (
-                    <tr key={b.id} className="hover:bg-[#F9FAF8]">
-                      <td className="py-3.5 px-4 sm:px-6 font-semibold text-[#14231B]">
+                    <tr key={b.id} className="hover:bg-[#F7F8F2]">
+                      <td className="py-3.5 px-4 sm:px-6 font-semibold text-[#2C3325]">
                         {b.judul}
                       </td>
-                      <td className="py-3.5 px-4 text-xs capitalize text-[#5F6F66]">
+                      <td className="py-3.5 px-4 text-xs capitalize text-[#6B7263]">
                         {b.kategori}
                       </td>
                       <td className="py-3.5 px-4">
@@ -361,13 +361,13 @@ export default function AdminBeritaManager({
                           {b.status}
                         </span>
                       </td>
-                      <td className="py-3.5 px-4 text-xs text-[#5F6F66]">
+                      <td className="py-3.5 px-4 text-xs text-[#6B7263]">
                         {formatDate(b.tanggal, "short")}
                       </td>
                       <td className="py-3.5 px-4 sm:px-6 text-right space-x-2 whitespace-nowrap">
                         <Link
                           href={`/berita/${b.id}`}
-                          className="inline-block rounded-md border border-[#DCE2DA] px-2.5 py-1 text-xs font-semibold text-[#4E5E55] hover:bg-[#F6F7F3]"
+                          className="inline-block rounded-md border border-[#8A947D] px-2.5 py-1 text-xs font-semibold text-[#4A5243] hover:bg-[#F7F8F2]"
                         >
                           Lihat
                         </Link>

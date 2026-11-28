@@ -18,10 +18,10 @@ export default async function PetugasPetaPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-[#12241B]">
+        <h1 className="text-2xl font-bold text-[#2C3325]">
           Peta Operasional Petugas
         </h1>
-        <p className="mt-1 text-sm text-[#606F67]">
+        <p className="mt-1 text-sm text-[#6B7263]">
           Pantau titik kejadian di seluruh wilayah atau saring khusus laporan
           yang ditugaskan kepada Anda beserta tautan arah navigasi.
         </p>

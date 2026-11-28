@@ -32,9 +32,9 @@ const ROLE_MENUS = {
 };
 
 const ROLE_BADGE = {
-  admin: { label: "Admin", cls: "bg-[#FDEEE9] text-[#B83E1B] border-[#F3C8B8]" },
-  petugas: { label: "Petugas", cls: "bg-[#EBF4FF] text-[#1E62B5] border-[#C5DCF8]" },
-  pelapor: { label: "Pelapor", cls: "bg-[#EAF5EE] text-[#1F6B41] border-[#C4E2CE]" },
+  admin: { label: "Admin", cls: "bg-[#FDEEE9] text-[#9B3417] border-[#F0C1B0]" },
+  petugas: { label: "Petugas", cls: "bg-[#EBF4FF] text-[#1A559E] border-[#BFD8F5]" },
+  pelapor: { label: "Pelapor", cls: "bg-[#EEF2E4] text-[#3F561E] border-[#C9D6B5]" },
 };
 
 const SEGMENT_LABELS = {
@@ -86,7 +86,6 @@ export default function DashboardShell({
   const badge = ROLE_BADGE[role] ?? ROLE_BADGE.pelapor;
   const breadcrumbs = buildBreadcrumbs(pathname);
 
-  // Pilih item menu dengan prefix terpanjang yang cocok dengan pathname aktif
   const activeHref = menuItems.reduce((best, item) => {
     const matched =
       pathname === item.href || pathname.startsWith(`${item.href}/`);
@@ -104,8 +103,7 @@ export default function DashboardShell({
   }
 
   return (
-    <div className="min-h-screen bg-[#F6F7F3] text-[#14231B] flex font-sans">
-      {/* Backdrop mobile */}
+    <div className="min-h-screen bg-[#F7F8F2] text-[#2C3325] flex font-sans">
       {sidebarOpen && (
         <div
           onClick={() => setSidebarOpen(false)}
@@ -115,13 +113,13 @@ export default function DashboardShell({
 
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 shrink-0 bg-white border-r border-[#E3E8E1] flex flex-col transition-transform duration-200 lg:static lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 w-64 shrink-0 bg-white border-r border-[#DCE0D5] flex flex-col transition-transform duration-200 lg:static lg:translate-x-0 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <div className="h-16 px-5 border-b border-[#E3E8E1] flex items-center justify-between">
+        <div className="h-[72px] px-5 border-b border-[#DCE0D5] flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-[#155E42] flex items-center justify-center text-white">
+            <div className="w-9 h-9 rounded-[8px] border border-[#DCE0D5] bg-[#F7F8F2] flex items-center justify-center text-[#6F8E3D]">
               <svg
                 className="w-4 h-4"
                 viewBox="0 0 24 24"
@@ -130,15 +128,16 @@ export default function DashboardShell({
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
+                aria-hidden="true"
               >
-                <path d="M12 3L5 12h4l-3 7h12l-3-7h4L12 3z" />
+                <path d="M12 3L6 12h4l-3 7h10l-3-7h4L12 3z" />
               </svg>
             </div>
             <div>
-              <span className="block text-sm font-bold text-[#12241B] leading-tight">
+              <span className="block font-serif text-[17px] font-bold text-[#2C3325] leading-tight">
                 HotMap
               </span>
-              <span className="block text-[10px] text-[#6B7A71]">
+              <span className="block text-[11px] font-medium text-[#6B7263]">
                 Portal {badge.label}
               </span>
             </div>
@@ -148,7 +147,7 @@ export default function DashboardShell({
             type="button"
             onClick={() => setSidebarOpen(false)}
             aria-label="Tutup sidebar"
-            className="lg:hidden rounded-md p-1.5 text-[#5F6F66] hover:bg-[#F6F7F3] cursor-pointer"
+            className="lg:hidden rounded-[4px] p-1.5 text-[#6B7263] hover:bg-[#F7F8F2] cursor-pointer"
           >
             &#10005;
           </button>
@@ -163,10 +162,10 @@ export default function DashboardShell({
                 href={item.href}
                 prefetch={true}
                 onClick={() => setSidebarOpen(false)}
-                className={`flex items-center justify-between rounded-lg px-3.5 py-2.5 text-sm font-medium transition-colors ${
+                className={`flex items-center justify-between rounded-[6px] px-3.5 py-2.5 text-[14px] font-medium transition-colors ${
                   active
-                    ? "bg-[#155E42] text-white shadow-2xs"
-                    : "text-[#4E5E55] hover:bg-[#EAF1EC] hover:text-[#155E42]"
+                    ? "bg-[#557029] text-white"
+                    : "text-[#2C3325] hover:bg-[#EEF2E4] hover:text-[#465D21]"
                 }`}
               >
                 <span>{item.label}</span>
@@ -176,25 +175,25 @@ export default function DashboardShell({
           })}
         </nav>
 
-        <div className="border-t border-[#E3E8E1] p-3.5 space-y-2">
+        <div className="border-t border-[#DCE0D5] p-3.5 space-y-2">
           {actualRole === "admin" && role !== "admin" && (
             <Link
               href="/admin"
-              className="block rounded-lg border border-[#155E42] bg-[#EAF1EC] px-3.5 py-2 text-center text-xs font-semibold text-[#155E42] hover:bg-[#DCE8E0] transition-colors"
+              className="block rounded-full border border-[#557029] bg-[#EEF2E4] px-3.5 py-2 text-center text-xs font-semibold text-[#3F561E] hover:bg-[#E1E9D2] transition-colors"
             >
               Kembali ke Portal Admin
             </Link>
           )}
           <Link
             href="/"
-            className="block rounded-lg border border-[#DCE2DA] bg-[#FBFBFA] px-3.5 py-2 text-center text-xs font-semibold text-[#4E5E55] hover:bg-[#EAF1EC] hover:text-[#155E42] transition-colors"
+            className="block rounded-full border border-[#8A947D] bg-white px-3.5 py-2 text-center text-xs font-semibold text-[#2C3325] hover:bg-[#F7F8F2] transition-colors"
           >
             Lihat Beranda Publik
           </Link>
           <button
             type="button"
             onClick={() => setConfirmLogout(true)}
-            className="w-full rounded-lg border border-[#F3C8B8] bg-[#FDF2EA] px-3.5 py-2 text-xs font-semibold text-[#B83E1B] hover:bg-[#FDE3D5] transition-colors cursor-pointer"
+            className="w-full rounded-full border border-[#E5B8A7] bg-[#FDF2EA] px-3.5 py-2 text-xs font-semibold text-[#9B3417] hover:bg-[#FDE3D5] transition-colors cursor-pointer"
           >
             Keluar
           </button>
@@ -203,14 +202,13 @@ export default function DashboardShell({
 
       {/* Main Column */}
       <div className="flex-1 min-w-0 flex flex-col">
-        {/* Dashboard Header */}
-        <header className="sticky top-0 z-30 h-16 bg-white/95 backdrop-blur border-b border-[#E3E8E1] px-4 sm:px-6 flex items-center justify-between gap-4">
+        <header className="sticky top-0 z-30 h-[72px] bg-white/95 backdrop-blur border-b border-[#DCE0D5] px-4 sm:px-6 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
             <button
               type="button"
               onClick={() => setSidebarOpen(true)}
               aria-label="Buka menu sidebar"
-              className="lg:hidden rounded-lg border border-[#DCE2DA] p-2 text-[#14231B] hover:bg-[#F6F7F3] cursor-pointer"
+              className="lg:hidden rounded-[4px] border border-[#8A947D] p-2 text-[#2C3325] hover:bg-[#F7F8F2] cursor-pointer"
             >
               <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M4 6h16M4 12h16M4 18h16" />
@@ -227,25 +225,26 @@ export default function DashboardShell({
               type="button"
               onClick={() => setProfileMenuOpen((prev) => !prev)}
               aria-expanded={profileMenuOpen}
-              className="flex items-center gap-2.5 rounded-xl border border-[#E3E8E1] bg-[#FBFBFA] px-3 py-1.5 text-left hover:border-[#C5D1C8] transition-colors cursor-pointer"
+              className="flex items-center gap-2.5 rounded-[8px] border border-[#DCE0D5] bg-[#F7F8F2] px-3 py-1.5 text-left hover:border-[#8A947D] transition-colors cursor-pointer"
             >
               <div className="hidden sm:block text-right">
-                <p className="text-xs font-semibold text-[#14231B] leading-tight max-w-[160px] truncate">
+                <p className="text-xs font-semibold text-[#2C3325] leading-tight max-w-[160px] truncate">
                   {userInfo.fullName || userInfo.email || "Pengguna"}
                 </p>
-                <p className="text-[10px] text-[#6B7A71] truncate max-w-[160px]">
+                <p className="text-[11px] text-[#6B7263] truncate max-w-[160px]">
                   {userInfo.email}
                 </p>
               </div>
               <span
-                className={`rounded-md border px-2 py-0.5 text-[11px] font-bold ${badge.cls}`}
+                className={`rounded-[4px] border px-2 py-0.5 text-[11px] font-bold ${badge.cls}`}
               >
                 {badge.label}
               </span>
               <svg
-                className="h-3.5 w-3.5 text-[#6B7A71]"
+                className="h-3.5 w-3.5 text-[#6B7263]"
                 viewBox="0 0 20 20"
                 fill="currentColor"
+                aria-hidden="true"
               >
                 <path
                   fillRule="evenodd"
@@ -256,12 +255,12 @@ export default function DashboardShell({
             </button>
 
             {profileMenuOpen && (
-              <div className="absolute right-0 mt-2 w-56 rounded-xl border border-[#E3E8E1] bg-white p-1.5 shadow-lg z-40">
-                <div className="px-3 py-2 border-b border-[#ECEFE9]">
-                  <p className="text-xs font-bold text-[#14231B] truncate">
+              <div className="absolute right-0 mt-2 w-56 rounded-[8px] border border-[#DCE0D5] bg-white p-1.5 shadow-md z-40">
+                <div className="px-3 py-2 border-b border-[#DCE0D5]">
+                  <p className="text-xs font-bold text-[#2C3325] truncate">
                     {userInfo.fullName || "Pengguna HotMap"}
                   </p>
-                  <p className="text-[11px] text-[#6B7A71] truncate">
+                  <p className="text-[11px] text-[#6B7263] truncate">
                     {userInfo.email}
                   </p>
                 </div>
@@ -269,7 +268,7 @@ export default function DashboardShell({
                 <Link
                   href={profileHref}
                   onClick={() => setProfileMenuOpen(false)}
-                  className="mt-1 block rounded-lg px-3 py-2 text-xs font-medium text-[#4E5E55] hover:bg-[#EAF1EC] hover:text-[#155E42]"
+                  className="mt-1 block rounded-[4px] px-3 py-2 text-xs font-medium text-[#2C3325] hover:bg-[#EEF2E4] hover:text-[#465D21]"
                 >
                   {role === "admin" ? "Pengaturan Aplikasi" : "Profil Saya"}
                 </Link>
@@ -278,7 +277,7 @@ export default function DashboardShell({
                   <Link
                     href="/test-db"
                     onClick={() => setProfileMenuOpen(false)}
-                    className="block rounded-lg px-3 py-2 text-xs font-medium text-[#4E5E55] hover:bg-[#EAF1EC] hover:text-[#155E42]"
+                    className="block rounded-[4px] px-3 py-2 text-xs font-medium text-[#2C3325] hover:bg-[#EEF2E4] hover:text-[#465D21]"
                   >
                     Tes Koneksi Database
                   </Link>
@@ -287,7 +286,7 @@ export default function DashboardShell({
                 <Link
                   href="/"
                   onClick={() => setProfileMenuOpen(false)}
-                  className="block rounded-lg px-3 py-2 text-xs font-medium text-[#4E5E55] hover:bg-[#EAF1EC] hover:text-[#155E42]"
+                  className="block rounded-[4px] px-3 py-2 text-xs font-medium text-[#2C3325] hover:bg-[#EEF2E4] hover:text-[#465D21]"
                 >
                   Beranda Publik
                 </Link>
@@ -298,7 +297,7 @@ export default function DashboardShell({
                     setProfileMenuOpen(false);
                     setConfirmLogout(true);
                   }}
-                  className="mt-1 w-full text-left rounded-lg px-3 py-2 text-xs font-semibold text-[#B83E1B] hover:bg-[#FDEEE9] cursor-pointer"
+                  className="mt-1 w-full text-left rounded-[4px] px-3 py-2 text-xs font-semibold text-[#9B3417] hover:bg-[#FDF2EA] cursor-pointer"
                 >
                   Keluar
                 </button>
@@ -307,8 +306,7 @@ export default function DashboardShell({
           </div>
         </header>
 
-        {/* Page Body */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-6">
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-[1200px] w-full mx-auto space-y-6">
           {children}
         </main>
       </div>

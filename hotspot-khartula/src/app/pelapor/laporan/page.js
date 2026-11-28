@@ -32,8 +32,8 @@ export default async function PelaporLaporanListPage({ searchParams }) {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-[#12241B]">Laporan Saya</h1>
-          <p className="mt-1 text-sm text-[#606F67]">
+          <h1 className="text-2xl font-bold text-[#2C3325]">Laporan Saya</h1>
+          <p className="mt-1 text-sm text-[#6B7263]">
             Seluruh riwayat laporan kejadian karhutla yang dikirim menggunakan
             akun Anda.
           </p>

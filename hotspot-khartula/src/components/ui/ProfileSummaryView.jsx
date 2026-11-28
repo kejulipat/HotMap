@@ -26,12 +26,12 @@ export default function ProfileSummaryView({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-[#12241B]">
+        <h1 className="text-2xl font-bold text-[#2C3325]">
           Profil {ROLE_LABELS[role] ?? "Pengguna"}
         </h1>
-        <p className="mt-1 text-sm text-[#606F67]">
+        <p className="mt-1 text-sm text-[#6B7263]">
           Informasi akun yang terhubung dengan Supabase Auth dan tabel{" "}
-          <code className="text-xs font-mono bg-[#EEF2EC] px-1.5 py-0.5 rounded">
+          <code className="text-xs font-mono bg-[#EEF2E4] px-1.5 py-0.5 rounded">
             profiles
           </code>
           .
@@ -39,47 +39,47 @@ export default function ProfileSummaryView({
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-        <div className="rounded-2xl border border-[#E3E8E1] bg-white p-6 shadow-2xs space-y-5">
-          <div className="flex items-center gap-4 pb-5 border-b border-[#ECEFE9]">
-            <div className="h-12 w-12 rounded-xl bg-[#155E42] text-white flex items-center justify-center font-bold text-lg">
+        <div className="rounded-2xl border border-[#DCE0D5] bg-white p-6 shadow-2xs space-y-5">
+          <div className="flex items-center gap-4 pb-5 border-b border-[#DCE0D5]">
+            <div className="h-12 w-12 rounded-xl bg-[#557029] text-white flex items-center justify-center font-bold text-lg">
               {String(fullName).slice(0, 1).toUpperCase()}
             </div>
             <div>
-              <h2 className="text-lg font-bold text-[#14231B]">{fullName}</h2>
-              <p className="text-xs text-[#6B7A71]">{user?.email}</p>
+              <h2 className="text-lg font-bold text-[#2C3325]">{fullName}</h2>
+              <p className="text-xs text-[#6B7263]">{user?.email}</p>
             </div>
           </div>
 
-          <dl className="divide-y divide-[#ECEFE9] text-sm">
+          <dl className="divide-y divide-[#DCE0D5] text-sm">
             <div className="py-3 flex flex-col sm:flex-row sm:justify-between gap-1">
-              <dt className="text-[#6B7A71]">User ID</dt>
-              <dd className="font-mono text-xs text-[#14231B]">{user?.id}</dd>
+              <dt className="text-[#6B7263]">User ID</dt>
+              <dd className="font-mono text-xs text-[#2C3325]">{user?.id}</dd>
             </div>
             <div className="py-3 flex flex-col sm:flex-row sm:justify-between gap-1">
-              <dt className="text-[#6B7A71]">Role Akun</dt>
-              <dd className="font-semibold text-[#155E42]">
+              <dt className="text-[#6B7263]">Role Akun</dt>
+              <dd className="font-semibold text-[#557029]">
                 {ROLE_LABELS[role] ?? role}
               </dd>
             </div>
             <div className="py-3 flex flex-col sm:flex-row sm:justify-between gap-1">
-              <dt className="text-[#6B7A71]">Wilayah Tugas / Domisili</dt>
-              <dd className="font-semibold text-[#14231B]">{wilayahName}</dd>
+              <dt className="text-[#6B7263]">Wilayah Tugas / Domisili</dt>
+              <dd className="font-semibold text-[#2C3325]">{wilayahName}</dd>
             </div>
             <div className="py-3 flex flex-col sm:flex-row sm:justify-between gap-1">
-              <dt className="text-[#6B7A71]">Terdaftar Sejak</dt>
-              <dd className="font-semibold text-[#14231B]">
+              <dt className="text-[#6B7263]">Terdaftar Sejak</dt>
+              <dd className="font-semibold text-[#2C3325]">
                 {createdDate ? formatDate(createdDate, "long") : "-"}
               </dd>
             </div>
           </dl>
 
           {actionLinks.length > 0 && (
-            <div className="pt-4 border-t border-[#ECEFE9] flex flex-wrap gap-3">
+            <div className="pt-4 border-t border-[#DCE0D5] flex flex-wrap gap-3">
               {actionLinks.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="rounded-lg border border-[#DCE2DA] bg-[#FBFBFA] px-4 py-2 text-xs font-semibold text-[#14231B] hover:border-[#155E42] hover:bg-[#EAF1EC] transition-colors"
+                  className="rounded-lg border border-[#8A947D] bg-[#F7F8F2] px-4 py-2 text-xs font-semibold text-[#2C3325] hover:border-[#557029] hover:bg-[#EEF2E4] transition-colors"
                 >
                   {link.label}
                 </Link>
@@ -89,12 +89,12 @@ export default function ProfileSummaryView({
         </div>
 
         {/* Form Ubah Profil Diri Sendiri (Hanya Nama & Wilayah — Role dikunci di server & RLS) */}
-        <div className="rounded-2xl border border-[#E3E8E1] bg-white p-6 shadow-2xs space-y-4">
+        <div className="rounded-2xl border border-[#DCE0D5] bg-white p-6 shadow-2xs space-y-4">
           <div>
-            <h2 className="text-base font-bold text-[#12241B]">
+            <h2 className="text-base font-bold text-[#2C3325]">
               Perbarui Profil Saya
             </h2>
-            <p className="text-xs text-[#6B7A71]">
+            <p className="text-xs text-[#6B7263]">
               Ubah nama tampilan dan wilayah domisili/tugas Anda. Perubahan role
               hanya dapat dilakukan oleh Admin.
             </p>
@@ -121,7 +121,7 @@ export default function ProfileSummaryView({
             <div>
               <label
                 htmlFor="profile-full-name"
-                className="block text-xs font-semibold text-[#4E5E55] mb-1.5"
+                className="block text-xs font-semibold text-[#4A5243] mb-1.5"
               >
                 Nama Lengkap <span className="text-[#C85A28]">*</span>
               </label>
@@ -134,14 +134,14 @@ export default function ProfileSummaryView({
                 maxLength={100}
                 disabled={isPending}
                 defaultValue={profile?.full_name ?? ""}
-                className="w-full rounded-lg border border-[#DCE2DA] bg-[#FBFBFA] px-3.5 py-2 text-sm text-[#14231B] focus:border-[#155E42] focus:outline-none"
+                className="w-full rounded-lg border border-[#8A947D] bg-[#F7F8F2] px-3.5 py-2 text-sm text-[#2C3325] focus:border-[#557029] focus:outline-none"
               />
             </div>
 
             <div>
               <label
                 htmlFor="profile-wilayah"
-                className="block text-xs font-semibold text-[#4E5E55] mb-1.5"
+                className="block text-xs font-semibold text-[#4A5243] mb-1.5"
               >
                 Wilayah Tugas / Domisili
               </label>
@@ -150,7 +150,7 @@ export default function ProfileSummaryView({
                 name="wilayah_id"
                 disabled={isPending}
                 defaultValue={profile?.wilayah_id ?? ""}
-                className="w-full rounded-lg border border-[#DCE2DA] bg-[#FBFBFA] px-3.5 py-2 text-sm text-[#14231B] focus:border-[#155E42] focus:outline-none"
+                className="w-full rounded-lg border border-[#8A947D] bg-[#F7F8F2] px-3.5 py-2 text-sm text-[#2C3325] focus:border-[#557029] focus:outline-none"
               >
                 <option value="">— Belum ditetapkan —</option>
                 {wilayahList.map((w) => (
@@ -166,7 +166,7 @@ export default function ProfileSummaryView({
               <button
                 type="submit"
                 disabled={isPending}
-                className="rounded-lg bg-[#155E42] hover:bg-[#114B35] px-5 py-2 text-xs font-semibold text-white transition-colors disabled:opacity-50 cursor-pointer"
+                className="rounded-lg bg-[#557029] hover:bg-[#465D21] px-5 py-2 text-xs font-semibold text-white transition-colors disabled:opacity-50 cursor-pointer"
               >
                 {isPending ? "Menyimpan..." : "Simpan Profil"}
               </button>

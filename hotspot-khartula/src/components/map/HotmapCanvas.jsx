@@ -53,15 +53,15 @@ function buildSafePopupNode(item, detailHrefPrefix) {
   badge.style.padding = "2px 8px";
   badge.style.borderRadius = "6px";
   badge.style.marginBottom = "6px";
-  badge.style.background = "#EAF1EC";
-  badge.style.color = "#155E42";
+  badge.style.background = "#EEF2E4";
+  badge.style.color = "#557029";
   root.appendChild(badge);
 
   const title = document.createElement("div");
   title.textContent = item.judul || "Laporan Karhutla";
   title.style.fontWeight = "700";
   title.style.fontSize = "13px";
-  title.style.color = "#12241B";
+  title.style.color = "#2C3325";
   title.style.lineHeight = "1.35";
   root.appendChild(title);
 
@@ -71,7 +71,7 @@ function buildSafePopupNode(item, detailHrefPrefix) {
     "short"
   )}`;
   info.style.fontSize = "11px";
-  info.style.color = "#5F6F66";
+  info.style.color = "#6B7263";
   info.style.marginTop = "4px";
   root.appendChild(info);
 
@@ -79,7 +79,7 @@ function buildSafePopupNode(item, detailHrefPrefix) {
   coords.textContent = formatCoordinates(item.latitude, item.longitude, 5);
   coords.style.fontSize = "11px";
   coords.style.fontFamily = "monospace";
-  coords.style.color = "#6B7A71";
+  coords.style.color = "#6B7263";
   coords.style.marginTop = "4px";
   root.appendChild(coords);
 
@@ -91,7 +91,7 @@ function buildSafePopupNode(item, detailHrefPrefix) {
     link.style.marginTop = "8px";
     link.style.fontSize = "12px";
     link.style.fontWeight = "700";
-    link.style.color = "#155E42";
+    link.style.color = "#557029";
     link.style.textDecoration = "underline";
     root.appendChild(link);
   }
@@ -108,6 +108,8 @@ export default function HotmapCanvas({
   heightClass = "h-[420px] lg:h-[500px]",
   singleMarkerMode = false,
   showControls = true,
+  showActionControls = true,
+  allowedBasemaps = null,
   showLegend = true,
 }) {
   const containerRef = useRef(null);
@@ -348,58 +350,66 @@ export default function HotmapCanvas({
   }
 
   return (
-    <div className="relative w-full overflow-hidden rounded-xl border border-[#CFE0D8] bg-[#DFECE6]">
+    <div className="relative w-full overflow-hidden rounded-xl border border-[#DCE0D5] bg-[#EEF2E4]">
       {/* Toolbar Kontrol Peta */}
       {showControls && (
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#D5E2D8] bg-white/95 px-3 py-2 text-xs">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#DCE0D5] bg-white/95 px-3 py-2 text-xs">
           <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="Pilihan Basemap">
-            {Object.values(BASEMAP_LAYERS).map((layer) => (
-              <button
-                key={layer.id}
-                type="button"
-                onClick={() => setActiveBasemap(layer.id)}
-                className={`rounded-md px-2.5 py-1 font-semibold transition-colors cursor-pointer ${
-                  activeBasemap === layer.id
-                    ? "bg-[#155E42] text-white"
-                    : "bg-[#F4F6F2] text-[#4E5E55] hover:bg-[#EAF1EC]"
-                }`}
-              >
-                {layer.label}
-              </button>
-            ))}
+            {Object.values(BASEMAP_LAYERS)
+              .filter((layer) =>
+                Array.isArray(allowedBasemaps) && allowedBasemaps.length > 0
+                  ? allowedBasemaps.includes(layer.id)
+                  : true
+              )
+              .map((layer) => (
+                <button
+                  key={layer.id}
+                  type="button"
+                  onClick={() => setActiveBasemap(layer.id)}
+                  className={`rounded-md px-2.5 py-1 font-semibold transition-colors cursor-pointer ${
+                    activeBasemap === layer.id
+                      ? "bg-[#557029] text-white"
+                      : "bg-[#F7F8F2] text-[#4A5243] hover:bg-[#EEF2E4]"
+                  }`}
+                >
+                  {layer.label}
+                </button>
+              ))}
           </div>
 
-          <div className="flex flex-wrap items-center gap-1.5">
-            {!singleMarkerMode && (
+          {showActionControls && (
+            <div className="flex flex-wrap items-center gap-1.5">
+              {!singleMarkerMode && (
+                <button
+                  type="button"
+                  onClick={() => setClusterEnabled((prev) => !prev)}
+                  className={`rounded-md border px-2.5 py-1 font-semibold transition-colors cursor-pointer ${
+                    clusterEnabled
+                      ? "border-[#557029] bg-[#EEF2E4] text-[#557029]"
+                      : "border-[#8A947D] bg-white text-[#6B7263] hover:bg-[#F7F8F2]"
+                  }`}
+                >
+                  Klaster: {clusterEnabled ? "Aktif" : "Mati"}
+                </button>
+              )}
+
               <button
                 type="button"
-                onClick={() => setClusterEnabled((prev) => !prev)}
-                className={`rounded-md border px-2.5 py-1 font-semibold transition-colors cursor-pointer ${
-                  clusterEnabled
-                    ? "border-[#155E42] bg-[#EAF1EC] text-[#155E42]"
-                    : "border-[#DCE2DA] bg-white text-[#5F6F66] hover:bg-[#F6F7F3]"
-                }`}
+                onClick={handleFitAllMarkers}
+                className="rounded-md border border-[#8A947D] bg-white px-2.5 py-1 font-semibold text-[#2C3325] hover:bg-[#EEF2E4] cursor-pointer"
               >
-                Klaster: {clusterEnabled ? "Aktif" : "Mati"}
+                Fokus Titik ({validPoints.length})
               </button>
-            )}
 
-            <button
-              type="button"
-              onClick={handleFitAllMarkers}
-              className="rounded-md border border-[#DCE2DA] bg-white px-2.5 py-1 font-semibold text-[#14231B] hover:bg-[#EAF1EC] cursor-pointer"
-            >
-              Fokus Titik ({validPoints.length})
-            </button>
-
-            <button
-              type="button"
-              onClick={handleResetIndonesia}
-              className="rounded-md border border-[#DCE2DA] bg-white px-2.5 py-1 font-semibold text-[#5F6F66] hover:bg-[#F6F7F3] cursor-pointer"
-            >
-              Reset RI
-            </button>
-          </div>
+              <button
+                type="button"
+                onClick={handleResetIndonesia}
+                className="rounded-md border border-[#8A947D] bg-white px-2.5 py-1 font-semibold text-[#6B7263] hover:bg-[#F7F8F2] cursor-pointer"
+              >
+                Reset RI
+              </button>
+            </div>
+          )}
         </div>
       )}
 
@@ -420,7 +430,7 @@ export default function HotmapCanvas({
 
         {/* Indikator Empty State pada Peta */}
         {validPoints.length === 0 && !singleMarkerMode && (
-          <div className="pointer-events-none absolute bottom-12 left-1/2 z-400 -translate-x-1/2 rounded-lg border border-[#DCE2DA] bg-white/95 px-3.5 py-2 text-xs font-medium text-[#4E5E55] shadow-sm text-center">
+          <div className="pointer-events-none absolute bottom-12 left-1/2 z-400 -translate-x-1/2 rounded-lg border border-[#8A947D] bg-white/95 px-3.5 py-2 text-xs font-medium text-[#4A5243] shadow-sm text-center">
             Belum ada titik laporan dengan koordinat valid untuk filter saat ini.
           </div>
         )}
@@ -428,7 +438,7 @@ export default function HotmapCanvas({
 
       {/* Footer Legenda & Disclaimer GIS */}
       {showLegend && (
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-t border-[#D5E2D8] bg-white/95 px-3.5 py-2.5 text-[11px] text-[#4E5E55]">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-t border-[#DCE0D5] bg-white/95 px-3.5 py-2.5 text-[11px] text-[#4A5243]">
           <div className="flex flex-wrap items-center gap-3">
             {Object.entries(STATUS_META).map(([key, meta]) => (
               <span key={key} className="inline-flex items-center gap-1.5 font-medium">
@@ -437,7 +447,7 @@ export default function HotmapCanvas({
               </span>
             ))}
           </div>
-          <div className="flex flex-wrap items-center gap-2 text-[#5F6F66]">
+          <div className="flex flex-wrap items-center gap-2 text-[#6B7263]">
             {invalidCoordCount > 0 && (
               <span className="rounded bg-[#FEF5E7] px-2 py-0.5 font-semibold text-[#B5651D]">
                 {invalidCoordCount} laporan tanpa koordinat valid

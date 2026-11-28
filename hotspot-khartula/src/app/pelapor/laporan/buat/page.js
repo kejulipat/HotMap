@@ -31,17 +31,17 @@ export default async function BuatLaporanPage() {
     <div className="space-y-6 max-w-4xl">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-[#12241B]">
+          <h1 className="text-2xl font-bold text-[#2C3325]">
             Buat Laporan Karhutla
           </h1>
-          <p className="mt-1 text-sm text-[#606F67]">
+          <p className="mt-1 text-sm text-[#6B7263]">
             Laporkan titik kebakaran hutan dan lahan beserta koordinat peta dan
             foto bukti lapangan.
           </p>
         </div>
         <Link
           href="/pelapor/laporan"
-          className="text-xs font-semibold text-[#155E42] hover:underline"
+          className="text-xs font-semibold text-[#557029] hover:underline"
         >
           &larr; Kembali ke Laporan Saya
         </Link>

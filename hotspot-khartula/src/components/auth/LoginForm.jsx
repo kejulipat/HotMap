@@ -37,8 +37,8 @@ const FAST_ROLES = [
     label: "Login sebagai Pelapor",
     desc: "Buat laporan kejadian & pantau progres",
     badge: "Pelapor",
-    accent: "border-[#C4E2CE] bg-[#EAF5EE] hover:border-[#155E42] text-[#1F6B41]",
-    iconBg: "bg-[#155E42] text-white",
+    accent: "border-[#C4E2CE] bg-[#EAF5EE] hover:border-[#557029] text-[#1F6B41]",
+    iconBg: "bg-[#557029] text-white",
     icon: (
       <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
@@ -99,15 +99,15 @@ export default function LoginForm({
 
   return (
     <div className="mx-auto w-full max-w-md space-y-6">
-      <div className="rounded-2xl border border-[#E3E8E1] bg-white p-6 sm:p-8 shadow-2xs space-y-6">
+      <div className="rounded-2xl border border-[#DCE0D5] bg-white p-6 sm:p-8 shadow-2xs space-y-6">
         <div className="space-y-1.5">
-          <span className="inline-block text-[11px] font-bold uppercase tracking-widest text-[#155E42]">
+          <span className="inline-block text-[11px] font-bold uppercase tracking-widest text-[#557029]">
             Autentikasi HotMap
           </span>
-          <h1 className="text-2xl font-bold text-[#12241B]">
+          <h1 className="text-2xl font-bold text-[#2C3325]">
             Masuk ke Sistem
           </h1>
-          <p className="text-sm text-[#606F67]">
+          <p className="text-sm text-[#6B7263]">
             Gunakan akun terdaftar untuk mengakses layanan pelaporan atau operasional karhutla.
           </p>
         </div>
@@ -132,7 +132,7 @@ export default function LoginForm({
           <div>
             <label
               htmlFor="login-email"
-              className="block text-xs font-semibold text-[#4E5E55] mb-1.5"
+              className="block text-xs font-semibold text-[#4A5243] mb-1.5"
             >
               Email
             </label>
@@ -144,14 +144,14 @@ export default function LoginForm({
               required
               disabled={isBusy}
               placeholder="nama@contoh.id"
-              className="w-full rounded-lg border border-[#DCE2DA] bg-[#FBFBFA] px-3.5 py-2.5 text-sm text-[#14231B] focus:border-[#155E42] focus:outline-none disabled:opacity-60"
+              className="w-full rounded-lg border border-[#8A947D] bg-[#F7F8F2] px-3.5 py-2.5 text-sm text-[#2C3325] focus:border-[#557029] focus:outline-none disabled:opacity-60"
             />
           </div>
 
           <div>
             <label
               htmlFor="login-password"
-              className="block text-xs font-semibold text-[#4E5E55] mb-1.5"
+              className="block text-xs font-semibold text-[#4A5243] mb-1.5"
             >
               Kata Sandi
             </label>
@@ -164,13 +164,13 @@ export default function LoginForm({
                 required
                 disabled={isBusy}
                 placeholder="Masukkan kata sandi"
-                className="w-full rounded-lg border border-[#DCE2DA] bg-[#FBFBFA] px-3.5 py-2.5 pr-20 text-sm text-[#14231B] focus:border-[#155E42] focus:outline-none disabled:opacity-60"
+                className="w-full rounded-lg border border-[#8A947D] bg-[#F7F8F2] px-3.5 py-2.5 pr-20 text-sm text-[#2C3325] focus:border-[#557029] focus:outline-none disabled:opacity-60"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((prev) => !prev)}
                 disabled={isBusy}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md px-2 py-1 text-xs font-semibold text-[#5F6F66] hover:bg-[#EAF1EC] hover:text-[#155E42] cursor-pointer"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md px-2 py-1 text-xs font-semibold text-[#6B7263] hover:bg-[#EEF2E4] hover:text-[#557029] cursor-pointer"
               >
                 {showPassword ? "Sembunyikan" : "Tampilkan"}
               </button>
@@ -180,17 +180,17 @@ export default function LoginForm({
           <button
             type="submit"
             disabled={isBusy}
-            className="w-full rounded-lg bg-[#155E42] hover:bg-[#114B35] px-4 py-2.5 text-sm font-semibold text-white shadow-xs transition-colors disabled:opacity-60 cursor-pointer"
+            className="w-full rounded-lg bg-[#557029] hover:bg-[#465D21] px-4 py-2.5 text-sm font-semibold text-white shadow-xs transition-colors disabled:opacity-60 cursor-pointer"
           >
             {isLoginPending ? "Memproses masuk..." : "Masuk"}
           </button>
         </form>
 
-        <p className="text-center text-xs text-[#606F67]">
+        <p className="text-center text-xs text-[#6B7263]">
           Belum memiliki akun pelapor?{" "}
           <Link
             href="/register"
-            className="font-semibold text-[#155E42] hover:underline"
+            className="font-semibold text-[#557029] hover:underline"
           >
             Daftar sekarang
           </Link>
@@ -198,12 +198,12 @@ export default function LoginForm({
 
         {/* Fast Login Section */}
         {fastLogin.enabled && (
-          <div className="pt-5 border-t border-[#E3E8E1] space-y-3.5">
+          <div className="pt-5 border-t border-[#DCE0D5] space-y-3.5">
             <div className="flex items-center justify-between gap-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-[#5B6B61]">
+              <span className="text-xs font-bold uppercase tracking-wider text-[#6B7263]">
                 Fast Login (Pengujian Role)
               </span>
-              <span className="rounded bg-[#F0F3EE] px-2 py-0.5 text-[10px] font-semibold text-[#5F6F66]">
+              <span className="rounded bg-[#EEF2E4] px-2 py-0.5 text-[10px] font-semibold text-[#6B7263]">
                 Dev / Staging
               </span>
             </div>

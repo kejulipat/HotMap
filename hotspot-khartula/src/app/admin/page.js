@@ -74,10 +74,10 @@ export default async function AdminDashboardPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-[#12241B]">
+          <h1 className="text-2xl font-bold text-[#2C3325]">
             Dashboard Administrasi HotMap
           </h1>
-          <p className="mt-1 text-sm text-[#606F67]">
+          <p className="mt-1 text-sm text-[#6B7263]">
             Ringkasan operasional laporan karhutla, penugasan petugas, distribusi
             wilayah, dan publikasi berita dari data aktual Supabase.
           </p>
@@ -86,13 +86,13 @@ export default async function AdminDashboardPage() {
         <div className="flex flex-wrap gap-2.5">
           <Link
             href="/admin/peta"
-            className="rounded-lg border border-[#DCE2DA] bg-white px-4 py-2 text-xs font-semibold text-[#155E42] hover:bg-[#EAF1EC] transition-colors"
+            className="rounded-lg border border-[#8A947D] bg-white px-4 py-2 text-xs font-semibold text-[#557029] hover:bg-[#EEF2E4] transition-colors"
           >
             Monitoring Peta
           </Link>
           <Link
             href="/admin/laporan"
-            className="rounded-lg bg-[#155E42] px-4 py-2 text-xs font-semibold text-white hover:bg-[#114B35] transition-colors"
+            className="rounded-lg bg-[#557029] px-4 py-2 text-xs font-semibold text-white hover:bg-[#465D21] transition-colors"
           >
             Kelola Laporan
           </Link>
@@ -111,10 +111,10 @@ export default async function AdminDashboardPage() {
           <span className="text-xs font-semibold text-[#B83E1B]">
             Belum Ditangani
           </span>
-          <p className="mt-1 text-2xl font-bold text-[#14231B]">
+          <p className="mt-1 text-2xl font-bold text-[#2C3325]">
             {belumDitangani}
           </p>
-          <span className="mt-1 block text-[11px] text-[#6B7A71]">
+          <span className="mt-1 block text-[11px] text-[#6B7263]">
             {counts.menunggu_verifikasi} menunggu verifikasi &bull;{" "}
             {counts.terverifikasi} terverifikasi
           </span>
@@ -128,61 +128,61 @@ export default async function AdminDashboardPage() {
 
         <Link
           href="/admin/pengguna"
-          className="rounded-xl border border-[#E3E8E1] bg-white p-4 hover:border-[#155E42] transition-colors"
+          className="rounded-xl border border-[#DCE0D5] bg-white p-4 hover:border-[#557029] transition-colors"
         >
-          <span className="text-xs font-semibold text-[#6B7A71]">
+          <span className="text-xs font-semibold text-[#6B7263]">
             Pengguna &amp; Petugas
           </span>
-          <p className="mt-1 text-2xl font-bold text-[#14231B]">
+          <p className="mt-1 text-2xl font-bold text-[#2C3325]">
             {analytics.totalPengguna}
           </p>
-          <span className="mt-1 block text-[11px] text-[#6B7A71]">
+          <span className="mt-1 block text-[11px] text-[#6B7263]">
             Admin: {analytics.roleCounts.admin} &bull; Petugas:{" "}
             {analytics.roleCounts.petugas} &bull; Pelapor:{" "}
             {analytics.roleCounts.pelapor}
           </span>
-          <span className="mt-2 inline-block text-xs font-semibold text-[#155E42]">
+          <span className="mt-2 inline-block text-xs font-semibold text-[#557029]">
             Manajemen Pengguna &rarr;
           </span>
         </Link>
 
         <Link
           href="/admin/wilayah"
-          className="rounded-xl border border-[#E3E8E1] bg-white p-4 hover:border-[#155E42] transition-colors"
+          className="rounded-xl border border-[#DCE0D5] bg-white p-4 hover:border-[#557029] transition-colors"
         >
-          <span className="text-xs font-semibold text-[#6B7A71]">
+          <span className="text-xs font-semibold text-[#6B7263]">
             Cakupan Wilayah &amp; Penugasan
           </span>
-          <p className="mt-1 text-2xl font-bold text-[#14231B]">
+          <p className="mt-1 text-2xl font-bold text-[#2C3325]">
             {dataset.wilayahList.length} wilayah
           </p>
-          <span className="mt-1 block text-[11px] text-[#6B7A71]">
+          <span className="mt-1 block text-[11px] text-[#6B7263]">
             Penugasan aktif: {analytics.penugasanStats.aktif} &bull; Selesai:{" "}
             {analytics.penugasanStats.selesai}
           </span>
-          <span className="mt-2 inline-block text-xs font-semibold text-[#155E42]">
+          <span className="mt-2 inline-block text-xs font-semibold text-[#557029]">
             Manajemen Wilayah &rarr;
           </span>
         </Link>
 
         <Link
           href="/admin/berita"
-          className="rounded-xl border border-[#E3E8E1] bg-white p-4 hover:border-[#155E42] transition-colors"
+          className="rounded-xl border border-[#DCE0D5] bg-white p-4 hover:border-[#557029] transition-colors"
         >
-          <span className="text-xs font-semibold text-[#6B7A71]">
+          <span className="text-xs font-semibold text-[#6B7263]">
             Ringkasan Berita
           </span>
-          <p className="mt-1 text-2xl font-bold text-[#14231B]">
+          <p className="mt-1 text-2xl font-bold text-[#2C3325]">
             {analytics.beritaStats.tableReady
               ? analytics.beritaStats.total
               : "Belum siap"}
           </p>
-          <span className="mt-1 block text-[11px] text-[#6B7A71]">
+          <span className="mt-1 block text-[11px] text-[#6B7263]">
             Published: {analytics.beritaStats.published} &bull; Draft:{" "}
             {analytics.beritaStats.draft} &bull; Arsip:{" "}
             {analytics.beritaStats.archived}
           </span>
-          <span className="mt-2 inline-block text-xs font-semibold text-[#155E42]">
+          <span className="mt-2 inline-block text-xs font-semibold text-[#557029]">
             Manajemen Berita &rarr;
           </span>
         </Link>
@@ -190,16 +190,16 @@ export default async function AdminDashboardPage() {
 
       {/* Analitik Distribusi Wilayah & Tren 14 Hari */}
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="rounded-2xl border border-[#E3E8E1] bg-white p-5 shadow-2xs space-y-4">
+        <div className="rounded-2xl border border-[#DCE0D5] bg-white p-5 shadow-2xs space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-bold text-[#12241B]">
+            <h2 className="text-base font-bold text-[#2C3325]">
               Distribusi Laporan per Wilayah
             </h2>
-            <span className="text-xs text-[#6B7A71]">Top 6 wilayah</span>
+            <span className="text-xs text-[#6B7263]">Top 6 wilayah</span>
           </div>
 
           {wilayahDist.length === 0 ? (
-            <p className="text-xs text-[#6B7A71] py-6 text-center">
+            <p className="text-xs text-[#6B7263] py-6 text-center">
               Belum ada laporan untuk menampilkan distribusi wilayah.
             </p>
           ) : (
@@ -207,16 +207,16 @@ export default async function AdminDashboardPage() {
               {wilayahDist.map((row) => (
                 <div key={row.nama} className="space-y-1">
                   <div className="flex justify-between text-xs">
-                    <span className="font-semibold text-[#14231B]">
+                    <span className="font-semibold text-[#2C3325]">
                       {row.nama}
                     </span>
-                    <span className="font-mono font-bold text-[#155E42]">
+                    <span className="font-mono font-bold text-[#557029]">
                       {row.total} laporan
                     </span>
                   </div>
-                  <div className="h-2.5 w-full rounded-full bg-[#EEF2EC] overflow-hidden">
+                  <div className="h-2.5 w-full rounded-full bg-[#EEF2E4] overflow-hidden">
                     <div
-                      className="h-full rounded-full bg-[#155E42]"
+                      className="h-full rounded-full bg-[#557029]"
                       style={{
                         width: `${Math.max(
                           8,
@@ -231,12 +231,12 @@ export default async function AdminDashboardPage() {
           )}
         </div>
 
-        <div className="rounded-2xl border border-[#E3E8E1] bg-white p-5 shadow-2xs space-y-4">
+        <div className="rounded-2xl border border-[#DCE0D5] bg-white p-5 shadow-2xs space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-bold text-[#12241B]">
+            <h2 className="text-base font-bold text-[#2C3325]">
               Tren Laporan (14 Hari Terakhir)
             </h2>
-            <span className="text-xs text-[#6B7A71]">Harian (WIB)</span>
+            <span className="text-xs text-[#6B7263]">Harian (WIB)</span>
           </div>
 
           <div className="flex items-end gap-1.5 h-36 pt-4">
@@ -246,12 +246,12 @@ export default async function AdminDashboardPage() {
                 title={`${d.date}: ${d.count} laporan`}
                 className="flex-1 flex flex-col items-center justify-end gap-1 h-full"
               >
-                <span className="text-[10px] font-semibold text-[#5F6F66]">
+                <span className="text-[10px] font-semibold text-[#6B7263]">
                   {d.count > 0 ? d.count : ""}
                 </span>
                 <div
                   className={`w-full rounded-t-md transition-all ${
-                    d.count > 0 ? "bg-[#C85A28]" : "bg-[#EEF2EC]"
+                    d.count > 0 ? "bg-[#C85A28]" : "bg-[#EEF2E4]"
                   }`}
                   style={{
                     height:
@@ -263,7 +263,7 @@ export default async function AdminDashboardPage() {
                         : "6px",
                   }}
                 />
-                <span className="text-[9px] text-[#6B7A71] hidden sm:block">
+                <span className="text-[9px] text-[#6B7263] hidden sm:block">
                   {d.label}
                 </span>
               </div>
@@ -273,40 +273,40 @@ export default async function AdminDashboardPage() {
       </section>
 
       {/* Aktivitas Petugas Terbaru */}
-      <section className="rounded-2xl border border-[#E3E8E1] bg-white p-5 shadow-2xs space-y-3">
-        <h2 className="text-base font-bold text-[#12241B]">
+      <section className="rounded-2xl border border-[#DCE0D5] bg-white p-5 shadow-2xs space-y-3">
+        <h2 className="text-base font-bold text-[#2C3325]">
           Aktivitas Penanganan Petugas Terbaru
         </h2>
         {analytics.recentActivities.length === 0 ? (
-          <p className="text-xs text-[#6B7A71]">
+          <p className="text-xs text-[#6B7263]">
             Belum ada log penanganan lapangan yang tercatat dari petugas.
           </p>
         ) : (
-          <ul className="divide-y divide-[#ECEFE9] text-xs">
+          <ul className="divide-y divide-[#DCE0D5] text-xs">
             {analytics.recentActivities.map((act) => (
               <li
                 key={act.id}
                 className="py-2.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2"
               >
                 <div className="space-y-0.5">
-                  <p className="font-semibold text-[#14231B]">
+                  <p className="font-semibold text-[#2C3325]">
                     {act.petugasNama}{" "}
-                    <span className="font-normal text-[#6B7A71]">
+                    <span className="font-normal text-[#6B7263]">
                       memperbarui status ke
                     </span>{" "}
-                    <span className="capitalize text-[#155E42]">
+                    <span className="capitalize text-[#557029]">
                       {String(act.statusUpdate ?? "").replace(/_/g, " ")}
                     </span>
                   </p>
-                  <p className="text-[#4E5E55] line-clamp-1">{act.catatan}</p>
+                  <p className="text-[#4A5243] line-clamp-1">{act.catatan}</p>
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
-                  <span className="text-[#6B7A71]">
+                  <span className="text-[#6B7263]">
                     {formatDate(normalizeDate(act.createdAt), "short")}
                   </span>
                   <Link
                     href={`/admin/laporan/${act.laporanId}`}
-                    className="font-semibold text-[#155E42] hover:underline"
+                    className="font-semibold text-[#557029] hover:underline"
                   >
                     Lihat &rarr;
                   </Link>
@@ -320,12 +320,12 @@ export default async function AdminDashboardPage() {
       {/* 8 Laporan Masuk Terbaru */}
       <section className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold text-[#12241B]">
+          <h2 className="text-lg font-bold text-[#2C3325]">
             Laporan Masuk Terbaru
           </h2>
           <Link
             href="/admin/laporan"
-            className="text-xs font-semibold text-[#155E42] hover:underline"
+            className="text-xs font-semibold text-[#557029] hover:underline"
           >
             Semua laporan &rarr;
           </Link>

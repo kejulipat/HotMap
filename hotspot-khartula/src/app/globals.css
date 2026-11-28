@@ -1,33 +1,71 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f6f7f3;
-  --foreground: #14231b;
+  --hm-primary: #6f8e3d;
+  --hm-primary-aa: #557029;
+  --hm-primary-hover: #465d21;
+  --hm-secondary: #4e6733;
+  --background: #ffffff;
+  --surface: #f7f8f2;
+  --surface-soft: #eef2e4;
+  --foreground: #2c3325;
+  --text-secondary: #6b7263;
+  --border-subtle: #dce0d5;
+  --border-control: #8a947d;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-surface: var(--surface);
+  --color-brand-primary: var(--hm-primary);
+  --color-brand-primary-aa: var(--hm-primary-aa);
+  --color-brand-secondary: var(--hm-secondary);
+  --font-sans: var(--font-inter), system-ui, -apple-system, sans-serif;
+  --font-serif: var(--font-playfair), Georgia, serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+@layer base {
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-playfair), Georgia, serif;
+    color: var(--foreground);
+  }
+
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    outline: 2px solid var(--hm-primary-aa);
+    outline-offset: 2px;
+  }
 }
 
-/* Custom Leaflet & MarkerCluster overrides agar selaras dengan identitas HotMap */
+.hm-floating-card {
+  box-shadow: 0 12px 28px rgba(44, 51, 37, 0.14);
+}
+
+/* Custom Leaflet & MarkerCluster overrides agar selaras dengan identitas organik-editorial HotMap */
 .leaflet-container {
-  font-family: inherit;
+  font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
   z-index: 1;
 }
 
 .leaflet-popup-content-wrapper {
   border-radius: 0.75rem;
-  box-shadow: 0 10px 25px -5px rgba(18, 36, 27, 0.16);
-  border: 1px solid #dce4df;
+  box-shadow: 0 10px 25px -5px rgba(44, 51, 37, 0.16);
+  border: 1px solid #dce0d5;
   padding: 0;
 }
 
@@ -57,11 +95,11 @@ body {
   font-weight: 700;
   color: #ffffff;
   border: 3px solid rgba(255, 255, 255, 0.92);
-  box-shadow: 0 4px 12px rgba(18, 36, 27, 0.25);
+  box-shadow: 0 4px 12px rgba(44, 51, 37, 0.25);
 }
 
 .hotmap-cluster-sm {
-  background: #155e42;
+  background: #557029;
 }
 
 .hotmap-cluster-md {

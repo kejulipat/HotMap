@@ -21,10 +21,10 @@ export default async function AdminWilayahPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-[#12241B]">Manajemen Wilayah</h1>
-        <p className="mt-1 text-sm text-[#606F67]">
+        <h1 className="text-2xl font-bold text-[#2C3325]">Manajemen Wilayah</h1>
+        <p className="mt-1 text-sm text-[#6B7263]">
           Kelola daftar wilayah pemantauan karhutla pada tabel{" "}
-          <code className="text-xs font-mono bg-[#EEF2EC] px-1.5 py-0.5 rounded">
+          <code className="text-xs font-mono bg-[#EEF2E4] px-1.5 py-0.5 rounded">
             wilayah
           </code>{" "}
           beserta koordinat pusat untuk fokus peta GIS dan formulir pelaporan.

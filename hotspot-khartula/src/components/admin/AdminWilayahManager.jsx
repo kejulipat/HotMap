@@ -79,15 +79,15 @@ export default function AdminWilayahManager({ wilayahList = [] }) {
       )}
 
       {/* Form Tambah / Edit Wilayah */}
-      <section className="rounded-2xl border border-[#E3E8E1] bg-white p-5 sm:p-6 shadow-2xs space-y-4">
+      <section className="rounded-2xl border border-[#DCE0D5] bg-white p-5 sm:p-6 shadow-2xs space-y-4">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <h2 className="text-lg font-bold text-[#12241B]">
+            <h2 className="text-lg font-bold text-[#2C3325]">
               {editingItem
                 ? `Edit Wilayah: ${editingItem.nama_wilayah}`
                 : "Tambah Wilayah Pemantauan"}
             </h2>
-            <p className="text-xs text-[#6B7A71]">
+            <p className="text-xs text-[#6B7263]">
               Koordinat pusat (Lat -11.5..6.5, Lng 94.5..142.0) digunakan peta
               GIS untuk fokus wilayah secara otomatis.
             </p>
@@ -99,7 +99,7 @@ export default function AdminWilayahManager({ wilayahList = [] }) {
                 setEditingItem(null);
                 setActionMessage(null);
               }}
-              className="rounded-lg border border-[#DCE2DA] px-3 py-1.5 text-xs font-semibold text-[#4E5E55] hover:bg-[#F6F7F3] cursor-pointer"
+              className="rounded-lg border border-[#8A947D] px-3 py-1.5 text-xs font-semibold text-[#4A5243] hover:bg-[#F7F8F2] cursor-pointer"
             >
               Batal Edit
             </button>
@@ -118,7 +118,7 @@ export default function AdminWilayahManager({ wilayahList = [] }) {
           <div>
             <label
               htmlFor="wilayah-nama"
-              className="block text-xs font-semibold text-[#4E5E55] mb-1.5"
+              className="block text-xs font-semibold text-[#4A5243] mb-1.5"
             >
               Nama Wilayah / Provinsi <span className="text-[#C85A28]">*</span>
             </label>
@@ -132,14 +132,14 @@ export default function AdminWilayahManager({ wilayahList = [] }) {
               disabled={isBusy}
               defaultValue={editingItem?.nama_wilayah ?? ""}
               placeholder="Contoh: Riau"
-              className="w-full rounded-lg border border-[#DCE2DA] bg-[#FBFBFA] px-3 py-2 text-sm text-[#14231B] focus:border-[#155E42] focus:outline-none"
+              className="w-full rounded-lg border border-[#8A947D] bg-[#F7F8F2] px-3 py-2 text-sm text-[#2C3325] focus:border-[#557029] focus:outline-none"
             />
           </div>
 
           <div>
             <label
               htmlFor="wilayah-kab"
-              className="block text-xs font-semibold text-[#4E5E55] mb-1.5"
+              className="block text-xs font-semibold text-[#4A5243] mb-1.5"
             >
               Kabupaten / Kota <span className="text-[#C85A28]">*</span>
             </label>
@@ -153,14 +153,14 @@ export default function AdminWilayahManager({ wilayahList = [] }) {
               disabled={isBusy}
               defaultValue={editingItem?.kabupaten_kota ?? ""}
               placeholder="Contoh: Kabupaten Pelalawan"
-              className="w-full rounded-lg border border-[#DCE2DA] bg-[#FBFBFA] px-3 py-2 text-sm text-[#14231B] focus:border-[#155E42] focus:outline-none"
+              className="w-full rounded-lg border border-[#8A947D] bg-[#F7F8F2] px-3 py-2 text-sm text-[#2C3325] focus:border-[#557029] focus:outline-none"
             />
           </div>
 
           <div>
             <label
               htmlFor="wilayah-lat"
-              className="block text-xs font-semibold text-[#4E5E55] mb-1.5"
+              className="block text-xs font-semibold text-[#4A5243] mb-1.5"
             >
               Center Latitude <span className="text-[#C85A28]">*</span>
             </label>
@@ -173,14 +173,14 @@ export default function AdminWilayahManager({ wilayahList = [] }) {
               disabled={isBusy}
               defaultValue={editingItem?.center_lat ?? ""}
               placeholder="0.2082"
-              className="w-full rounded-lg border border-[#DCE2DA] bg-[#FBFBFA] px-3 py-2 font-mono text-sm text-[#14231B] focus:border-[#155E42] focus:outline-none"
+              className="w-full rounded-lg border border-[#8A947D] bg-[#F7F8F2] px-3 py-2 font-mono text-sm text-[#2C3325] focus:border-[#557029] focus:outline-none"
             />
           </div>
 
           <div>
             <label
               htmlFor="wilayah-lng"
-              className="block text-xs font-semibold text-[#4E5E55] mb-1.5"
+              className="block text-xs font-semibold text-[#4A5243] mb-1.5"
             >
               Center Longitude <span className="text-[#C85A28]">*</span>
             </label>
@@ -193,7 +193,7 @@ export default function AdminWilayahManager({ wilayahList = [] }) {
               disabled={isBusy}
               defaultValue={editingItem?.center_lng ?? ""}
               placeholder="102.1654"
-              className="w-full rounded-lg border border-[#DCE2DA] bg-[#FBFBFA] px-3 py-2 font-mono text-sm text-[#14231B] focus:border-[#155E42] focus:outline-none"
+              className="w-full rounded-lg border border-[#8A947D] bg-[#F7F8F2] px-3 py-2 font-mono text-sm text-[#2C3325] focus:border-[#557029] focus:outline-none"
             />
           </div>
 
@@ -201,7 +201,7 @@ export default function AdminWilayahManager({ wilayahList = [] }) {
             <button
               type="submit"
               disabled={isBusy}
-              className="rounded-lg bg-[#155E42] hover:bg-[#114B35] px-5 py-2.5 text-sm font-semibold text-white transition-colors disabled:opacity-50 cursor-pointer"
+              className="rounded-lg bg-[#557029] hover:bg-[#465D21] px-5 py-2.5 text-sm font-semibold text-white transition-colors disabled:opacity-50 cursor-pointer"
             >
               {isBusy
                 ? "Menyimpan..."
@@ -216,7 +216,7 @@ export default function AdminWilayahManager({ wilayahList = [] }) {
       {/* Tabel Daftar Wilayah */}
       <section className="space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <h2 className="text-lg font-bold text-[#12241B]">
+          <h2 className="text-lg font-bold text-[#2C3325]">
             Daftar Wilayah ({filteredList.length})
           </h2>
           <input
@@ -224,21 +224,21 @@ export default function AdminWilayahManager({ wilayahList = [] }) {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Cari provinsi atau kabupaten/kota..."
-            className="w-full sm:w-72 rounded-lg border border-[#DCE2DA] bg-white px-3.5 py-2 text-sm text-[#14231B] focus:border-[#155E42] focus:outline-none"
+            className="w-full sm:w-72 rounded-lg border border-[#8A947D] bg-white px-3.5 py-2 text-sm text-[#2C3325] focus:border-[#557029] focus:outline-none"
           />
         </div>
 
         {filteredList.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-[#CBD6CE] bg-white px-6 py-10 text-center text-sm text-[#606F67]">
+          <div className="rounded-2xl border border-dashed border-[#8A947D] bg-white px-6 py-10 text-center text-sm text-[#6B7263]">
             Belum ada data wilayah yang cocok. Tambahkan wilayah melalui form di
             atas.
           </div>
         ) : (
-          <div className="rounded-xl bg-white border border-[#E3E8E1] overflow-hidden shadow-2xs">
+          <div className="rounded-xl bg-white border border-[#DCE0D5] overflow-hidden shadow-2xs">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="bg-[#EEF2EC] border-b border-[#E1E7DF] text-[11px] font-bold uppercase tracking-wider text-[#5B6B61]">
+                  <tr className="bg-[#EEF2E4] border-b border-[#DCE0D5] text-[11px] font-bold uppercase tracking-wider text-[#6B7263]">
                     <th className="py-3.5 px-4 sm:px-6">Nama Wilayah</th>
                     <th className="py-3.5 px-4">Kabupaten / Kota</th>
                     <th className="py-3.5 px-4">Koordinat Pusat</th>
@@ -246,21 +246,21 @@ export default function AdminWilayahManager({ wilayahList = [] }) {
                     <th className="py-3.5 px-4 sm:px-6 text-right">Aksi</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#ECEFE9] text-sm">
+                <tbody className="divide-y divide-[#DCE0D5] text-sm">
                   {filteredList.map((w) => {
                     const lat = parseCoord(w.center_lat);
                     const lng = parseCoord(w.center_lng);
                     const valid = isValidCoordinatePair(lat, lng);
                     const inRi = valid && isWithinIndonesiaBounds(lat, lng);
                     return (
-                      <tr key={w.id} className="hover:bg-[#F9FAF8]">
-                        <td className="py-3.5 px-4 sm:px-6 font-semibold text-[#14231B]">
+                      <tr key={w.id} className="hover:bg-[#F7F8F2]">
+                        <td className="py-3.5 px-4 sm:px-6 font-semibold text-[#2C3325]">
                           {w.nama_wilayah}
                         </td>
-                        <td className="py-3.5 px-4 text-xs sm:text-sm text-[#4E5E55]">
+                        <td className="py-3.5 px-4 text-xs sm:text-sm text-[#4A5243]">
                           {w.kabupaten_kota || "-"}
                         </td>
-                        <td className="py-3.5 px-4 font-mono text-xs text-[#6B7A71]">
+                        <td className="py-3.5 px-4 font-mono text-xs text-[#6B7263]">
                           {valid ? formatCoordinates(lat, lng, 4) : "-"}
                           {valid && !inRi && (
                             <span className="ml-1.5 text-[10px] font-sans font-semibold text-[#B83E1B]">
@@ -268,7 +268,7 @@ export default function AdminWilayahManager({ wilayahList = [] }) {
                             </span>
                           )}
                         </td>
-                        <td className="py-3.5 px-4 text-xs text-[#5F6F66]">
+                        <td className="py-3.5 px-4 text-xs text-[#6B7263]">
                           {w.created_at
                             ? formatDate(normalizeDate(w.created_at), "short")
                             : "-"}
