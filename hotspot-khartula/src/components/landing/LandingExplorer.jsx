@@ -1,15 +1,44 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import PublicNavbar from "@/components/layout/PublicNavbar";
 import PublicFooter from "@/components/layout/PublicFooter";
 import HotmapMap from "@/components/map/HotmapMap";
 import {
+  CLIENT_CACHE_PREFIX,
+  PUBLIC_SNAPSHOT_TTL_MS,
+  writeBrowserCache,
+} from "@/lib/client-cache";
+import {
   formatCoordinates,
   isValidCoordinatePair,
 } from "@/lib/gis";
 import { STATUS_META, formatDate } from "@/lib/normalizers";
+
+const EMPTY_SUBSCRIBE = () => () => {};
+const LANDING_SNAPSHOT_STORAGE_KEY = `${CLIENT_CACHE_PREFIX}landing:public-snapshot`;
+
+function readRawLandingSnapshot() {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(LANDING_SNAPSHOT_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (
+      !parsed ||
+      typeof parsed.expiresAt !== "number" ||
+      parsed.expiresAt <= Date.now()
+    ) {
+      window.localStorage.removeItem(LANDING_SNAPSHOT_STORAGE_KEY);
+      return null;
+    }
+    return raw;
+  } catch {
+    return null;
+  }
+}
 
 const ROLE_PORTAL_HREF = {
   admin: "/admin",
@@ -39,25 +68,91 @@ export default function LandingExplorer({
   });
 
   const [focusTarget, setFocusTarget] = useState(null);
+  const [shouldMountMap, setShouldMountMap] = useState(false);
+  const mapSectionRef = useRef(null);
+
+  const rawCachedSnapshot = useSyncExternalStore(
+    EMPTY_SUBSCRIBE,
+    readRawLandingSnapshot,
+    () => null
+  );
+
+  const cachedFallback = useMemo(() => {
+    if (!hasQueryError || !rawCachedSnapshot) return null;
+    try {
+      return JSON.parse(rawCachedSnapshot)?.value ?? null;
+    } catch {
+      return null;
+    }
+  }, [hasQueryError, rawCachedSnapshot]);
+
+  // Simpan snapshot data publik di browser agar kunjungan ulang / gangguan jaringan tetap cepat
+  useEffect(() => {
+    if (!hasQueryError && (initialLaporan.length > 0 || wilayahList.length > 0)) {
+      writeBrowserCache(
+        "landing:public-snapshot",
+        {
+          laporan: initialLaporan,
+          wilayah: wilayahList,
+          berita: beritaList,
+        },
+        PUBLIC_SNAPSHOT_TTL_MS
+      );
+    }
+  }, [hasQueryError, initialLaporan, wilayahList, beritaList]);
+
+  // Tunda mount Leaflet + tile peta sampai pengguna menggulir mendekati section peta
+  useEffect(() => {
+    if (shouldMountMap) return;
+    const node = mapSectionRef.current;
+    if (!node || typeof IntersectionObserver === "undefined") {
+      setShouldMountMap(true);
+      return;
+    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          setShouldMountMap(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "350px 0px" }
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [shouldMountMap]);
+
+  const effectiveLaporan =
+    hasQueryError && initialLaporan.length === 0 && cachedFallback?.laporan
+      ? cachedFallback.laporan
+      : initialLaporan;
+  const effectiveWilayah =
+    hasQueryError && wilayahList.length === 0 && cachedFallback?.wilayah
+      ? cachedFallback.wilayah
+      : wilayahList;
+  const effectiveBerita =
+    hasQueryError && beritaList.length === 0 && cachedFallback?.berita
+      ? cachedFallback.berita
+      : beritaList;
 
   const wilayahByName = useMemo(() => {
     const map = new Map();
-    for (const w of wilayahList) {
+    for (const w of effectiveWilayah) {
       if (w.nama) map.set(w.nama, w);
     }
     return map;
-  }, [wilayahList]);
+  }, [effectiveWilayah]);
 
   const wilayahOptions = useMemo(() => {
-    const set = new Set(wilayahList.map((w) => w.nama).filter(Boolean));
-    for (const item of initialLaporan) {
+    const set = new Set(effectiveWilayah.map((w) => w.nama).filter(Boolean));
+    for (const item of effectiveLaporan) {
       if (item.wilayah) set.add(item.wilayah);
     }
     return Array.from(set).sort((a, b) => a.localeCompare(b));
-  }, [wilayahList, initialLaporan]);
+  }, [effectiveWilayah, effectiveLaporan]);
 
   const filteredLaporan = useMemo(() => {
-    return initialLaporan.filter((item) => {
+    return effectiveLaporan.filter((item) => {
       if (
         appliedFilters.wilayah !== "semua" &&
         item.wilayah !== appliedFilters.wilayah
@@ -86,7 +181,7 @@ export default function LandingExplorer({
       }
       return true;
     });
-  }, [initialLaporan, appliedFilters]);
+  }, [effectiveLaporan, appliedFilters]);
 
   const showcaseItems = useMemo(() => {
     const priority = {
@@ -96,13 +191,13 @@ export default function LandingExplorer({
       menunggu_verifikasi: 3,
       ditolak: 4,
     };
-    return [...initialLaporan]
+    return [...effectiveLaporan]
       .sort(
         (a, b) =>
           (priority[a.statusKey] ?? 9) - (priority[b.statusKey] ?? 9)
       )
       .slice(0, 3);
-  }, [initialLaporan]);
+  }, [effectiveLaporan]);
 
   const hasActiveFilter =
     appliedFilters.wilayah !== "semua" ||
@@ -111,6 +206,7 @@ export default function LandingExplorer({
     Boolean(appliedFilters.endDate);
 
   function scrollToMapSection() {
+    setShouldMountMap(true);
     if (typeof document === "undefined") return;
     const el = document.getElementById("peta-sebaran");
     if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -234,21 +330,23 @@ export default function LandingExplorer({
       <PublicNavbar currentUser={currentUser} />
 
       <main className="flex-1">
-        {/* 1. HERO SECTION (2 Kolom Asimetris + Placeholder Foto Alam Full-Bleed, Full Viewport) */}
+        {/* 1. HERO SECTION (2 Kolom Asimetris + Foto Latar Full-Bleed WebP, Full Viewport) */}
         <section className="relative w-full min-h-[calc(100dvh-110px)] flex items-center overflow-hidden bg-[#2C3B21]">
-          {/*
-            PLACEHOLDER FOTO HERO FULL-BLEED (siap diganti):
-            Simpan foto alam/hutan lanskap pada `public/images/hero-forest.jpg` lalu aktifkan blok img ini:
-            <img
-              src="/images/hero-forest.jpg"
-              alt=""
-              aria-hidden="true"
-              className="absolute inset-0 h-full w-full object-cover"
-            />
-          */}
+          <Image
+            src="/images/hero-forest.webp"
+            alt=""
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover object-center"
+          />
           <div
             aria-hidden="true"
-            className="absolute inset-0 bg-gradient-to-br from-[#1C2715]/92 via-[#2B3B1F]/80 to-[#394C27]/88"
+            className="absolute inset-0 bg-gradient-to-r from-[#1A2413]/88 via-[#223018]/70 to-[#2C3B21]/45"
+          />
+          <div
+            aria-hidden="true"
+            className="absolute inset-0 bg-gradient-to-b from-[#1A2413]/55 via-transparent to-[#1A2413]/50"
           />
 
           <div className="relative w-full mx-auto max-w-[1200px] px-4 sm:px-6 py-12 lg:py-16">
@@ -284,10 +382,6 @@ export default function LandingExplorer({
                     Lihat Peta Sebaran &darr;
                   </button>
                 </div>
-
-                <p className="pt-2 text-[11px] font-medium text-white/60">
-                  Slot foto latar hero siap diganti (<code>public/images/hero-forest.jpg</code>)
-                </p>
               </div>
 
               {/* Kolom Kanan: Kartu Form Melayang (Filter Pantauan Cepat Aktif) */}
@@ -435,15 +529,20 @@ export default function LandingExplorer({
         </section>
 
         {/* 3. PETA SEBARAN RINGKAS (Tanpa Panel Laporan Terpilih, Hanya Peta Jalan & Citra Satelit) */}
-        <section id="peta-sebaran" className="w-full bg-white py-16 scroll-mt-20">
+        <section
+          id="peta-sebaran"
+          ref={mapSectionRef}
+          className="w-full bg-white py-16 scroll-mt-20"
+        >
           <div className="mx-auto max-w-[1200px] px-4 sm:px-6 space-y-6">
             {hasQueryError && (
               <div
                 role="alert"
                 className="rounded-[8px] border border-[#E5B8A7] bg-[#FDF2EA] px-4 py-3 text-sm text-[#9B3417]"
               >
-                Sebagian data gagal dimuat dari database. Silakan muat ulang halaman
-                beberapa saat lagi.
+                {cachedFallback
+                  ? "Menampilkan data tersimpan lokal sementara koneksi database dipulihkan."
+                  : "Sebagian data gagal dimuat dari database. Silakan muat ulang halaman beberapa saat lagi."}
               </div>
             )}
 
@@ -481,13 +580,19 @@ export default function LandingExplorer({
               </Link>
             </div>
 
-            <HotmapMap
-              laporan={filteredLaporan}
-              focusTarget={focusTarget}
-              allowedBasemaps={LANDING_BASEMAPS}
-              showActionControls={false}
-              heightClass="h-[400px] sm:h-[460px] lg:h-[500px]"
-            />
+            {shouldMountMap ? (
+              <HotmapMap
+                laporan={filteredLaporan}
+                focusTarget={focusTarget}
+                allowedBasemaps={LANDING_BASEMAPS}
+                showActionControls={false}
+                heightClass="h-[400px] sm:h-[460px] lg:h-[500px]"
+              />
+            ) : (
+              <div className="h-[400px] sm:h-[460px] lg:h-[500px] w-full rounded-xl border border-[#DCE0D5] bg-[#EEF2E4] flex flex-col items-center justify-center gap-2 text-xs font-medium text-[#6B7263]">
+                <span>Peta interaktif akan dimuat otomatis saat area ini terlihat...</span>
+              </div>
+            )}
           </div>
         </section>
 
@@ -503,13 +608,13 @@ export default function LandingExplorer({
               </p>
             </div>
 
-            {beritaList.length === 0 ? (
+            {effectiveBerita.length === 0 ? (
               <p className="text-center text-[14px] text-[#6B7263]">
                 Belum ada berita yang dipublikasikan.
               </p>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {beritaList.map((berita) => (
+                {effectiveBerita.map((berita) => (
                   <article key={berita.id} className="group flex flex-col justify-between">
                     <div>
                       <Link

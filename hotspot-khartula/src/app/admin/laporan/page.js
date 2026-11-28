@@ -58,6 +58,7 @@ export default async function AdminLaporanListPage({ searchParams }) {
       />
 
       <LaporanFilterTable
+        key={activeStatus}
         laporanList={dataset.laporanList}
         wilayahList={dataset.wilayahList}
         detailHrefPrefix="/admin/laporan"

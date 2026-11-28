@@ -1,9 +1,10 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { requireRole } from "@/lib/auth";
 import { isValidCoordinatePair, isWithinIndonesiaBounds } from "@/lib/gis";
 import { isUuid } from "@/lib/normalizers";
+import { PUBLIC_DATA_CACHE_TAG } from "@/lib/public-cache";
 import { invalidateHotmapCache } from "@/lib/server-cache";
 
 function validateWilayahInput(formData) {
@@ -53,6 +54,7 @@ function mapWilayahDbError(error, fallback) {
 
 function revalidateWilayahRoutes() {
   invalidateHotmapCache({ data: true });
+  revalidateTag(PUBLIC_DATA_CACHE_TAG, { expire: 0 });
   revalidatePath("/");
   revalidatePath("/peta");
   revalidatePath("/admin");

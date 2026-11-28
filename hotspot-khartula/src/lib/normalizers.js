@@ -2,6 +2,7 @@ import {
   getBeritaImagePublicUrl,
   getLaporanEvidenceSignedUrl,
 } from "@/lib/storage";
+import { createCachedPublicFetcher } from "@/lib/public-cache";
 import {
   DATA_CACHE_TTL_MS,
   readCachedOrFetch,
@@ -388,6 +389,14 @@ async function fetchBaseDatasetUncached(
   };
 }
 
+const getPersistentPublicDataset = createCachedPublicFetcher((publicClient) =>
+  fetchBaseDatasetUncached(publicClient, {
+    pelaporId: null,
+    limit: BASE_CACHE_LAPORAN_LIMIT,
+    beritaLimit: BASE_CACHE_BERITA_LIMIT,
+  })
+);
+
 async function getSharedBaseDataset(supabase, { pelaporId = null } = {}) {
   const scope = resolveDatasetScope(supabase);
   const cacheKey = `dataset:${scope}:${pelaporId ?? "all"}`;
@@ -396,12 +405,23 @@ async function getSharedBaseDataset(supabase, { pelaporId = null } = {}) {
     "data",
     cacheKey,
     DATA_CACHE_TTL_MS,
-    () =>
-      fetchBaseDatasetUncached(supabase, {
+    async () => {
+      if (scope === "anon" && !pelaporId) {
+        try {
+          const persistent = await getPersistentPublicDataset();
+          if (persistent && !persistent.hasQueryError) {
+            return persistent;
+          }
+        } catch {
+          // Fallback ke query langsung jika dipanggil di luar konteks Next.js cache
+        }
+      }
+      return fetchBaseDatasetUncached(supabase, {
         pelaporId,
         limit: BASE_CACHE_LAPORAN_LIMIT,
         beritaLimit: BASE_CACHE_BERITA_LIMIT,
-      }),
+      });
+    },
     (res) => !res?.hasQueryError
   );
 }
@@ -429,6 +449,8 @@ export async function fetchNormalizedDataset(
   });
 }
 
+const DETAIL_CACHE_TTL_MS = 30_000;
+
 export async function fetchLaporanById(supabase, id) {
   if (!id || !isUuid(id)) {
     return {
@@ -442,6 +464,19 @@ export async function fetchLaporanById(supabase, id) {
     };
   }
 
+  const scope = resolveDatasetScope(supabase);
+  const cacheKey = `laporanDetail:${scope}:${id}`;
+
+  return readCachedOrFetch(
+    "data",
+    cacheKey,
+    DETAIL_CACHE_TTL_MS,
+    () => fetchLaporanByIdUncached(supabase, id),
+    (res) => Boolean(res?.laporan && !res?.error)
+  );
+}
+
+async function fetchLaporanByIdUncached(supabase, id) {
   let { data: row, error } = await supabase
     .from("laporan_karhutla")
     .select(EXTENDED_LAPORAN_COLS)
@@ -793,13 +828,12 @@ export async function fetchExactStatusCounts(
         return q;
       };
 
-      const [totalRes, ...statusResList] = await Promise.all([
-        makeQuery(null),
-        ...statuses.map((st) => makeQuery(st)),
-      ]);
+      const statusResList = await Promise.all(
+        statuses.map((st) => makeQuery(st))
+      );
 
       const counts = {
-        semua: totalRes.count ?? 0,
+        semua: 0,
         menunggu_verifikasi: 0,
         terverifikasi: 0,
         ditangani: 0,
@@ -808,7 +842,9 @@ export async function fetchExactStatusCounts(
       };
 
       statuses.forEach((st, idx) => {
-        counts[st] = statusResList[idx]?.count ?? 0;
+        const c = statusResList[idx]?.count ?? 0;
+        counts[st] = c;
+        counts.semua += c;
       });
 
       return counts;

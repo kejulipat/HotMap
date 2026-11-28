@@ -1,10 +1,6 @@
 import { cache } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import {
-  AUTH_CACHE_TTL_MS,
-  readCachedOrFetch,
-} from "@/lib/server-cache";
 
 export const ROLE_HOME = {
   admin: "/admin",
@@ -31,7 +27,11 @@ export function normalizeRole(rawRole) {
 
 export function isPathAllowedForRole(targetPath, role) {
   if (!targetPath || typeof targetPath !== "string") return false;
-  if (!targetPath.startsWith("/") || targetPath.startsWith("//") || targetPath.includes("\\")) {
+  if (
+    !targetPath.startsWith("/") ||
+    targetPath.startsWith("//") ||
+    targetPath.includes("\\")
+  ) {
     return false;
   }
   const cleanPath = targetPath.split("?")[0];
@@ -44,8 +44,8 @@ export function isPathAllowedForRole(targetPath, role) {
 /**
  * Mengambil user Supabase Auth saat ini beserta baris profil & role dari tabel `profiles`.
  * - Jika tidak ada cookie sesi `sb-*`, langsung selesai dalam 0ms tanpa network call.
- * - Jika ada cookie sesi, hasil verifikasi `getUser()` + `profiles` di-cache di memori
- *   server selama 60 detik berdasarkan fingerprint token (dan langsung dihapus saat login/logout).
+ * - Dideduplikasi per request via React `cache()` tanpa cache lintas-request sehingga
+ *   pencabutan sesi/role langsung berlaku seketika dan scope cache terisolasi per user.
  */
 export const getCurrentUserWithRole = cache(async function getCurrentUserWithRole() {
   const supabase = await createClient();
@@ -57,48 +57,33 @@ export const getCurrentUserWithRole = cache(async function getCurrentUserWithRol
     return { supabase, user: null, profile: null, role: null };
   }
 
-  const resolved = await readCachedOrFetch(
-    "auth",
-    fingerprint,
-    AUTH_CACHE_TTL_MS,
-    async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-      if (!user) {
-        return { user: null, profile: null, role: null };
-      }
+  if (!user) {
+    supabase.__isAuthenticated = false;
+    supabase.__sessionScope = "anon";
+    return { supabase, user: null, profile: null, role: null };
+  }
 
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("id, role, full_name, wilayah_id, created_at")
-        .eq("id", user.id)
-        .maybeSingle();
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("id, role, full_name, wilayah_id, created_at")
+    .eq("id", user.id)
+    .maybeSingle();
 
-      const role = normalizeRole(profile?.role);
+  const role = normalizeRole(profile?.role);
 
-      return {
-        user,
-        profile: profile ?? null,
-        role,
-      };
-    },
-    (res) => Boolean(res?.user)
-  );
-
-  supabase.__isAuthenticated = Boolean(resolved.user);
-  supabase.__sessionScope = !resolved.user
-    ? "anon"
-    : resolved.role === "admin" || resolved.role === "petugas"
-    ? "staff"
-    : `pelapor:${resolved.user.id}`;
+  supabase.__isAuthenticated = true;
+  // Isolasi ketat scope cache: admin terpisah dari setiap petugas/pelapor berdasarkan user.id
+  supabase.__sessionScope = role === "admin" ? "admin" : `${role}:${user.id}`;
 
   return {
     supabase,
-    user: resolved.user,
-    profile: resolved.profile,
-    role: resolved.role,
+    user,
+    profile: profile ?? null,
+    role,
   };
 });
 

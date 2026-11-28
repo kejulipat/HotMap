@@ -57,6 +57,7 @@ export default async function PetugasLaporanListPage({ searchParams }) {
       />
 
       <LaporanFilterTable
+        key={activeStatus}
         laporanList={dataset.laporanList}
         wilayahList={dataset.wilayahList}
         detailHrefPrefix="/petugas/laporan"

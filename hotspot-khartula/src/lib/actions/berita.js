@@ -1,7 +1,8 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { requireRole } from "@/lib/auth";
+import { PUBLIC_DATA_CACHE_TAG } from "@/lib/public-cache";
 import { invalidateHotmapCache } from "@/lib/server-cache";
 import {
   STORAGE_BUCKETS,
@@ -118,6 +119,7 @@ export async function createBeritaAction(_prevState, formData) {
   }
 
   invalidateHotmapCache({ data: true });
+  revalidateTag(PUBLIC_DATA_CACHE_TAG, { expire: 0 });
   revalidatePath("/");
   revalidatePath("/berita");
   revalidatePath("/admin/berita");
@@ -215,6 +217,7 @@ export async function updateBeritaAction(_prevState, formData) {
   }
 
   invalidateHotmapCache({ data: true });
+  revalidateTag(PUBLIC_DATA_CACHE_TAG, { expire: 0 });
   revalidatePath("/");
   revalidatePath("/berita");
   revalidatePath(`/berita/${id}`);
@@ -261,6 +264,7 @@ export async function deleteBeritaAction(formData) {
   }
 
   invalidateHotmapCache({ data: true });
+  revalidateTag(PUBLIC_DATA_CACHE_TAG, { expire: 0 });
   revalidatePath("/");
   revalidatePath("/berita");
   revalidatePath("/admin/berita");

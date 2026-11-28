@@ -1,10 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
-import {
-  extractSupabaseAuthFingerprint,
-  getCachedAuth,
-  setCachedAuth,
-} from "@/lib/server-cache";
+import { extractSupabaseAuthFingerprint } from "@/lib/server-cache";
 
 /**
  * Aturan akses route berdasarkan kolom `role` di tabel `profiles`.
@@ -42,7 +38,7 @@ export async function middleware(request) {
   const allCookies = request.cookies.getAll();
   const fingerprint = extractSupabaseAuthFingerprint(allCookies);
 
-  // 1. Pengunjung belum login (tidak ada cookie sb-*):
+  // 1. Pengunjung belum login (tidak ada cookie sb-*): 0ms fast-path.
   if (!fingerprint) {
     if (!rulePrefix) {
       return NextResponse.next({ request });
@@ -62,57 +58,45 @@ export async function middleware(request) {
 
   let response = NextResponse.next({ request });
 
-  // 3. Cek cache sesi terverifikasi di memori server agar navigasi antar halaman instan (0ms).
-  let cachedSession = getCachedAuth(fingerprint);
-  let user = cachedSession?.user ?? null;
-  let role = cachedSession?.role ?? null;
-
-  if (!user) {
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-      {
-        cookies: {
-          getAll() {
-            return request.cookies.getAll();
-          },
-          setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value }) =>
-              request.cookies.set(name, value)
-            );
-            response = NextResponse.next({ request });
-            cookiesToSet.forEach(({ name, value, options }) =>
-              response.cookies.set(name, value, options)
-            );
-          },
+  // 3. Verifikasi sesi & refresh cookie langsung via @supabase/ssr tanpa cache auth lintas-request
+  //    agar pencabutan role/sesi langsung efektif dan token sesi selalu segar.
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
         },
-      }
-    );
-
-    const {
-      data: { user: verifiedUser },
-    } = await supabase.auth.getUser();
-
-    user = verifiedUser;
-
-    if (user) {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("id, role, full_name, wilayah_id, created_at")
-        .eq("id", user.id)
-        .maybeSingle();
-
-      const rawRole = profile?.role
-        ? String(profile.role).toLowerCase().trim()
-        : "pelapor";
-      role = ROLE_HOME[rawRole] ? rawRole : "pelapor";
-
-      setCachedAuth(fingerprint, {
-        user,
-        profile: profile ?? null,
-        role,
-      });
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) =>
+            request.cookies.set(name, value)
+          );
+          response = NextResponse.next({ request });
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, options)
+          );
+        },
+      },
     }
+  );
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  let role = null;
+  if (user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    const rawRole = profile?.role
+      ? String(profile.role).toLowerCase().trim()
+      : "pelapor";
+    role = ROLE_HOME[rawRole] ? rawRole : "pelapor";
   }
 
   // Route auth (/login, /register) tetapi token ternyata sudah tidak valid -> lanjutkan.
@@ -160,8 +144,7 @@ function redirectWithCookies(url, sourceResponse) {
 
 export const config = {
   matcher: [
-    // Jalankan di semua route kecuali file statis & aset gambar.
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+    // Jalankan di semua route kecuali file statis, service worker, & aset gambar.
+    "/((?!_next/static|_next/image|favicon.ico|sw\\.js|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],
 };
-

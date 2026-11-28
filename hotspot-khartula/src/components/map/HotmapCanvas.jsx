@@ -13,6 +13,11 @@ import {
   formatCoordinates,
   isValidCoordinatePair,
 } from "@/lib/gis";
+import {
+  UI_PREF_TTL_MS,
+  readBrowserCache,
+  writeBrowserCache,
+} from "@/lib/client-cache";
 import { STATUS_META, formatDate } from "@/lib/normalizers";
 
 function createStatusMarkerIcon(statusKey, isSelected = false) {
@@ -118,9 +123,22 @@ export default function HotmapCanvas({
   const markersLayerRef = useRef(null);
   const markerMapRef = useRef(new Map());
 
-  const [activeBasemap, setActiveBasemap] = useState("osm");
+  // HotmapCanvas dimuat khusus client (`ssr: false`), sehingga preferensi basemap bisa dibaca langsung saat inisialisasi
+  const [activeBasemap, setActiveBasemap] = useState(() => {
+    const saved = readBrowserCache("pref:basemap");
+    if (!saved || !BASEMAP_LAYERS[saved]) return "osm";
+    if (Array.isArray(allowedBasemaps) && !allowedBasemaps.includes(saved)) {
+      return "osm";
+    }
+    return saved;
+  });
   const [clusterEnabled, setClusterEnabled] = useState(!singleMarkerMode);
   const [tileError, setTileError] = useState(false);
+
+  function handleSelectBasemap(layerId) {
+    setActiveBasemap(layerId);
+    writeBrowserCache("pref:basemap", layerId, UI_PREF_TTL_MS);
+  }
 
   const validPoints = useMemo(
     () =>
@@ -306,20 +324,35 @@ export default function HotmapCanvas({
     if (!map || !focusTarget) return;
 
     if (isValidCoordinatePair(focusTarget.lat, focusTarget.lng)) {
+      const marker = focusTarget.reportId
+        ? markerMapRef.current.get(focusTarget.reportId)
+        : null;
+      const layerGroup = markersLayerRef.current;
+
+      if (
+        marker &&
+        layerGroup &&
+        typeof layerGroup.zoomToShowLayer === "function"
+      ) {
+        layerGroup.zoomToShowLayer(marker, () => {
+          if (mapRef.current && marker && typeof marker.openPopup === "function") {
+            marker.openPopup();
+          }
+        });
+        return;
+      }
+
       const zoom = focusTarget.zoom ?? Math.max(map.getZoom(), 11);
       map.flyTo([focusTarget.lat, focusTarget.lng], zoom, {
         duration: 0.65,
       });
 
-      if (focusTarget.reportId) {
-        const marker = markerMapRef.current.get(focusTarget.reportId);
-        if (marker && typeof marker.openPopup === "function") {
-          setTimeout(() => {
-            if (mapRef.current && marker) {
-              marker.openPopup();
-            }
-          }, 350);
-        }
+      if (marker && typeof marker.openPopup === "function") {
+        setTimeout(() => {
+          if (mapRef.current && marker) {
+            marker.openPopup();
+          }
+        }, 350);
       }
     }
   }, [focusTarget]);
@@ -365,7 +398,7 @@ export default function HotmapCanvas({
                 <button
                   key={layer.id}
                   type="button"
-                  onClick={() => setActiveBasemap(layer.id)}
+                  onClick={() => handleSelectBasemap(layer.id)}
                   className={`rounded-md px-2.5 py-1 font-semibold transition-colors cursor-pointer ${
                     activeBasemap === layer.id
                       ? "bg-[#557029] text-white"

@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/auth";
 import {
@@ -9,6 +9,7 @@ import {
   isWithinIndonesiaBounds,
 } from "@/lib/gis";
 import { isUuid, normalizeStatusKey } from "@/lib/normalizers";
+import { PUBLIC_DATA_CACHE_TAG } from "@/lib/public-cache";
 import { invalidateHotmapCache } from "@/lib/server-cache";
 import {
   STORAGE_BUCKETS,
@@ -28,6 +29,7 @@ const MAX_PHOTOS_PENANGANAN = 2;
 
 function revalidateLaporanRoutes(laporanId = null) {
   invalidateHotmapCache({ data: true });
+  revalidateTag(PUBLIC_DATA_CACHE_TAG, { expire: 0 });
   revalidatePath("/");
   revalidatePath("/peta");
   revalidatePath("/admin");
@@ -260,21 +262,28 @@ export async function createLaporanAction(_prevState, formData) {
         supabase,
         uploadedFiles.map((item) => item.path)
       );
+      await supabase.from("laporan_karhutla").delete().eq("id", created.id);
       return {
         error:
-          "Laporan tersimpan, tetapi metadata foto bukti gagal dicatat. Silakan hubungi admin atau unggah ulang.",
+          "Gagal mencatat metadata foto bukti ke database. Pengiriman laporan dibatalkan, silakan coba lagi.",
       };
     }
   }
 
   // Catat riwayat status awal pada public.laporan_riwayat_status
-  await supabase.from("laporan_riwayat_status").insert({
-    laporan_id: created.id,
-    status_sebelumnya: null,
-    status_baru: "menunggu_verifikasi",
-    changed_by: user.id,
-    catatan: "Laporan baru dikirim oleh pelapor.",
-  });
+  const { error: riwayatErr } = await supabase
+    .from("laporan_riwayat_status")
+    .insert({
+      laporan_id: created.id,
+      status_sebelumnya: null,
+      status_baru: "menunggu_verifikasi",
+      changed_by: user.id,
+      catatan: "Laporan baru dikirim oleh pelapor.",
+    });
+
+  if (riwayatErr) {
+    console.error("[createLaporanAction] Gagal mencatat riwayat awal:", riwayatErr.message);
+  }
 
   revalidateLaporanRoutes(created.id);
   redirect(
@@ -357,17 +366,27 @@ export async function verifyAndUpdateLaporanAction(_prevState, formData) {
 
   const statusChanged = currentStatus !== nextStatus;
   if (statusChanged || catatan) {
-    await supabase.from("laporan_riwayat_status").insert({
-      laporan_id: laporanId,
-      status_sebelumnya: currentStatus,
-      status_baru: nextStatus,
-      changed_by: user.id,
-      catatan:
-        catatan ||
-        (statusChanged
-          ? `Status diperbarui oleh admin menjadi ${nextStatus}.`
-          : "Catatan/prioritas diperbarui oleh admin."),
-    });
+    const { error: riwayatErr } = await supabase
+      .from("laporan_riwayat_status")
+      .insert({
+        laporan_id: laporanId,
+        status_sebelumnya: currentStatus,
+        status_baru: nextStatus,
+        changed_by: user.id,
+        catatan:
+          catatan ||
+          (statusChanged
+            ? `Status diperbarui oleh admin menjadi ${nextStatus}.`
+            : "Catatan/prioritas diperbarui oleh admin."),
+      });
+
+    if (riwayatErr) {
+      return {
+        error:
+          riwayatErr.message ||
+          "Status tersimpan, tetapi pencatatan riwayat audit gagal.",
+      };
+    }
   }
 
   revalidateLaporanRoutes(laporanId);
@@ -425,67 +444,109 @@ export async function assignPetugasAction(_prevState, formData) {
     };
   }
 
-  // Batalkan penugasan aktif sebelumnya (jika ada) agar lolos unique partial index
-  const { error: cancelPrevErr } = await supabase
-    .from("penugasan_laporan")
-    .update({ status_penugasan: "dibatalkan" })
-    .eq("laporan_id", laporanId)
-    .in("status_penugasan", ["ditugaskan", "diterima", "dalam_penanganan"]);
+  // Gunakan RPC transaksional atomik (Migration 006) jika tersedia di database remote
+  const { error: rpcErr } = await supabase.rpc("assign_petugas_atomic", {
+    p_laporan_id: laporanId,
+    p_petugas_id: petugasId,
+    p_catatan: catatan || null,
+  });
 
-  if (cancelPrevErr) {
+  if (rpcErr && rpcErr.code !== "PGRST202") {
     return {
-      error:
-        cancelPrevErr.message ||
-        "Gagal membatalkan penugasan aktif sebelumnya.",
+      error: rpcErr.message || "Gagal menyimpan penugasan petugas secara atomik.",
     };
   }
 
-  const { error: insertAssignErr } = await supabase
-    .from("penugasan_laporan")
-    .insert({
-      laporan_id: laporanId,
-      petugas_id: petugasId,
-      assigned_by: user.id,
-      status_penugasan: "ditugaskan",
-      catatan: catatan || null,
-    });
+  if (rpcErr?.code === "PGRST202") {
+    // Fallback berurutan dengan pemeriksaan error ketat sebelum Migration 006 diterapkan
+    const { error: cancelPrevErr } = await supabase
+      .from("penugasan_laporan")
+      .update({ status_penugasan: "dibatalkan" })
+      .eq("laporan_id", laporanId)
+      .in("status_penugasan", ["ditugaskan", "diterima", "dalam_penanganan"]);
 
-  if (insertAssignErr) {
-    return {
-      error: insertAssignErr.message || "Gagal menyimpan penugasan petugas.",
-    };
-  }
+    if (cancelPrevErr) {
+      return {
+        error:
+          cancelPrevErr.message ||
+          "Gagal membatalkan penugasan aktif sebelumnya.",
+      };
+    }
 
-  // Jika laporan masih menunggu_verifikasi, otomatis naikkan ke terverifikasi saat ditugaskan
-  if (currentStatus === "menunggu_verifikasi") {
-    await supabase
-      .from("laporan_karhutla")
-      .update({
-        status: "terverifikasi",
-        verified_by: user.id,
-        verified_at: new Date().toISOString(),
-      })
-      .eq("id", laporanId);
+    const { error: insertAssignErr } = await supabase
+      .from("penugasan_laporan")
+      .insert({
+        laporan_id: laporanId,
+        petugas_id: petugasId,
+        assigned_by: user.id,
+        status_penugasan: "ditugaskan",
+        catatan: catatan || null,
+      });
 
-    await supabase.from("laporan_riwayat_status").insert({
-      laporan_id: laporanId,
-      status_sebelumnya: "menunggu_verifikasi",
-      status_baru: "terverifikasi",
-      changed_by: user.id,
-      catatan: `Diverifikasi dan ditugaskan ke ${petugasRes.data.full_name}.${
-        catatan ? ` Catatan: ${catatan}` : ""
-      }`,
-    });
-  } else {
-    await supabase.from("laporan_riwayat_status").insert({
-      laporan_id: laporanId,
-      status_sebelumnya: currentStatus,
-      status_baru: currentStatus,
-      changed_by: user.id,
-      catatan: `Penugasan petugas kepada ${petugasRes.data.full_name}.${
-        catatan ? ` Catatan: ${catatan}` : ""
-      }`,
-    });
+    if (insertAssignErr) {
+      return {
+        error: insertAssignErr.message || "Gagal menyimpan penugasan petugas.",
+      };
+    }
+
+    if (currentStatus === "menunggu_verifikasi") {
+      const { error: statusUpErr } = await supabase
+        .from("laporan_karhutla")
+        .update({
+          status: "terverifikasi",
+          verified_by: user.id,
+          verified_at: new Date().toISOString(),
+        })
+        .eq("id", laporanId);
+
+      if (statusUpErr) {
+        return {
+          error:
+            statusUpErr.message ||
+            "Penugasan tersimpan, tetapi gagal memperbarui status verifikasi.",
+        };
+      }
+
+      const { error: riwayatErr } = await supabase
+        .from("laporan_riwayat_status")
+        .insert({
+          laporan_id: laporanId,
+          status_sebelumnya: "menunggu_verifikasi",
+          status_baru: "terverifikasi",
+          changed_by: user.id,
+          catatan: `Diverifikasi dan ditugaskan ke ${petugasRes.data.full_name}.${
+            catatan ? ` Catatan: ${catatan}` : ""
+          }`,
+        });
+
+      if (riwayatErr) {
+        return {
+          error:
+            riwayatErr.message ||
+            "Penugasan tersimpan, tetapi pencatatan riwayat status gagal.",
+        };
+      }
+    } else {
+      const { error: riwayatErr } = await supabase
+        .from("laporan_riwayat_status")
+        .insert({
+          laporan_id: laporanId,
+          status_sebelumnya: currentStatus,
+          status_baru: currentStatus,
+          changed_by: user.id,
+          catatan: `Penugasan petugas kepada ${petugasRes.data.full_name}.${
+            catatan ? ` Catatan: ${catatan}` : ""
+          }`,
+        });
+
+      if (riwayatErr) {
+        return {
+          error:
+            riwayatErr.message ||
+            "Penugasan tersimpan, tetapi pencatatan riwayat status gagal.",
+        };
+      }
+    }
   }
 
   revalidateLaporanRoutes(laporanId);
@@ -525,13 +586,23 @@ export async function cancelPenugasanAction(formData) {
   }
 
   const statusNow = normalizeStatusKey(laporan.status);
-  await supabase.from("laporan_riwayat_status").insert({
-    laporan_id: laporanId,
-    status_sebelumnya: statusNow,
-    status_baru: statusNow,
-    changed_by: user.id,
-    catatan: "Penugasan petugas aktif dibatalkan oleh admin.",
-  });
+  const { error: riwayatErr } = await supabase
+    .from("laporan_riwayat_status")
+    .insert({
+      laporan_id: laporanId,
+      status_sebelumnya: statusNow,
+      status_baru: statusNow,
+      changed_by: user.id,
+      catatan: "Penugasan petugas aktif dibatalkan oleh admin.",
+    });
+
+  if (riwayatErr) {
+    return {
+      error:
+        riwayatErr.message ||
+        "Penugasan dibatalkan, tetapi pencatatan riwayat status gagal.",
+    };
+  }
 
   revalidateLaporanRoutes(laporanId);
   return { success: "Penugasan aktif berhasil dibatalkan." };
@@ -652,45 +723,7 @@ export async function updatePenangananPetugasAction(_prevState, formData) {
     uploadedFiles.push(up);
   }
 
-  // 1. Update status laporan_karhutla (HANYA kolom status — tidak menyentuh kolom administratif!)
-  if (currentStatus !== nextStatus) {
-    const { error: updateStatusErr } = await supabase
-      .from("laporan_karhutla")
-      .update({ status: nextStatus })
-      .eq("id", laporanId);
-
-    if (updateStatusErr) {
-      await rollbackUploadedPaths(
-        supabase,
-        uploadedFiles.map((item) => item.path)
-      );
-      return {
-        error:
-          updateStatusErr.message || "Gagal memperbarui status laporan.",
-      };
-    }
-  }
-
-  // 2. Sinkronkan status penugasan aktif pada penugasan_laporan
-  const nextPenugasanStatus =
-    nextStatus === "selesai" ? "selesai" : "dalam_penanganan";
-  const penugasanUpdate = {
-    status_penugasan: nextPenugasanStatus,
-    ...(nextStatus === "selesai" ? { completed_at: new Date().toISOString() } : {}),
-  };
-
-  let penugasanQuery = supabase
-    .from("penugasan_laporan")
-    .update(penugasanUpdate)
-    .eq("laporan_id", laporanId)
-    .in("status_penugasan", ["ditugaskan", "diterima", "dalam_penanganan"]);
-
-  if (role !== "admin") {
-    penugasanQuery = penugasanQuery.eq("petugas_id", user.id);
-  }
-  await penugasanQuery;
-
-  // 3. Simpan metadata foto penanganan ke laporan_foto
+  // 1. Simpan metadata foto penanganan ke laporan_foto terlebih dahulu (mudah di-rollback)
   const jenisFoto = nextStatus === "selesai" ? "selesai" : "penanganan";
   if (uploadedFiles.length > 0) {
     const fotoRows = uploadedFiles.map((item) => ({
@@ -717,27 +750,106 @@ export async function updatePenangananPetugasAction(_prevState, formData) {
     }
   }
 
-  // 4. Catat log penanganan lapangan ke public.penanganan_log
-  const { error: logErr } = await supabase.from("penanganan_log").insert({
-    laporan_id: laporanId,
-    petugas_id: user.id,
-    status_update: nextStatus,
-    catatan_penanganan: catatan,
-    foto_bukti_url: uploadedFiles[0]?.path ?? null,
+  // 2. Jalankan update status + penugasan + penanganan_log + riwayat secara atomik via RPC (Migration 006)
+  const { error: rpcErr } = await supabase.rpc("update_penanganan_atomic", {
+    p_laporan_id: laporanId,
+    p_next_status: nextStatus,
+    p_catatan: catatan,
+    p_foto_bukti_url: uploadedFiles[0]?.path ?? null,
   });
 
-  if (logErr) {
-    return { error: logErr.message || "Gagal mencatat log penanganan." };
+  if (rpcErr && rpcErr.code !== "PGRST202") {
+    if (uploadedFiles.length > 0) {
+      await supabase
+        .from("laporan_foto")
+        .delete()
+        .in(
+          "storage_path",
+          uploadedFiles.map((item) => item.path)
+        );
+      await rollbackUploadedPaths(
+        supabase,
+        uploadedFiles.map((item) => item.path)
+      );
+    }
+    return {
+      error: rpcErr.message || "Gagal memperbarui progres penanganan secara atomik.",
+    };
   }
 
-  // 5. Catat riwayat perubahan status pada public.laporan_riwayat_status
-  await supabase.from("laporan_riwayat_status").insert({
-    laporan_id: laporanId,
-    status_sebelumnya: currentStatus,
-    status_baru: nextStatus,
-    changed_by: user.id,
-    catatan,
-  });
+  if (rpcErr?.code === "PGRST202") {
+    // Fallback berurutan dengan pemeriksaan error ketat sebelum Migration 006 diterapkan
+    if (currentStatus !== nextStatus) {
+      const { error: updateStatusErr } = await supabase
+        .from("laporan_karhutla")
+        .update({ status: nextStatus })
+        .eq("id", laporanId);
+
+      if (updateStatusErr) {
+        await rollbackUploadedPaths(
+          supabase,
+          uploadedFiles.map((item) => item.path)
+        );
+        return {
+          error:
+            updateStatusErr.message || "Gagal memperbarui status laporan.",
+        };
+      }
+    }
+
+    const nextPenugasanStatus =
+      nextStatus === "selesai" ? "selesai" : "dalam_penanganan";
+    const penugasanUpdate = {
+      status_penugasan: nextPenugasanStatus,
+      ...(nextStatus === "selesai" ? { completed_at: new Date().toISOString() } : {}),
+    };
+
+    let penugasanQuery = supabase
+      .from("penugasan_laporan")
+      .update(penugasanUpdate)
+      .eq("laporan_id", laporanId)
+      .in("status_penugasan", ["ditugaskan", "diterima", "dalam_penanganan"]);
+
+    if (role !== "admin") {
+      penugasanQuery = penugasanQuery.eq("petugas_id", user.id);
+    }
+    const { error: penugasanErr } = await penugasanQuery;
+    if (penugasanErr) {
+      return {
+        error: penugasanErr.message || "Gagal menyinkronkan status penugasan.",
+      };
+    }
+
+    const { error: logErr } = await supabase.from("penanganan_log").insert({
+      laporan_id: laporanId,
+      petugas_id: user.id,
+      status_update: nextStatus,
+      catatan_penanganan: catatan,
+      foto_bukti_url: uploadedFiles[0]?.path ?? null,
+    });
+
+    if (logErr) {
+      return { error: logErr.message || "Gagal mencatat log penanganan." };
+    }
+
+    const { error: riwayatErr } = await supabase
+      .from("laporan_riwayat_status")
+      .insert({
+        laporan_id: laporanId,
+        status_sebelumnya: currentStatus,
+        status_baru: nextStatus,
+        changed_by: user.id,
+        catatan,
+      });
+
+    if (riwayatErr) {
+      return {
+        error:
+          riwayatErr.message ||
+          "Log tersimpan, tetapi pencatatan riwayat status gagal.",
+      };
+    }
+  }
 
   revalidateLaporanRoutes(laporanId);
   return {

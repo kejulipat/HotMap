@@ -1,4 +1,5 @@
 import { Geist_Mono, Inter, Playfair_Display } from "next/font/google";
+import CacheRegistrar from "@/components/pwa/CacheRegistrar";
 import "./globals.css";
 
 const inter = Inter({
@@ -34,6 +35,7 @@ export default function RootLayout({ children }) {
       className={`${inter.variable} ${playfairDisplay.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-white text-[#2C3325] font-sans">
+        <CacheRegistrar />
         {children}
       </body>
     </html>
