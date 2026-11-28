@@ -11,8 +11,12 @@ export const metadata = {
   description: "Pengelolaan artikel berita dan informasi publik karhutla.",
 };
 
-export default async function AdminBeritaPage() {
+export default async function AdminBeritaPage({ searchParams }) {
   const { supabase } = await requireRole(["admin"]);
+  const resolvedParams = await searchParams;
+  const editId =
+    typeof resolvedParams?.edit === "string" ? resolvedParams.edit.trim() : "";
+
   const { beritaList, tableReady, error } = await fetchBeritaList(
     supabase,
     100,
@@ -42,7 +46,12 @@ export default async function AdminBeritaPage() {
         <ErrorBanner message="Gagal memuat daftar berita dari database." />
       )}
 
-      <AdminBeritaManager beritaList={beritaList} tableReady={tableReady} />
+      <AdminBeritaManager
+        key={editId || "create"}
+        beritaList={beritaList}
+        tableReady={tableReady}
+        initialEditId={editId}
+      />
     </div>
   );
 }

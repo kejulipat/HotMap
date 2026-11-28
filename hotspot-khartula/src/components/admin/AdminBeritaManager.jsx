@@ -20,8 +20,16 @@ const STATUS_BADGES = {
 export default function AdminBeritaManager({
   beritaList = [],
   tableReady = false,
+  initialEditId = "",
 }) {
-  const [editingItem, setEditingItem] = useState(null);
+  const [editingItem, setEditingItem] = useState(
+    () =>
+      initialEditId
+        ? beritaList.find(
+            (b) => b.id === initialEditId || b.slug === initialEditId
+          ) ?? null
+        : null
+  );
   const [statusFilter, setStatusFilter] = useState("semua");
   const [fileError, setFileError] = useState("");
   const [actionMessage, setActionMessage] = useState(null);
