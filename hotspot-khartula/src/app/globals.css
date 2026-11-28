@@ -90,6 +90,15 @@
   }
 }
 
+@keyframes hmBgDrift {
+  from {
+    transform: scale(1) translate3d(0, 0, 0);
+  }
+  to {
+    transform: scale(1.06) translate3d(-0.8%, -0.8%, 0);
+  }
+}
+
 .hm-animate-fade-up {
   animation: hmFadeUp 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
@@ -100,6 +109,11 @@
 
 .hm-animate-fade-fast {
   animation: hmFadeFast 200ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.hm-animate-bg-drift {
+  animation: hmBgDrift 22s ease-in-out infinite alternate;
+  will-change: transform;
 }
 
 .hm-delay-1 {
@@ -145,7 +159,8 @@
 @media (prefers-reduced-motion: reduce) {
   .hm-animate-fade-up,
   .hm-animate-scale-in,
-  .hm-animate-fade-fast {
+  .hm-animate-fade-fast,
+  .hm-animate-bg-drift {
     animation: none !important;
   }
 

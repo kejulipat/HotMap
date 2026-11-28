@@ -420,10 +420,18 @@ export default function HotmapCanvas({
     <div className="relative w-full overflow-hidden rounded-xl border border-[#DCE0D5] bg-[#EEF2E4]">
       {/* Toolbar Kontrol Peta */}
       {showControls && (
-        <div className="flex flex-wrap items-center justify-between gap-2.5 border-b border-[#DCE0D5] bg-white/95 px-3 py-2 text-xs">
+        <div
+          className={`border-b border-[#DCE0D5] bg-white/95 px-3 py-2.5 text-xs ${
+            showActionControls
+              ? "flex flex-col gap-2"
+              : "flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2"
+          }`}
+        >
           {/* Sistem Switch Basemap dengan Indikator Geser Halus */}
           <div
-            className="relative inline-grid max-w-full items-center rounded-full border border-[#DCE0D5] bg-[#F7F8F2] p-1"
+            className={`relative grid items-center rounded-full border border-[#DCE0D5] bg-[#F7F8F2] p-1 ${
+              showActionControls ? "w-full" : "w-full sm:w-auto sm:inline-grid"
+            }`}
             style={{
               gridTemplateColumns: `repeat(${availableBasemaps.length}, minmax(0, 1fr))`,
             }}
@@ -447,7 +455,7 @@ export default function HotmapCanvas({
                   role="radio"
                   aria-checked={isActive}
                   onClick={() => handleSelectBasemap(layer.id)}
-                  className={`relative z-10 inline-flex items-center justify-center whitespace-nowrap rounded-full px-3 py-1.5 text-center font-semibold transition-colors duration-200 cursor-pointer ${
+                  className={`relative z-10 inline-flex items-center justify-center whitespace-nowrap rounded-full px-2.5 sm:px-3.5 py-1.5 text-center text-[11px] sm:text-xs font-semibold transition-colors duration-200 cursor-pointer ${
                     isActive
                       ? "text-white"
                       : "text-[#4A5243] hover:text-[#2C3325]"
@@ -459,13 +467,21 @@ export default function HotmapCanvas({
             })}
           </div>
 
-          {/* Kontrol Pojok Kanan (Aksi Opsional + Reset Kamera ke Peta Indonesia) */}
-          <div className="ml-auto flex flex-wrap items-center gap-1.5">
+          {/* Kontrol Aksi + Reset Kamera ke Peta Indonesia */}
+          <div
+            className={
+              showActionControls
+                ? `grid w-full gap-2 ${
+                    singleMarkerMode ? "grid-cols-2" : "grid-cols-2 sm:grid-cols-3"
+                  }`
+                : "flex w-full sm:w-auto sm:ml-auto items-center justify-end"
+            }
+          >
             {showActionControls && !singleMarkerMode && (
               <button
                 type="button"
                 onClick={() => setClusterEnabled((prev) => !prev)}
-                className={`rounded-full border px-3 py-1.5 font-semibold transition-all duration-200 active:scale-[0.98] cursor-pointer ${
+                className={`inline-flex w-full items-center justify-center rounded-full border px-3 py-1.5 font-semibold transition-all duration-200 active:scale-[0.98] cursor-pointer ${
                   clusterEnabled
                     ? "border-[#557029] bg-[#EEF2E4] text-[#557029]"
                     : "border-[#8A947D] bg-white text-[#6B7263] hover:bg-[#F7F8F2]"
@@ -479,7 +495,7 @@ export default function HotmapCanvas({
               <button
                 type="button"
                 onClick={handleFitAllMarkers}
-                className="rounded-full border border-[#8A947D] bg-white px-3 py-1.5 font-semibold text-[#2C3325] transition-all duration-200 hover:border-[#557029] hover:bg-[#EEF2E4] active:scale-[0.98] cursor-pointer"
+                className="inline-flex w-full items-center justify-center rounded-full border border-[#8A947D] bg-white px-3 py-1.5 font-semibold text-[#2C3325] transition-all duration-200 hover:border-[#557029] hover:bg-[#EEF2E4] active:scale-[0.98] cursor-pointer"
               >
                 Fokus Titik ({validPoints.length})
               </button>
@@ -490,10 +506,16 @@ export default function HotmapCanvas({
               onClick={handleResetIndonesia}
               title="Reset kamera ke seluruh peta Indonesia"
               aria-label="Reset kamera ke peta Indonesia"
-              className="group inline-flex items-center gap-1.5 rounded-full border border-[#8A947D] bg-white px-3 py-1.5 font-semibold text-[#2C3325] transition-all duration-200 hover:border-[#557029] hover:bg-[#F7F8F2] hover:text-[#557029] active:scale-[0.98] cursor-pointer"
+              className={`group inline-flex items-center justify-center gap-1.5 rounded-full border border-[#8A947D] bg-white px-3 py-1.5 font-semibold text-[#2C3325] transition-all duration-200 hover:border-[#557029] hover:bg-[#F7F8F2] hover:text-[#557029] active:scale-[0.98] cursor-pointer ${
+                showActionControls
+                  ? singleMarkerMode
+                    ? "w-full"
+                    : "w-full col-span-2 sm:col-span-1"
+                  : "w-full sm:w-auto"
+              }`}
             >
               <svg
-                className={`h-3.5 w-3.5 transition-transform duration-500 ease-out group-hover:-rotate-45 ${
+                className={`h-3.5 w-3.5 shrink-0 transition-transform duration-500 ease-out group-hover:-rotate-45 ${
                   isResettingCamera ? "-rotate-180" : ""
                 }`}
                 viewBox="0 0 24 24"
@@ -507,8 +529,7 @@ export default function HotmapCanvas({
                 <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
                 <path d="M3 3v5h5" />
               </svg>
-              <span className="hidden sm:inline">Reset Peta Indonesia</span>
-              <span className="sm:hidden">Reset RI</span>
+              <span>Reset Peta Indonesia</span>
             </button>
           </div>
         </div>

@@ -42,7 +42,7 @@ export default function RegisterForm() {
 
   return (
     <div className="mx-auto w-full max-w-md">
-      <div className="rounded-2xl border border-[#DCE0D5] bg-white p-6 sm:p-8 shadow-2xs space-y-6">
+      <div className="rounded-2xl border border-[#DCE0D5] bg-white/95 backdrop-blur-sm p-6 sm:p-8 hm-floating-card space-y-6">
         <div className="space-y-1.5">
           <span className="inline-block text-[11px] font-bold uppercase tracking-widest text-[#557029]">
             Registrasi Pelapor
@@ -58,7 +58,7 @@ export default function RegisterForm() {
         {activeError && (
           <div
             role="alert"
-            className="rounded-xl border border-[#E5B8A7] bg-[#FDF2EA] px-4 py-3 text-sm text-[#9B4017]"
+            className="hm-animate-fade-fast rounded-xl border border-[#E5B8A7] bg-[#FDF2EA] px-4 py-3 text-sm text-[#9B4017]"
           >
             {activeError}
           </div>
@@ -67,7 +67,7 @@ export default function RegisterForm() {
         {state?.success && (
           <div
             role="status"
-            className="rounded-xl border border-[#C4E2CE] bg-[#EAF5EE] px-4 py-3 text-sm text-[#1F6B41] space-y-2"
+            className="hm-animate-fade-fast rounded-xl border border-[#C4E2CE] bg-[#EAF5EE] px-4 py-3 text-sm text-[#1F6B41] space-y-2"
           >
             <p>{state.success}</p>
             <Link
@@ -174,7 +174,7 @@ export default function RegisterForm() {
           <button
             type="submit"
             disabled={isPending}
-            className="w-full rounded-lg bg-[#557029] hover:bg-[#465D21] px-4 py-2.5 text-sm font-semibold text-white shadow-xs transition-colors disabled:opacity-60 cursor-pointer"
+            className="w-full rounded-lg bg-[#557029] hover:bg-[#465D21] px-4 py-2.5 text-sm font-semibold text-white shadow-xs transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-60 disabled:hover:translate-y-0 cursor-pointer"
           >
             {isPending ? "Mendaftarkan..." : "Daftar sebagai Pelapor"}
           </button>

@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import PublicShell from "@/components/layout/PublicShell";
+import AuthBackdropSection from "@/components/auth/AuthBackdropSection";
 import LoginForm from "@/components/auth/LoginForm";
 import {
   ROLE_HOME,
@@ -29,8 +30,10 @@ export default async function LoginPage({ searchParams }) {
   const fastLogin = getFastLoginAvailability();
 
   return (
-    <PublicShell mainClassName="flex-1 flex items-center justify-center px-4 sm:px-6 py-10 sm:py-14">
-      <LoginForm redirectTo={redirectTo} fastLogin={fastLogin} />
+    <PublicShell mainClassName="flex-1 flex flex-col">
+      <AuthBackdropSection>
+        <LoginForm redirectTo={redirectTo} fastLogin={fastLogin} />
+      </AuthBackdropSection>
     </PublicShell>
   );
 }
