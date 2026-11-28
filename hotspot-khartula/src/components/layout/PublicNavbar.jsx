@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { logoutAction } from "@/lib/actions/auth";
+import BrandLogo from "@/components/ui/BrandLogo";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
 const ROLE_DASHBOARD = {
@@ -55,21 +56,7 @@ export default function PublicNavbar({ currentUser = null }) {
         <div className="mx-auto max-w-[1200px] px-4 sm:px-6 h-[72px] flex items-center justify-between gap-4">
           {/* Brand Logo + Tagline */}
           <Link href="/" className="flex items-center gap-3 shrink-0 group">
-            <div className="w-10 h-10 rounded-[8px] border border-[#DCE0D5] bg-[#F7F8F2] flex items-center justify-center text-[#6F8E3D] group-hover:border-[#557029] transition-colors">
-              <svg
-                className="w-5 h-5"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <path d="M12 3L6 12h4l-3 7h10l-3-7h4L12 3z" />
-                <path d="M12 19v3" />
-              </svg>
-            </div>
+            <BrandLogo size={40} />
             <div>
               <span className="block font-serif text-[20px] font-bold leading-none tracking-tight text-[#2C3325]">
                 HotMap

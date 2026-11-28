@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="hmIconBg" x1="8" y1="6" x2="56" y2="58" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#6F8E3D" />
+      <stop offset="55%" stop-color="#557029" />
+      <stop offset="100%" stop-color="#42581F" />
+    </linearGradient>
+    <linearGradient id="hmIconEmber" x1="32" y1="15" x2="32" y2="33" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#F59E0B" />
+      <stop offset="100%" stop-color="#DC4A1F" />
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="60" height="60" rx="14" fill="url(#hmIconBg)" />
+  <rect x="3" y="3" width="58" height="58" rx="13" stroke="#9BB964" stroke-opacity="0.45" stroke-width="1.5" />
+  <path
+    d="M32 10C21.507 10 13 18.42 13 28.807C13 40.916 26.64 51.972 30.72 54.996C31.478 55.558 32.522 55.558 33.28 54.996C37.36 51.972 51 40.916 51 28.807C51 18.42 42.493 10 32 10Z"
+    fill="#F7F8F2"
+  />
+  <path
+    d="M19.5 34.8L26.2 25.8L30.2 30.8L35.4 24.4L44.5 34.8C41.4 39.2 36.4 42.9 32 45.8C27.6 42.9 22.6 39.2 19.5 34.8Z"
+    fill="#4E6733"
+  />
+  <path
+    d="M32 15C32 15 37.6 20.6 37.6 25.3C37.6 28.45 35.09 31 32 31C28.91 31 26.4 28.45 26.4 25.3C26.4 20.6 32 15 32 15Z"
+    fill="url(#hmIconEmber)"
+  />
+  <circle cx="32" cy="25.6" r="2.2" fill="#FEF3C7" />
+</svg>

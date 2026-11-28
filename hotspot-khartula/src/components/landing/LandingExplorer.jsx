@@ -342,14 +342,14 @@ export default function LandingExplorer({
           />
           <div
             aria-hidden="true"
-            className="absolute inset-0 bg-gradient-to-r from-[#1A2413]/88 via-[#223018]/70 to-[#2C3B21]/45"
+            className="absolute inset-0 bg-linear-to-r from-[#1A2413]/88 via-[#223018]/70 to-[#2C3B21]/45"
           />
           <div
             aria-hidden="true"
-            className="absolute inset-0 bg-gradient-to-b from-[#1A2413]/55 via-transparent to-[#1A2413]/50"
+            className="absolute inset-0 bg-linear-to-b from-[#1A2413]/55 via-transparent to-[#1A2413]/50"
           />
 
-          <div className="relative w-full mx-auto max-w-[1200px] px-4 sm:px-6 py-12 lg:py-16">
+          <div className="relative w-full mx-auto max-w-300 px-4 sm:px-6 py-12 lg:py-16">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center">
               {/* Kolom Kiri: Headline Serif + Subjudul + CTA Pil */}
               <div className="lg:col-span-7 space-y-5">
@@ -386,7 +386,7 @@ export default function LandingExplorer({
 
               {/* Kolom Kanan: Kartu Form Melayang (Filter Pantauan Cepat Aktif) */}
               <div className="lg:col-span-5">
-                <div className="rounded-[12px] bg-white p-6 hm-floating-card border border-[#DCE0D5]">
+                <div className="rounded-xl bg-white p-6 hm-floating-card border border-[#DCE0D5]">
                   <div className="mb-5 space-y-1">
                     <h2 className="font-serif text-[22px] font-semibold text-[#2C3325] leading-snug">
                       Filter Pantauan Cepat
@@ -408,7 +408,7 @@ export default function LandingExplorer({
                         id="hero-filter-wilayah"
                         value={draftWilayah}
                         onChange={(e) => setDraftWilayah(e.target.value)}
-                        className="w-full rounded-[4px] border border-[#8A947D] bg-white px-3 py-2.5 text-[14px] text-[#2C3325] focus:border-[#557029] focus:outline-none"
+                        className="w-full rounded-sm border border-[#8A947D] bg-white px-3 py-2.5 text-[14px] text-[#2C3325] focus:border-[#557029] focus:outline-none"
                       >
                         <option value="semua">Semua wilayah ({wilayahOptions.length})</option>
                         {wilayahOptions.map((wilayah) => (
@@ -430,7 +430,7 @@ export default function LandingExplorer({
                         id="hero-filter-status"
                         value={draftStatus}
                         onChange={(e) => setDraftStatus(e.target.value)}
-                        className="w-full rounded-[4px] border border-[#8A947D] bg-white px-3 py-2.5 text-[14px] text-[#2C3325] focus:border-[#557029] focus:outline-none"
+                        className="w-full rounded-sm border border-[#8A947D] bg-white px-3 py-2.5 text-[14px] text-[#2C3325] focus:border-[#557029] focus:outline-none"
                       >
                         <option value="semua">Semua status</option>
                         {Object.entries(STATUS_META).map(([key, meta]) => (
@@ -454,7 +454,7 @@ export default function LandingExplorer({
                           type="date"
                           value={draftStartDate}
                           onChange={(e) => setDraftStartDate(e.target.value)}
-                          className="w-full rounded-[4px] border border-[#8A947D] bg-white px-3 py-2 text-[14px] text-[#2C3325] focus:border-[#557029] focus:outline-none"
+                          className="w-full rounded-sm border border-[#8A947D] bg-white px-3 py-2 text-[14px] text-[#2C3325] focus:border-[#557029] focus:outline-none"
                         />
                       </div>
 
@@ -470,7 +470,7 @@ export default function LandingExplorer({
                           type="date"
                           value={draftEndDate}
                           onChange={(e) => setDraftEndDate(e.target.value)}
-                          className="w-full rounded-[4px] border border-[#8A947D] bg-white px-3 py-2 text-[14px] text-[#2C3325] focus:border-[#557029] focus:outline-none"
+                          className="w-full rounded-sm border border-[#8A947D] bg-white px-3 py-2 text-[14px] text-[#2C3325] focus:border-[#557029] focus:outline-none"
                         />
                       </div>
                     </div>
@@ -502,7 +502,7 @@ export default function LandingExplorer({
 
         {/* 2. FEATURE STRIP (4 Kolom, Latar Krem Hangat #F7F8F2) */}
         <section className="w-full bg-[#F7F8F2] border-b border-[#DCE0D5] py-16">
-          <div className="mx-auto max-w-[1200px] px-4 sm:px-6">
+          <div className="mx-auto max-w-300 px-4 sm:px-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {featureItems.map((item) => (
                 <div
@@ -534,11 +534,11 @@ export default function LandingExplorer({
           ref={mapSectionRef}
           className="w-full bg-white py-16 scroll-mt-20"
         >
-          <div className="mx-auto max-w-[1200px] px-4 sm:px-6 space-y-6">
+          <div className="mx-auto max-w-300 px-4 sm:px-6 space-y-6">
             {hasQueryError && (
               <div
                 role="alert"
-                className="rounded-[8px] border border-[#E5B8A7] bg-[#FDF2EA] px-4 py-3 text-sm text-[#9B3417]"
+                className="rounded-lg border border-[#E5B8A7] bg-[#FDF2EA] px-4 py-3 text-sm text-[#9B3417]"
               >
                 {cachedFallback
                   ? "Menampilkan data tersimpan lokal sementara koneksi database dipulihkan."
@@ -586,10 +586,10 @@ export default function LandingExplorer({
                 focusTarget={focusTarget}
                 allowedBasemaps={LANDING_BASEMAPS}
                 showActionControls={false}
-                heightClass="h-[400px] sm:h-[460px] lg:h-[500px]"
+                heightClass="h-100 sm:h-115 lg:h-125"
               />
             ) : (
-              <div className="h-[400px] sm:h-[460px] lg:h-[500px] w-full rounded-xl border border-[#DCE0D5] bg-[#EEF2E4] flex flex-col items-center justify-center gap-2 text-xs font-medium text-[#6B7263]">
+              <div className="h-100 sm:h-115 lg:h-125 w-full rounded-xl border border-[#DCE0D5] bg-[#EEF2E4] flex flex-col items-center justify-center gap-2 text-xs font-medium text-[#6B7263]">
                 <span>Peta interaktif akan dimuat otomatis saat area ini terlihat...</span>
               </div>
             )}
@@ -598,7 +598,7 @@ export default function LandingExplorer({
 
         {/* 4. FEATURED ARTICLES / BERITA TERKINI (3 Kolom Tanpa Border Kartu Luar) */}
         <section className="w-full bg-[#F7F8F2] border-y border-[#DCE0D5] py-16">
-          <div className="mx-auto max-w-[1200px] px-4 sm:px-6 space-y-10">
+          <div className="mx-auto max-w-300 px-4 sm:px-6 space-y-10">
             <div className="text-center max-w-2xl mx-auto space-y-2">
               <h2 className="font-serif text-[30px] font-bold text-[#2C3325]">
                 Berita &amp; Informasi Terkini
@@ -619,7 +619,7 @@ export default function LandingExplorer({
                     <div>
                       <Link
                         href={`/berita/${berita.slug || berita.id}`}
-                        className="block aspect-[16/10] w-full rounded-[8px] overflow-hidden mb-4 bg-[#E6ECE0] border border-[#DCE0D5]"
+                        className="block aspect-16/10 w-full rounded-lg overflow-hidden mb-4 bg-[#E6ECE0] border border-[#DCE0D5]"
                       >
                         {berita.gambarUrl ? (
                           /* eslint-disable-next-line @next/next/no-img-element */
@@ -688,7 +688,7 @@ export default function LandingExplorer({
 
         {/* 5. SHOWCASE / SOROTAN PENANGANAN & WILAYAH (3 Kolom, Rasio 4:3, Sudut Tajam + Bilah Caption Solid) */}
         <section className="w-full bg-white py-16">
-          <div className="mx-auto max-w-[1200px] px-4 sm:px-6 space-y-10">
+          <div className="mx-auto max-w-300 px-4 sm:px-6 space-y-10">
             <div className="text-center max-w-2xl mx-auto space-y-2">
               <h2 className="font-serif text-[30px] font-bold text-[#2C3325]">
                 Sorotan Penanganan &amp; Wilayah
@@ -715,7 +715,7 @@ export default function LandingExplorer({
                       className="group text-left rounded-none overflow-hidden border border-[#DCE0D5] bg-white flex flex-col cursor-pointer"
                     >
                       {/* Placeholder foto dokumentasi lapangan rasio 4:3, sudut tajam (siap diganti foto) */}
-                      <div className="relative aspect-[4/3] w-full bg-[#EEF2E4] flex flex-col items-center justify-center gap-2 px-6 text-center">
+                      <div className="relative aspect-4/3 w-full bg-[#EEF2E4] flex flex-col items-center justify-center gap-2 px-6 text-center">
                         <svg
                           className="h-9 w-9 text-[#6F8E3D] opacity-80 group-hover:scale-105 transition-transform"
                           viewBox="0 0 24 24"
@@ -733,7 +733,7 @@ export default function LandingExplorer({
                         <span className="font-mono text-[11px] text-[#2C3325]/80">
                           {formatCoordinates(item.latitude, item.longitude, 4)}
                         </span>
-                        <span className="absolute top-3 left-3 rounded-[4px] bg-white/95 border border-[#DCE0D5] px-2.5 py-1 text-[11px] font-semibold text-[#2C3325]">
+                        <span className="absolute top-3 left-3 rounded-sm bg-white/95 border border-[#DCE0D5] px-2.5 py-1 text-[11px] font-semibold text-[#2C3325]">
                           {statusInfo.label}
                         </span>
                       </div>

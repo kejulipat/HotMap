@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { logoutAction } from "@/lib/actions/auth";
+import BrandLogo from "@/components/ui/BrandLogo";
 import { Breadcrumb } from "@/components/ui/SharedUI";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
@@ -118,21 +119,8 @@ export default function DashboardShell({
         }`}
       >
         <div className="h-[72px] px-5 border-b border-[#DCE0D5] flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-[8px] border border-[#DCE0D5] bg-[#F7F8F2] flex items-center justify-center text-[#6F8E3D]">
-              <svg
-                className="w-4 h-4"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <path d="M12 3L6 12h4l-3 7h10l-3-7h4L12 3z" />
-              </svg>
-            </div>
+          <Link href="/" className="flex items-center gap-2.5 group">
+            <BrandLogo size={36} />
             <div>
               <span className="block font-serif text-[17px] font-bold text-[#2C3325] leading-tight">
                 HotMap
