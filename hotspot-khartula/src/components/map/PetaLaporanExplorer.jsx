@@ -539,8 +539,8 @@ export default function PetaLaporanExplorer({
                   compact
                   emptyMessage={
                     isAuthenticated
-                      ? "Belum ada foto laporan yang diunggah atau dapat diakses pada titik ini."
-                      : "Foto bukti laporan bersifat privat. Masuk sebagai pelapor terkait, petugas ditugaskan, atau admin untuk melihat foto."
+                      ? "Belum ada foto laporan yang diunggah untuk titik ini."
+                      : "Belum ada foto laporan publik untuk titik ini."
                   }
                 />
               )}

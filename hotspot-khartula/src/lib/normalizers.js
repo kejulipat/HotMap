@@ -452,14 +452,11 @@ export async function fetchNormalizedDataset(
 
 /**
  * Mengambil daftar foto dari `public.laporan_foto` untuk sekumpulan `laporanIds`
- * sesuai hak akses RLS pengguna aktif (bucket privat `laporan-bukti` via signed URL).
- * Untuk pengunjung anon, langsung mengembalikan `{}` tanpa query tambahan.
+ * sesuai hak akses RLS pengguna aktif (termasuk pengunjung publik `anon` untuk
+ * laporan berstatus terverifikasi, ditangani, atau selesai).
  */
 export async function fetchLaporanFotosByIds(supabase, laporanIds = []) {
-  const isAuthenticated = Boolean(
-    supabase?.__isAuthenticated ?? supabase?.__authFingerprint
-  );
-  if (!supabase || !isAuthenticated || !Array.isArray(laporanIds)) {
+  if (!supabase || !Array.isArray(laporanIds)) {
     return {};
   }
 
