@@ -43,25 +43,25 @@ export default function PublicNavbar({ currentUser = null }) {
   return (
     <>
       {/* Top Utility Bar */}
-      <div className="w-full bg-[#557029] border-t-2 border-[#6F8E3D] text-white">
+      <div className="w-full bg-[#3A4E1B]/95 backdrop-blur-md border-b border-white/15 text-white">
         <div className="mx-auto max-w-[1200px] px-4 sm:px-6 h-9 flex items-center justify-end gap-4 text-[12px] font-medium">
-          <span className="truncate">
+          <span className="truncate text-white/95">
             Posko Pemantauan Karhutla Indonesia &bull; Layanan Pelaporan Warga 24/7 &bull; siaga@hotmap.id
           </span>
         </div>
       </div>
 
-      {/* Main Editorial Navbar */}
-      <header className="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-[#DCE0D5]">
+      {/* Main Editorial Navbar (Semi-Transparan Hijau Olive) */}
+      <header className="sticky top-0 z-30 bg-[#465D21]/88 backdrop-blur-md border-b border-white/15 text-white shadow-xs">
         <div className="mx-auto max-w-[1200px] px-4 sm:px-6 h-[72px] flex items-center justify-between gap-4">
           {/* Brand Logo + Tagline */}
           <Link href="/" className="flex items-center gap-3 shrink-0 group">
             <BrandLogo size={40} />
             <div>
-              <span className="block font-serif text-[20px] font-bold leading-none tracking-tight text-[#2C3325]">
+              <span className="block font-serif text-[20px] font-bold leading-none tracking-tight text-white">
                 HotMap
               </span>
-              <span className="mt-0.5 block text-[11px] font-medium text-[#6B7263]">
+              <span className="mt-0.5 block text-[11px] font-medium text-white/80">
                 SIPKARHUTLA &bull; Web GIS Karhutla
               </span>
             </div>
@@ -81,8 +81,8 @@ export default function PublicNavbar({ currentUser = null }) {
                   prefetch={true}
                   className={`rounded-[4px] px-3.5 py-2 transition-colors ${
                     active
-                      ? "border border-[#8A947D] bg-[#F7F8F2] text-[#2C3325] font-semibold"
-                      : "border border-transparent text-[#2C3325] hover:bg-[#F7F8F2] hover:text-[#557029]"
+                      ? "border border-white/40 bg-white/18 text-white font-semibold"
+                      : "border border-transparent text-white/90 hover:bg-white/12 hover:text-white"
                   }`}
                 >
                   {item.label}
@@ -96,8 +96,8 @@ export default function PublicNavbar({ currentUser = null }) {
                   href={dashboardTarget.href}
                   className={`rounded-[4px] px-3.5 py-2 transition-colors ${
                     isActive(dashboardTarget.href)
-                      ? "border border-[#8A947D] bg-[#F7F8F2] text-[#2C3325] font-semibold"
-                      : "border border-transparent text-[#2C3325] hover:bg-[#F7F8F2] hover:text-[#557029]"
+                      ? "border border-white/40 bg-white/18 text-white font-semibold"
+                      : "border border-transparent text-white/90 hover:bg-white/12 hover:text-white"
                   }`}
                 >
                   {dashboardTarget.label}
@@ -105,7 +105,7 @@ export default function PublicNavbar({ currentUser = null }) {
                 <button
                   type="button"
                   onClick={() => setConfirmLogout(true)}
-                  className="rounded-[4px] border border-transparent px-3.5 py-2 text-[#6B7263] hover:border-[#DCE0D5] hover:bg-[#F7F8F2] hover:text-[#2C3325] transition-colors cursor-pointer"
+                  className="rounded-[4px] border border-transparent px-3.5 py-2 text-white/85 hover:border-white/30 hover:bg-white/12 hover:text-white transition-colors cursor-pointer"
                 >
                   Keluar
                 </button>
@@ -116,8 +116,8 @@ export default function PublicNavbar({ currentUser = null }) {
                   href="/login"
                   className={`rounded-[4px] px-3.5 py-2 transition-colors ${
                     isActive("/login")
-                      ? "border border-[#8A947D] bg-[#F7F8F2] text-[#2C3325] font-semibold"
-                      : "border border-transparent text-[#2C3325] hover:bg-[#F7F8F2] hover:text-[#557029]"
+                      ? "border border-white/40 bg-white/18 text-white font-semibold"
+                      : "border border-transparent text-white/90 hover:bg-white/12 hover:text-white"
                   }`}
                 >
                   Masuk
@@ -126,8 +126,8 @@ export default function PublicNavbar({ currentUser = null }) {
                   href="/register"
                   className={`rounded-[4px] px-3.5 py-2 transition-colors ${
                     isActive("/register")
-                      ? "border border-[#8A947D] bg-[#F7F8F2] text-[#2C3325] font-semibold"
-                      : "border border-transparent text-[#2C3325] hover:bg-[#F7F8F2] hover:text-[#557029]"
+                      ? "border border-white/40 bg-white/18 text-white font-semibold"
+                      : "border border-transparent text-white/90 hover:bg-white/12 hover:text-white"
                   }`}
                 >
                   Daftar
@@ -138,7 +138,7 @@ export default function PublicNavbar({ currentUser = null }) {
             {currentUser?.role !== "petugas" && (
               <Link
                 href="/pelapor/laporan/buat"
-                className="ml-2 inline-flex items-center justify-center rounded-full bg-[#557029] hover:bg-[#465D21] px-5 py-2 text-[13px] font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98]"
+                className="ml-2 inline-flex items-center justify-center rounded-full bg-white hover:bg-[#F7F8F2] px-5 py-2 text-[13px] font-semibold text-[#3F561E] shadow-xs transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98]"
               >
                 Laporkan
               </Link>
@@ -151,7 +151,7 @@ export default function PublicNavbar({ currentUser = null }) {
             onClick={() => setMobileOpen((prev) => !prev)}
             aria-label={mobileOpen ? "Tutup menu navigasi" : "Buka menu navigasi"}
             aria-expanded={mobileOpen}
-            className="lg:hidden inline-flex items-center justify-center rounded-[4px] border border-[#8A947D] bg-white p-2 text-[#2C3325] hover:bg-[#F7F8F2] cursor-pointer"
+            className="lg:hidden inline-flex items-center justify-center rounded-[4px] border border-white/35 bg-white/10 p-2 text-white hover:bg-white/20 cursor-pointer"
           >
             {mobileOpen ? (
               <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -167,7 +167,7 @@ export default function PublicNavbar({ currentUser = null }) {
 
         {/* Mobile Drawer Menu */}
         {mobileOpen && (
-          <div className="hm-animate-fade-fast lg:hidden border-t border-[#DCE0D5] bg-white px-4 py-4 space-y-2">
+          <div className="hm-animate-fade-fast lg:hidden border-t border-white/15 bg-[#3F551F]/95 backdrop-blur-md px-4 py-4 space-y-2">
             {navItems.map((item) => {
               const active = isActive(item.href);
               return (
@@ -178,8 +178,8 @@ export default function PublicNavbar({ currentUser = null }) {
                   onClick={() => setMobileOpen(false)}
                   className={`block rounded-[4px] px-3.5 py-2.5 text-sm font-medium ${
                     active
-                      ? "border border-[#8A947D] bg-[#F7F8F2] text-[#2C3325] font-semibold"
-                      : "text-[#2C3325] hover:bg-[#F7F8F2]"
+                      ? "border border-white/35 bg-white/18 text-white font-semibold"
+                      : "text-white/90 hover:bg-white/12 hover:text-white"
                   }`}
                 >
                   {item.label}
@@ -187,13 +187,13 @@ export default function PublicNavbar({ currentUser = null }) {
               );
             })}
 
-            <div className="pt-2 mt-2 border-t border-[#DCE0D5] space-y-2">
+            <div className="pt-2 mt-2 border-t border-white/15 space-y-2">
               {currentUser ? (
                 <>
                   <Link
                     href={dashboardTarget.href}
                     onClick={() => setMobileOpen(false)}
-                    className="block rounded-[4px] bg-[#EEF2E4] px-3.5 py-2.5 text-sm font-semibold text-[#2C3325]"
+                    className="block rounded-[4px] bg-white/15 px-3.5 py-2.5 text-sm font-semibold text-white hover:bg-white/20"
                   >
                     {dashboardTarget.label}
                   </Link>
@@ -203,7 +203,7 @@ export default function PublicNavbar({ currentUser = null }) {
                       setMobileOpen(false);
                       setConfirmLogout(true);
                     }}
-                    className="w-full text-left rounded-[4px] px-3.5 py-2.5 text-sm font-medium text-[#9B4017] hover:bg-[#FDF2EA] cursor-pointer"
+                    className="w-full text-left rounded-[4px] px-3.5 py-2.5 text-sm font-medium text-[#FFD9CC] hover:bg-white/10 cursor-pointer"
                   >
                     Keluar
                   </button>
@@ -215,8 +215,8 @@ export default function PublicNavbar({ currentUser = null }) {
                     onClick={() => setMobileOpen(false)}
                     className={`text-center rounded-[4px] border px-3 py-2.5 text-sm font-semibold ${
                       isActive("/login")
-                        ? "border-[#557029] bg-[#EEF2E4] text-[#2C3325]"
-                        : "border-[#8A947D] text-[#2C3325]"
+                        ? "border-white/50 bg-white/20 text-white"
+                        : "border-white/30 text-white/95 hover:bg-white/10"
                     }`}
                   >
                     Masuk
@@ -226,8 +226,8 @@ export default function PublicNavbar({ currentUser = null }) {
                     onClick={() => setMobileOpen(false)}
                     className={`text-center rounded-[4px] border px-3 py-2.5 text-sm font-semibold ${
                       isActive("/register")
-                        ? "border-[#557029] bg-[#EEF2E4] text-[#2C3325]"
-                        : "border-[#8A947D] text-[#2C3325]"
+                        ? "border-white/50 bg-white/20 text-white"
+                        : "border-white/30 text-white/95 hover:bg-white/10"
                     }`}
                   >
                     Daftar
@@ -239,7 +239,7 @@ export default function PublicNavbar({ currentUser = null }) {
                 <Link
                   href="/pelapor/laporan/buat"
                   onClick={() => setMobileOpen(false)}
-                  className="block text-center rounded-full bg-[#557029] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#465D21]"
+                  className="block text-center rounded-full bg-white px-4 py-2.5 text-sm font-semibold text-[#3F561E] hover:bg-[#F7F8F2]"
                 >
                   Laporkan Kejadian
                 </Link>

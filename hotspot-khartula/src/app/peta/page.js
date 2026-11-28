@@ -58,7 +58,7 @@ export default async function PublicPetaPage() {
         fotoByLaporanId={fotoByLaporanId}
         isAuthenticated={Boolean(user)}
         title="Peta Pemantauan Laporan Warga"
-        subtitle="Gunakan filter wilayah, tanggal, status, atau pencarian lokasi. Klik marker atau baris daftar untuk fokus lokasi."
+        subtitle="Gunakan filter wilayah, status, prioritas, atau pencarian lokasi. Klik marker atau baris daftar untuk fokus lokasi."
       />
     </PublicShell>
   );

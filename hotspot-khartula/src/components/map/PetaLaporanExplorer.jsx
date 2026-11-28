@@ -38,8 +38,6 @@ export default function PetaLaporanExplorer({
   const [wilayahFilter, setWilayahFilter] = useState("semua");
   const [statusFilter, setStatusFilter] = useState("semua");
   const [keparahanFilter, setKeparahanFilter] = useState("semua");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
   const [petugasScope, setPetugasScope] = useState("semua"); // 'semua' | 'tugas_saya'
   const [selectedId, setSelectedId] = useState(laporanList[0]?.id ?? null);
   const [focusTarget, setFocusTarget] = useState(null);
@@ -80,12 +78,6 @@ export default function PetaLaporanExplorer({
       ) {
         return false;
       }
-      if (startDate && item.tanggal && item.tanggal < startDate) {
-        return false;
-      }
-      if (endDate && item.tanggal && item.tanggal > endDate) {
-        return false;
-      }
       if (q) {
         const haystack = [
           item.judul,
@@ -109,8 +101,6 @@ export default function PetaLaporanExplorer({
     currentUserId,
     wilayahFilter,
     keparahanFilter,
-    startDate,
-    endDate,
     searchQuery,
   ]);
 
@@ -171,8 +161,6 @@ export default function PetaLaporanExplorer({
     setWilayahFilter("semua");
     setStatusFilter("semua");
     setKeparahanFilter("semua");
-    setStartDate("");
-    setEndDate("");
     setPetugasScope("semua");
   }
 
@@ -266,7 +254,7 @@ export default function PetaLaporanExplorer({
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-end">
-          <div className="lg:col-span-3">
+          <div className="lg:col-span-4">
             <label
               htmlFor="peta-search"
               className="block text-xs font-semibold text-[#4A5243] mb-1"
@@ -283,7 +271,7 @@ export default function PetaLaporanExplorer({
             />
           </div>
 
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-3">
             <label
               htmlFor="peta-wilayah"
               className="block text-xs font-semibold text-[#4A5243] mb-1"
@@ -305,7 +293,7 @@ export default function PetaLaporanExplorer({
             </select>
           </div>
 
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-3">
             <label
               htmlFor="peta-status"
               className="block text-xs font-semibold text-[#4A5243] mb-1"
@@ -347,39 +335,6 @@ export default function PetaLaporanExplorer({
                 </option>
               ))}
             </select>
-          </div>
-
-          <div className="lg:col-span-3 grid grid-cols-2 gap-2">
-            <div>
-              <label
-                htmlFor="peta-start"
-                className="block text-xs font-semibold text-[#4A5243] mb-1"
-              >
-                Dari Tanggal
-              </label>
-              <input
-                id="peta-start"
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="w-full rounded-lg border border-[#8A947D] bg-[#F7F8F2] px-2.5 py-2 text-xs text-[#2C3325] focus:border-[#557029] focus:outline-none"
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="peta-end"
-                className="block text-xs font-semibold text-[#4A5243] mb-1"
-              >
-                Sampai
-              </label>
-              <input
-                id="peta-end"
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="w-full rounded-lg border border-[#8A947D] bg-[#F7F8F2] px-2.5 py-2 text-xs text-[#2C3325] focus:border-[#557029] focus:outline-none"
-              />
-            </div>
           </div>
         </div>
 
@@ -563,7 +518,7 @@ export default function PetaLaporanExplorer({
         {filteredLaporan.length === 0 ? (
           <EmptyState
             title="Tidak ada laporan sesuai filter"
-            description="Coba ubah rentang tanggal, wilayah, status, atau kata kunci pencarian Anda."
+            description="Coba ubah wilayah, status, prioritas, atau kata kunci pencarian Anda."
           />
         ) : (
           <div className="rounded-xl bg-white border border-[#DCE0D5] overflow-hidden shadow-2xs">
