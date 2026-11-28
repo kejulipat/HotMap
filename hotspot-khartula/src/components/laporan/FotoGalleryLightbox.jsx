@@ -11,7 +11,11 @@ function formatBytes(bytes) {
   return `${(num / (1024 * 1024)).toFixed(2)} MB`;
 }
 
-export default function FotoGalleryLightbox({ fotoList = [] }) {
+export default function FotoGalleryLightbox({
+  fotoList = [],
+  compact = false,
+  emptyMessage = "Belum ada foto bukti yang diunggah untuk laporan ini.",
+}) {
   const [activePhoto, setActivePhoto] = useState(null);
 
   useEffect(() => {
@@ -25,25 +29,39 @@ export default function FotoGalleryLightbox({ fotoList = [] }) {
 
   if (fotoList.length === 0) {
     return (
-      <p className="text-sm text-[#6B7263]">
-        Belum ada foto bukti yang diunggah untuk laporan ini.
+      <p className={compact ? "text-xs text-[#6B7263] leading-relaxed" : "text-sm text-[#6B7263]"}>
+        {emptyMessage}
       </p>
     );
   }
 
+  const gridClass = compact
+    ? fotoList.length === 1
+      ? "grid grid-cols-1 gap-3"
+      : "grid grid-cols-2 gap-2.5"
+    : "grid grid-cols-1 sm:grid-cols-2 gap-4";
+
+  const thumbHeightClass = compact
+    ? fotoList.length === 1
+      ? "h-44"
+      : "h-28"
+    : "h-44";
+
   return (
     <>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className={gridClass}>
         {fotoList.map((foto, idx) => (
           <div
             key={foto.id}
-            className="rounded-xl border border-[#DCE0D5] bg-[#F7F8F2] p-3 space-y-2"
+            className={`rounded-xl border border-[#DCE0D5] bg-[#F7F8F2] ${
+              compact ? "p-2 space-y-1.5" : "p-3 space-y-2"
+            }`}
           >
             {foto.signedUrl ? (
               <button
                 type="button"
                 onClick={() => setActivePhoto(foto)}
-                className="group relative block h-44 w-full overflow-hidden rounded-lg border border-[#DCE0D5] bg-[#EEF2E4] cursor-pointer"
+                className={`group relative block ${thumbHeightClass} w-full overflow-hidden rounded-lg border border-[#DCE0D5] bg-[#EEF2E4] cursor-pointer`}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
@@ -56,19 +74,21 @@ export default function FotoGalleryLightbox({ fotoList = [] }) {
                 </span>
               </button>
             ) : (
-              <div className="h-44 w-full rounded-lg bg-[#EEF2E4] flex items-center justify-center text-xs text-[#6B7263]">
+              <div
+                className={`${thumbHeightClass} w-full rounded-lg bg-[#EEF2E4] flex items-center justify-center text-xs text-[#6B7263]`}
+              >
                 Pratinjau tidak tersedia
               </div>
             )}
 
-            <div className="flex items-center justify-between text-xs">
-              <span className="font-semibold capitalize text-[#2C3325]">
+            <div className="flex items-center justify-between gap-1 text-[11px]">
+              <span className="font-semibold capitalize text-[#2C3325] truncate">
                 {String(foto.jenisFoto ?? "bukti_awal").replace("_", " ")}
               </span>
-              <span className="text-[#6B7263]">
+              <span className="text-[#6B7263] shrink-0">
                 {formatBytes(foto.fileSize)}
-                {foto.fileSize ? " • " : ""}
-                {formatDate(normalizeDate(foto.createdAt), "short")}
+                {!compact && foto.fileSize ? " • " : ""}
+                {!compact ? formatDate(normalizeDate(foto.createdAt), "short") : ""}
               </span>
             </div>
           </div>

@@ -1,6 +1,7 @@
 import {
   getBeritaImagePublicUrl,
   getLaporanEvidenceSignedUrl,
+  getLaporanEvidenceSignedUrlsMap,
 } from "@/lib/storage";
 import { createCachedPublicFetcher } from "@/lib/public-cache";
 import {
@@ -447,6 +448,62 @@ export async function fetchNormalizedDataset(
     limit,
     beritaLimit,
   });
+}
+
+/**
+ * Mengambil daftar foto dari `public.laporan_foto` untuk sekumpulan `laporanIds`
+ * sesuai hak akses RLS pengguna aktif (bucket privat `laporan-bukti` via signed URL).
+ * Untuk pengunjung anon, langsung mengembalikan `{}` tanpa query tambahan.
+ */
+export async function fetchLaporanFotosByIds(supabase, laporanIds = []) {
+  const isAuthenticated = Boolean(
+    supabase?.__isAuthenticated ?? supabase?.__authFingerprint
+  );
+  if (!supabase || !isAuthenticated || !Array.isArray(laporanIds)) {
+    return {};
+  }
+
+  const validIds = Array.from(
+    new Set(laporanIds.filter((id) => isUuid(id)))
+  );
+  if (validIds.length === 0) return {};
+
+  const { data: rawFotos, error } = await supabase
+    .from("laporan_foto")
+    .select(
+      "id, laporan_id, storage_path, jenis_foto, mime_type, file_size, created_at"
+    )
+    .in("laporan_id", validIds)
+    .order("created_at", { ascending: false });
+
+  if (error || !Array.isArray(rawFotos) || rawFotos.length === 0) {
+    return {};
+  }
+
+  const signedMap = await getLaporanEvidenceSignedUrlsMap(
+    supabase,
+    rawFotos.map((f) => f.storage_path),
+    3600
+  );
+
+  const grouped = {};
+  for (const f of rawFotos) {
+    const item = {
+      id: f.id,
+      storagePath: f.storage_path,
+      jenisFoto: f.jenis_foto,
+      mimeType: f.mime_type,
+      fileSize: f.file_size,
+      createdAt: f.created_at,
+      signedUrl: signedMap.get(f.storage_path) ?? null,
+    };
+    if (!grouped[f.laporan_id]) {
+      grouped[f.laporan_id] = [];
+    }
+    grouped[f.laporan_id].push(item);
+  }
+
+  return grouped;
 }
 
 const DETAIL_CACHE_TTL_MS = 30_000;

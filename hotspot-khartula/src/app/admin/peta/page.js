@@ -1,7 +1,10 @@
 import PetaLaporanExplorer from "@/components/map/PetaLaporanExplorer";
 import { ErrorBanner } from "@/components/ui/SharedUI";
 import { requireRole } from "@/lib/auth";
-import { fetchNormalizedDataset } from "@/lib/normalizers";
+import {
+  fetchLaporanFotosByIds,
+  fetchNormalizedDataset,
+} from "@/lib/normalizers";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +17,10 @@ export const metadata = {
 export default async function AdminPetaPage() {
   const { supabase } = await requireRole(["admin"]);
   const dataset = await fetchNormalizedDataset(supabase, { limit: 200 });
+  const fotoByLaporanId = await fetchLaporanFotosByIds(
+    supabase,
+    dataset.laporanList.map((item) => item.id)
+  );
 
   return (
     <div className="space-y-6">
@@ -34,6 +41,8 @@ export default async function AdminPetaPage() {
       <PetaLaporanExplorer
         laporanList={dataset.laporanList}
         wilayahList={dataset.wilayahList}
+        fotoByLaporanId={fotoByLaporanId}
+        isAuthenticated={true}
         detailHrefPrefix="/admin/laporan"
         title="Sebaran Laporan Seluruh Wilayah"
         subtitle="Klik titik pada peta atau baris pada daftar untuk fokus lokasi dan membuka panel verifikasi/penugasan."

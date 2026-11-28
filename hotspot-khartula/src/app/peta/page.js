@@ -2,7 +2,10 @@ import PublicShell from "@/components/layout/PublicShell";
 import PetaLaporanExplorer from "@/components/map/PetaLaporanExplorer";
 import { Breadcrumb, ErrorBanner } from "@/components/ui/SharedUI";
 import { getCurrentUserWithRole } from "@/lib/auth";
-import { fetchNormalizedDataset } from "@/lib/normalizers";
+import {
+  fetchLaporanFotosByIds,
+  fetchNormalizedDataset,
+} from "@/lib/normalizers";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +18,10 @@ export const metadata = {
 export default async function PublicPetaPage() {
   const { supabase, user, profile, role } = await getCurrentUserWithRole();
   const dataset = await fetchNormalizedDataset(supabase, { limit: 200 });
+  const fotoByLaporanId = await fetchLaporanFotosByIds(
+    supabase,
+    dataset.laporanList.map((item) => item.id)
+  );
 
   const currentUser = user
     ? {
@@ -48,6 +55,8 @@ export default async function PublicPetaPage() {
       <PetaLaporanExplorer
         laporanList={dataset.laporanList}
         wilayahList={dataset.wilayahList}
+        fotoByLaporanId={fotoByLaporanId}
+        isAuthenticated={Boolean(user)}
         title="Peta Pemantauan Laporan Warga"
         subtitle="Gunakan filter wilayah, tanggal, status, atau pencarian lokasi. Klik marker atau baris daftar untuk fokus lokasi."
       />

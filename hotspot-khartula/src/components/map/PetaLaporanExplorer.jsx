@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import HotmapMap from "@/components/map/HotmapMap";
+import FotoGalleryLightbox from "@/components/laporan/FotoGalleryLightbox";
 import { EmptyState, StatusBadge } from "@/components/ui/SharedUI";
 import {
   formatCoordinates,
@@ -25,6 +26,8 @@ import {
 export default function PetaLaporanExplorer({
   laporanList = [],
   wilayahList = [],
+  fotoByLaporanId = {},
+  isAuthenticated = false,
   detailHrefPrefix = null,
   currentUserId = null,
   enablePetugasScope = false,
@@ -128,6 +131,12 @@ export default function PetaLaporanExplorer({
       null,
     [filteredLaporan, selectedId]
   );
+
+  const selectedPhotos = useMemo(() => {
+    if (!selectedReport?.id) return [];
+    const list = fotoByLaporanId?.[selectedReport.id];
+    return Array.isArray(list) ? list : [];
+  }, [fotoByLaporanId, selectedReport]);
 
   function handleSelectFromList(item) {
     setSelectedId(item.id);
@@ -401,109 +410,141 @@ export default function PetaLaporanExplorer({
             />
           </div>
 
-          <aside className="lg:col-span-4 rounded-xl border border-[#DCE0D5] bg-[#F7F8F2] p-4 sm:p-5 space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-[#6B7263]">
-                Detail Titik Terpilih
-              </span>
-              {selectedKeparahan && (
-                <span
-                  className={`rounded-md px-2 py-0.5 text-[11px] font-semibold ${selectedKeparahan.badgeBg} ${selectedKeparahan.badgeText}`}
-                >
-                  {selectedKeparahan.label}
+          <aside className="lg:col-span-4 space-y-4">
+            <div className="rounded-xl border border-[#DCE0D5] bg-[#F7F8F2] p-4 sm:p-5 space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[#6B7263]">
+                  Detail Titik Terpilih
                 </span>
+                {selectedKeparahan && (
+                  <span
+                    className={`rounded-md px-2 py-0.5 text-[11px] font-semibold ${selectedKeparahan.badgeBg} ${selectedKeparahan.badgeText}`}
+                  >
+                    {selectedKeparahan.label}
+                  </span>
+                )}
+              </div>
+
+              {!selectedReport ? (
+                <p className="text-xs text-[#6B7263] py-6 text-center">
+                  Pilih titik marker pada peta atau baris pada daftar untuk
+                  melihat informasi kejadian.
+                </p>
+              ) : (
+                <>
+                  <div className="space-y-2">
+                    <h3 className="text-base font-bold text-[#2C3325] leading-snug">
+                      {selectedReport.judul}
+                    </h3>
+                    <StatusBadge statusKey={selectedReport.statusKey} />
+                  </div>
+
+                  <dl className="divide-y divide-[#DCE0D5] text-xs">
+                    <div className="py-2 flex justify-between gap-3">
+                      <dt className="text-[#6B7263]">Wilayah</dt>
+                      <dd className="font-semibold text-[#2C3325] text-right">
+                        {selectedReport.wilayah}
+                      </dd>
+                    </div>
+                    <div className="py-2 flex justify-between gap-3">
+                      <dt className="text-[#6B7263]">Jenis Kejadian</dt>
+                      <dd className="font-semibold text-[#2C3325] text-right">
+                        {getJenisKejadianLabel(selectedReport.jenisKejadian)}
+                      </dd>
+                    </div>
+                    <div className="py-2 flex justify-between gap-3">
+                      <dt className="text-[#6B7263]">Estimasi Luas</dt>
+                      <dd className="font-semibold text-[#2C3325] text-right">
+                        {selectedReport.estimasiLuas}
+                      </dd>
+                    </div>
+                    <div className="py-2 flex justify-between gap-3">
+                      <dt className="text-[#6B7263]">Koordinat</dt>
+                      <dd className="font-mono font-semibold text-[#2C3325] text-right">
+                        {formatCoordinates(
+                          selectedReport.latitude,
+                          selectedReport.longitude,
+                          5
+                        )}
+                      </dd>
+                    </div>
+                    <div className="py-2 flex justify-between gap-3">
+                      <dt className="text-[#6B7263]">Tanggal</dt>
+                      <dd className="font-semibold text-[#2C3325] text-right">
+                        {formatDate(selectedReport.tanggal, "short")}
+                      </dd>
+                    </div>
+                    <div className="py-2 flex justify-between gap-3">
+                      <dt className="text-[#6B7263]">Petugas</dt>
+                      <dd className="font-semibold text-[#2C3325] text-right">
+                        {selectedReport.petugas}
+                      </dd>
+                    </div>
+                  </dl>
+
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    {detailHrefPrefix && (
+                      <Link
+                        href={`${detailHrefPrefix}/${selectedReport.id}`}
+                        className="flex-1 text-center rounded-lg bg-[#557029] hover:bg-[#465D21] px-3 py-2 text-xs font-semibold text-white transition-colors"
+                      >
+                        Buka Detail &amp; Aksi &rarr;
+                      </Link>
+                    )}
+                    {googleMapsUrl && (
+                      <a
+                        href={googleMapsUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="rounded-lg border border-[#8A947D] bg-white px-3 py-2 text-xs font-semibold text-[#2C3325] hover:bg-[#EEF2E4]"
+                      >
+                        Google Maps
+                      </a>
+                    )}
+                    {osmUrl && (
+                      <a
+                        href={osmUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="rounded-lg border border-[#8A947D] bg-white px-3 py-2 text-xs font-semibold text-[#4A5243] hover:bg-[#EEF2E4]"
+                      >
+                        OSM
+                      </a>
+                    )}
+                  </div>
+                </>
               )}
             </div>
 
-            {!selectedReport ? (
-              <p className="text-xs text-[#6B7263] py-6 text-center">
-                Pilih titik marker pada peta atau baris pada daftar untuk
-                melihat informasi kejadian.
-              </p>
-            ) : (
-              <>
-                <div className="space-y-2">
-                  <h3 className="text-base font-bold text-[#2C3325] leading-snug">
-                    {selectedReport.judul}
-                  </h3>
-                  <StatusBadge statusKey={selectedReport.statusKey} />
-                </div>
+            {/* Tempat Foto Laporan di Bawah Detail Titik Terpilih */}
+            <div className="rounded-xl border border-[#DCE0D5] bg-white p-4 sm:p-5 space-y-3">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[#6B7263]">
+                  Foto Laporan
+                </span>
+                {selectedReport && selectedPhotos.length > 0 && (
+                  <span className="rounded-full bg-[#EEF2E4] px-2 py-0.5 text-[11px] font-semibold text-[#3F561E]">
+                    {selectedPhotos.length} foto
+                  </span>
+                )}
+              </div>
 
-                <dl className="divide-y divide-[#DCE0D5] text-xs">
-                  <div className="py-2 flex justify-between gap-3">
-                    <dt className="text-[#6B7263]">Wilayah</dt>
-                    <dd className="font-semibold text-[#2C3325] text-right">
-                      {selectedReport.wilayah}
-                    </dd>
-                  </div>
-                  <div className="py-2 flex justify-between gap-3">
-                    <dt className="text-[#6B7263]">Jenis Kejadian</dt>
-                    <dd className="font-semibold text-[#2C3325] text-right">
-                      {getJenisKejadianLabel(selectedReport.jenisKejadian)}
-                    </dd>
-                  </div>
-                  <div className="py-2 flex justify-between gap-3">
-                    <dt className="text-[#6B7263]">Estimasi Luas</dt>
-                    <dd className="font-semibold text-[#2C3325] text-right">
-                      {selectedReport.estimasiLuas}
-                    </dd>
-                  </div>
-                  <div className="py-2 flex justify-between gap-3">
-                    <dt className="text-[#6B7263]">Koordinat</dt>
-                    <dd className="font-mono font-semibold text-[#2C3325] text-right">
-                      {formatCoordinates(
-                        selectedReport.latitude,
-                        selectedReport.longitude,
-                        5
-                      )}
-                    </dd>
-                  </div>
-                  <div className="py-2 flex justify-between gap-3">
-                    <dt className="text-[#6B7263]">Tanggal</dt>
-                    <dd className="font-semibold text-[#2C3325] text-right">
-                      {formatDate(selectedReport.tanggal, "short")}
-                    </dd>
-                  </div>
-                  <div className="py-2 flex justify-between gap-3">
-                    <dt className="text-[#6B7263]">Petugas</dt>
-                    <dd className="font-semibold text-[#2C3325] text-right">
-                      {selectedReport.petugas}
-                    </dd>
-                  </div>
-                </dl>
-
-                <div className="flex flex-wrap gap-2 pt-1">
-                  {detailHrefPrefix && (
-                    <Link
-                      href={`${detailHrefPrefix}/${selectedReport.id}`}
-                      className="flex-1 text-center rounded-lg bg-[#557029] hover:bg-[#465D21] px-3 py-2 text-xs font-semibold text-white transition-colors"
-                    >
-                      Buka Detail &amp; Aksi &rarr;
-                    </Link>
-                  )}
-                  {googleMapsUrl && (
-                    <a
-                      href={googleMapsUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="rounded-lg border border-[#8A947D] bg-white px-3 py-2 text-xs font-semibold text-[#2C3325] hover:bg-[#EEF2E4]"
-                    >
-                      Google Maps
-                    </a>
-                  )}
-                  {osmUrl && (
-                    <a
-                      href={osmUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="rounded-lg border border-[#8A947D] bg-white px-3 py-2 text-xs font-semibold text-[#4A5243] hover:bg-[#EEF2E4]"
-                    >
-                      OSM
-                    </a>
-                  )}
-                </div>
-              </>
-            )}
+              {!selectedReport ? (
+                <p className="text-xs text-[#6B7263]">
+                  Pilih titik laporan pada peta untuk melihat foto bukti yang diunggah pelapor.
+                </p>
+              ) : (
+                <FotoGalleryLightbox
+                  fotoList={selectedPhotos}
+                  compact
+                  emptyMessage={
+                    isAuthenticated
+                      ? "Belum ada foto laporan yang diunggah atau dapat diakses pada titik ini."
+                      : "Foto bukti laporan bersifat privat. Masuk sebagai pelapor terkait, petugas ditugaskan, atau admin untuk melihat foto."
+                  }
+                />
+              )}
+            </div>
           </aside>
         </div>
       </section>

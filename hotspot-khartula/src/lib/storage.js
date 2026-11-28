@@ -247,6 +247,51 @@ export async function getLaporanEvidenceSignedUrl(
   return { signedUrl: data?.signedUrl ?? null, error: null };
 }
 
+export async function getLaporanEvidenceSignedUrlsMap(
+  supabase,
+  paths = [],
+  expiresIn = 3600
+) {
+  const result = new Map();
+  if (!supabase || !Array.isArray(paths) || paths.length === 0) {
+    return result;
+  }
+
+  const uniquePaths = Array.from(
+    new Set(paths.map((p) => String(p ?? "").trim()).filter(Boolean))
+  );
+  if (uniquePaths.length === 0) return result;
+
+  const bucket = supabase.storage.from(STORAGE_BUCKETS.LAPORAN);
+  if (typeof bucket.createSignedUrls === "function") {
+    const { data, error } = await bucket.createSignedUrls(uniquePaths, expiresIn);
+    if (!error && Array.isArray(data)) {
+      for (const item of data) {
+        if (item?.path && item?.signedUrl) {
+          result.set(item.path, item.signedUrl);
+        }
+      }
+      return result;
+    }
+  }
+
+  // Fallback jika createSignedUrls tidak tersedia atau gagal secara batch
+  const entries = await Promise.all(
+    uniquePaths.map(async (path) => {
+      const { signedUrl } = await getLaporanEvidenceSignedUrl(
+        supabase,
+        path,
+        expiresIn
+      );
+      return [path, signedUrl];
+    })
+  );
+  for (const [path, signedUrl] of entries) {
+    if (signedUrl) result.set(path, signedUrl);
+  }
+  return result;
+}
+
 export async function deleteStorageObject(supabase, bucket, path) {
   if (!supabase || !path) return { error: null };
   if (!Object.values(STORAGE_BUCKETS).includes(bucket)) {
